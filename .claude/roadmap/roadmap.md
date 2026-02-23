@@ -35,8 +35,7 @@ This roadmap defines the strategic development plan for the Kakeibo platform —
 
 | Phase | Status | Backend | Frontend | Blockers |
 |-------|--------|---------|----------|----------|
-| 0 — Base Infrastructure | Partially complete | Scaffolding started | Shell created | Email service needed |
-| 1 — Identity | Pending | Not started | Not started | Phase 0 |
+| 1 — Foundation & Authentication | Partially complete | Infrastructure done, Identity pending | Shell created | None |
 | 2 — Wallets + Collaboration | Pending | Not started | Not started | Phase 1 |
 | 3 — Transactions + Categories | Pending | Not started | Not started | Phase 2 |
 | 4 — Budgets | Pending | Not started | Not started | Phase 3 |
@@ -154,33 +153,25 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 
 ## Phase Summaries
 
-### Phase 0: Base Infrastructure
-**Objective:** Establish foundational infrastructure for development and deployment.
+### Phase 1: Foundation & Authentication
+**Objective:** Establish foundational infrastructure and implement complete authentication system
+
+**Sub-Phases:**
+- **1a - Infrastructure Base** (2-3 days): Docker Compose, CI/CD, project scaffolding, Common interfaces
+- **1b - Identity Backend** (4-5 days): User registration, login, JWT tokens, password recovery
+- **1c - Outbox Pattern** (2-3 days): Reliable event delivery with domain/integration events
+- **1d - Audit Logging** (1-2 days): ClickHouse integration for audit trail
+- **1e - Identity Frontend** (2-3 days): Login/register screens, token refresh, route guards
 
 **Key Deliverables:**
-- All 12 projects scaffolded (`Kakeibo.slnx`)
-- Docker Compose with 8 infrastructure services (PostgreSQL, Redis, RustFS, ClickHouse, Mailpit, Redis Insight, Aspire Dashboard)
-- GitHub Actions CI pipeline (quality gates for API, App, Email, Docker)
-- Email renderer service (`Kakeibo.Email` — Bun + Hono + React Email)
-- Vue PWA shell (`sites/Kakeibo.App`)
-- Architecture tests (module boundary enforcement)
-- Pre-commit hooks (`lefthook.yml`)
+- All 12 projects scaffolded with minimal structure
+- Docker Compose with 8 infrastructure services
+- Complete authentication flow (backend + frontend)
+- Event-driven infrastructure tested with real Identity events
+- CI/CD pipeline functional
 
-**Status:** Partially complete
-**Link:** [phases/phase-0/phase-0.md](./phases/phase-0/phase-0.md)
-
----
-
-### Phase 1: Identity (Backend + Frontend)
-**Objective:** Complete authentication system with email/password registration, login, email verification, password recovery, and super admin setup.
-
-**Key Deliverables:**
-- **Phase 1a: Outbox Pattern** — Infrastructure for reliable event publishing
-- **Phase 1b: Audit Logging** — Infrastructure for immutable activity logs
-- **Phase 1c: Auth Backend** — Registration, login, JWT tokens, email verification, password recovery
-- **Phase 1d: Auth Frontend** — Login screen, Register screen, Email Verification flow, Password Reset flow, Super Admin Onboarding wizard
-
-**Status:** Pending (blocked by Phase 0)
+**Status:** Partially complete (1a infrastructure in progress)
+**Duration:** 10-15 days total
 **Link:** [phases/phase-1/phase-1.md](./phases/phase-1/phase-1.md)
 
 ---
@@ -278,10 +269,8 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 **Sequential order accounting for dependencies:**
 
 ```
-Phase 0 (Infrastructure)
-  │
-  v
-Phase 1a (Outbox) → 1b (Audit) → 1c (Auth Backend) → 1d (Auth Frontend)
+Phase 1 (Foundation & Authentication)
+  1a (Infrastructure) → 1b (Identity Backend) → 1c (Outbox) → 1d (Audit) → 1e (Frontend)
   │
   v
 Phase 2a (Wallets Backend + UI) → 2b (Shared Wallets Backend + UI)
@@ -349,8 +338,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 
 | Phase | Relative Effort | Deliverables | Sequencing Notes |
 |-------|----------------|--------------|------------------|
-| **Phase 0** | Foundation | Infrastructure setup (Docker, CI, Email service) | Prerequisite for all phases |
-| **Phase 1 (1a-1d)** | Medium | Outbox + Audit + Auth (API + UI) | Sequential: 1a → 1b → 1c → 1d |
+| **Phase 1 (1a-1e)** | Medium | Infrastructure + Outbox + Audit + Auth (API + UI) | Sequential: 1a → 1b → 1c → 1d → 1e |
 | **Phase 2 (2a-2c)** | Medium | Wallets + Collaboration (API + UI) | Sequential: 2a → 2b; Phase 2c deferred until after 3b |
 | **Phase 3 (3a-3c)** | Medium | Transactions + Categories (API + Calculator UI) | Sequential: 3a → 3b → 3c; unblocks 2c, 4, 5, 6 |
 | **Phase 4 (4a-4b)** | Medium (parallel) | Budgets (API + UI) | Can be developed concurrently with 5, 6 after Phase 3b |
@@ -388,7 +376,7 @@ During implementation, every phase should reference these source files from the 
 | **RBAC implementation** | Simple (SuperAdmin + user isolation) | Kakeibo's permission model is intentionally flat. Full RBAC adds complexity for no business value. Shared wallet permissions are membership checks, not role-based. |
 | **Notification module timing** | Late (Phase 7 after business modules) | Consumers need events from all business modules. Building early means constant modification. Building late means implementing once against complete event catalog. |
 | **Phase 2c placement** | In Phase 2 with Phase 3b prerequisite | Conceptually belongs in Wallets module. Prerequisite explicitly documented. Actual dev order: 2a → 2b → 3a → 3b → 2c → 3c. |
-| **Outbox Pattern timing** | Phase 1a (dedicated sub-phase) | Infrastructure deserves focused implementation with dedicated tests. Phase 0 already large. Enables all subsequent phases to publish events reliably. |
+| **Outbox Pattern timing** | Phase 1c (after Identity) | Outbox needs real events from Identity (UserRegisteredEvent, UserLoggedInEvent) for meaningful testing. Sequential order: 1a (infra) → 1b (Identity) → 1c (Outbox tested with Identity events). |
 | **Dashboard + Onboarding timing** | Phase 8 (after all modules complete) | Dashboard aggregates data from all 6 business modules. Onboarding guides users through features that must already exist. Settings centralizes preferences from all modules. |
 | **OAuth login** | Post-MVP | OAuth listed in platform.md but not in MVP scope. Focus on email/password for MVP. Google/Apple Sign-In deferred. |
 | **Multi-currency** | Post-MVP | Single-currency MVP per constraints.md. User selects currency at registration. Multi-currency deferred to post-MVP. |
@@ -401,19 +389,19 @@ During implementation, every phase should reference these source files from the 
 
 ### Notifications
 
-- **Phase 0-6:** Integration events published via `IModuleEventBus` and persisted in outbox. No consumer exists — events marked as "no consumer" by `OutboxProcessor`. Safe because outbox pattern handles at-least-once delivery.
+- **Phase 1-6:** Integration events published via `IModuleEventBus` and persisted in outbox. No consumer exists — events marked as "no consumer" by `OutboxProcessor`. Safe because outbox pattern handles at-least-once delivery.
 - **Phase 7a:** `Kakeibo.Modules.Notifications` implemented with consumers for all business events. `OutboxProcessor` now resolves `IEventConsumer<T>` for notification events.
 
 ### Auditing
 
-- **Phase 0:** ClickHouse `audit_logs` table created (infrastructure level).
-- **Phase 1b:** Audit pipeline fully operational — `IAuditOutbox.Stage()` and `.PublishAsync()` available to all modules. `AuditOutboxProcessor` running in background.
+- **Phase 1a:** ClickHouse `audit_logs` table created (infrastructure level).
+- **Phase 1d:** Audit pipeline fully operational — `IAuditOutbox.Stage()` and `.PublishAsync()` available to all modules. `AuditOutboxProcessor` running in background.
 - **Phase 2-6:** Each module's `DomainEventHandler` implementations call `auditOutbox.Stage()` within transaction. Audit events flow to ClickHouse automatically.
 - **Phase 7b:** `Kakeibo.Modules.Auditing` adds Activity entity, query endpoints, and admin UI for browsing audit trail.
 
 ### i18n
 
-- **Phase 0:** Vue i18n configured with EN/ES locale files (empty templates).
+- **Phase 1a:** Vue i18n configured with EN/ES locale files (empty templates).
 - **Phases 1-8:** All user-visible strings use `t('key')` per mandatory rule 5. Translation keys added incrementally as screens are built.
 
 ---

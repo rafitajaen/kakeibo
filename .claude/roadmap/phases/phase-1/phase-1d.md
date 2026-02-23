@@ -1,7 +1,7 @@
-# Phase 1d: Authentication Frontend
+# Phase 1d: Audit Logging
 
 **Status**: Not Started
-**Objective**: Implement login, register, and password recovery screens with automatic token refresh
+**Objective**: Implement audit trail for all user actions using ClickHouse
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Item | Status |
 |------|--------|
-| Authentication Backend | ⏳ Phase 1c |
-| Vue PWA base app | ✅ Phase 0 |
-| i18n setup | ✅ Phase 0 |
+| ClickHouse running | ✅ Phase 1a |
+| Outbox Pattern | ✅ Phase 1c |
+| `IAuditOutbox` interface | ✅ Phase 1c |
 
 ---
 
@@ -19,25 +19,19 @@
 
 ### ✅ Included
 
-**Screens**:
-- Login (email + password)
-- Register (email + password + confirm)
-- Email verification (from email link)
-- Forgot password (email input)
-- Reset password (new password + confirm)
-
-**Infrastructure**:
-- Pinia `useAuthStore` (login, register, logout, token refresh)
-- Axios interceptor (inject auth headers)
-- Axios 401 handler (automatic token refresh)
-- Route guards (redirect to login if unauthenticated)
-- i18n for all auth messages (English + Spanish)
+- ClickHouse `audit_events` table
+- `ClickHouseAuditService` implementation
+- `IAuditOutbox` in-memory staging buffer
+- Health check for ClickHouse
+- Audit event types: Authentication, CRUD, Transaction, Collaboration
+- Integration tests for persistence and querying
 
 ### ❌ Excluded
 
-- Social login buttons — Phase 8b
-- Password strength meter — basic validation only
-- "Remember me" checkbox — refresh tokens handle this
+- Audit UI (viewing logs) — Phase 8c
+- Audit search/filtering — Phase 8c
+- Audit retention policies — indefinite for MVP
+- Audit event versioning — all v1
 
 ---
 
@@ -45,73 +39,59 @@
 
 ### New Files
 
-**sites/Kakeibo.App/src/views/auth/**:
+**Kakeibo.Infrastructure/Audit/**:
 ```
-LoginView.vue
-RegisterView.vue
-VerifyEmailView.vue
-ForgotPasswordView.vue
-ResetPasswordView.vue
-```
-
-**sites/Kakeibo.App/src/components/auth/**:
-```
-LoginForm.vue
-RegisterForm.vue
-ForgotPasswordForm.vue
-ResetPasswordForm.vue
+IAuditService.cs
+ClickHouseAuditService.cs
+ClickHouseOptions.cs
+IAuditOutbox.cs
+AuditOutbox.cs
 ```
 
-**sites/Kakeibo.App/src/stores/**:
+**Kakeibo.Infrastructure/HealthChecks/**:
 ```
-auth.ts                 — useAuthStore
-```
-
-**sites/Kakeibo.App/src/lib/**:
-```
-axios.ts                — Axios instance with interceptors
+ClickHouseHealthCheck.cs
 ```
 
-### Routes
+### Database
 
-```typescript
-{
-  path: '/login',
-  name: 'login',
-  component: () => import('@/views/auth/LoginView.vue'),
-  meta: { requiresAuth: false }
-},
-{
-  path: '/register',
-  name: 'register',
-  component: () => import('@/views/auth/RegisterView.vue'),
-  meta: { requiresAuth: false }
-},
-// ... more auth routes
+```sql
+CREATE TABLE audit.audit_events (
+  id UUID,
+  user_id UUID NOT NULL,
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(100),
+  entity_id UUID,
+  occurred_at DateTime64(3) NOT NULL,
+  ip_address VARCHAR(45),
+  user_agent VARCHAR(500),
+  changes String,
+  INDEX idx_user (user_id),
+  INDEX idx_action (action),
+  INDEX idx_occurred (occurred_at)
+) ENGINE = MergeTree()
+ORDER BY (user_id, occurred_at);
 ```
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Login screen validates email format and password
-- [ ] Register screen validates password confirmation
-- [ ] Email verification shows success/failure
-- [ ] Password recovery sends email
-- [ ] Password reset validates token
-- [ ] `useAuthStore` manages tokens
-- [ ] Axios interceptor injects auth headers
-- [ ] Axios 401 handler triggers refresh
-- [ ] Route guards redirect unauthenticated users
-- [ ] All text translated (en + es)
-- [ ] E2E test: register → verify → login → logout
-- [ ] E2E test: password recovery
+- [ ] ClickHouse table created
+- [ ] `ClickHouseAuditService` writes events
+- [ ] `IAuditOutbox` stages events
+- [ ] Health check passes
+- [ ] Integration test: stage → flush → query
 
 ---
 
 ## Definition of "Phase 1d Completed"
 
-1. All 5 screens functional
-2. Auth infrastructure complete
-3. Tests pass (E2E)
-4. Phase 2 can begin
+1. All audit infrastructure functional
+2. All acceptance criteria checked (5 items)
+3. Integration tests pass
+4. Phase 1e can begin (Frontend uses Identity)
+
+---
+
+**Next Sub-Phase:** [Phase 1e: Identity Frontend](./phase-1e.md)

@@ -1,7 +1,7 @@
-# Phase 1b: Audit Logging
+# Phase 1b: Identity Backend
 
 **Status**: Not Started
-**Objective**: Implement audit trail for all user actions using ClickHouse
+**Objective**: Implement JWT authentication with user registration and password recovery
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Item | Status |
 |------|--------|
-| ClickHouse running | ✅ Phase 0 |
-| Outbox Pattern | ⏳ Phase 1a |
-| `IAuditOutbox` interface | ⏳ Phase 1a |
+| Infrastructure Base | ✅ Phase 1a |
+| Email Service | ✅ Phase 1a |
+| PostgreSQL | ✅ Phase 1a |
 
 ---
 
@@ -19,75 +19,101 @@
 
 ### ✅ Included
 
-- ClickHouse `audit_events` table
-- `ClickHouseAuditService` implementation
-- `IAuditOutbox` in-memory staging buffer
-- Health check for ClickHouse
-- Audit event types: Authentication, CRUD, Transaction, Collaboration
-- Integration tests for persistence and querying
+**User Management**:
+- Registration (email + password)
+- Email verification (confirmation link)
+- Login (JWT access + refresh tokens)
+- Token refresh with rotation
+- Password recovery (email token)
+- Password reset
+- Session tracking
+- OAuth (Google, Apple) — basic
+
+**Security**:
+- PBKDF2-SHA512 password hashing
+- JWT tokens: access (15min), refresh (7 days, HttpOnly cookie)
+- Email verification required for login
+- Password strength validation (min 8 chars, upper, lower, digit)
 
 ### ❌ Excluded
 
-- Audit UI (viewing logs) — Phase 8c
-- Audit search/filtering — Phase 8c
-- Audit retention policies — indefinite for MVP
-- Audit event versioning — all v1
+- MFA — post-MVP
+- Account deletion — Phase 8c
+- Password change UI — Phase 8c
+- Session management UI — Phase 8c
 
 ---
 
 ## Deliverables
 
-### New Files
+### Module Structure
 
-**Kakeibo.Infrastructure/Audit/**:
+**Kakeibo.Modules.Identity/**:
 ```
-IAuditService.cs
-ClickHouseAuditService.cs
-ClickHouseOptions.cs
-IAuditOutbox.cs
-AuditOutbox.cs
+Entities/
+  User.cs
+  RefreshToken.cs
+  PasswordResetToken.cs
+  Session.cs
+
+Features/
+  Register/
+  VerifyEmail/
+  Login/
+  RefreshToken/
+  Logout/
+  ForgotPassword/
+  ResetPassword/
+  GetCurrentUser/
+
+Services/
+  JwtService.cs
+  PasswordHasher.cs
 ```
 
-**Kakeibo.Infrastructure/HealthChecks/**:
-```
-ClickHouseHealthCheck.cs
-```
+### Endpoints
 
-### Database
+- `POST /api/auth/register`
+- `POST /api/auth/verify-email`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+- `GET /api/auth/me`
 
-```sql
-CREATE TABLE audit.audit_events (
-  id UUID,
-  user_id UUID NOT NULL,
-  action VARCHAR(100) NOT NULL,
-  entity_type VARCHAR(100),
-  entity_id UUID,
-  occurred_at DateTime64(3) NOT NULL,
-  ip_address VARCHAR(45),
-  user_agent VARCHAR(500),
-  changes String,
-  INDEX idx_user (user_id),
-  INDEX idx_action (action),
-  INDEX idx_occurred (occurred_at)
-) ENGINE = MergeTree()
-ORDER BY (user_id, occurred_at);
-```
+### Integration Events
+
+- `UserRegisteredEvent`
+- `UserLoggedInEvent`
+- `UserLoggedOutEvent`
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] ClickHouse table created
-- [ ] `ClickHouseAuditService` writes events
-- [ ] `IAuditOutbox` stages events
-- [ ] Health check passes
-- [ ] Integration test: stage → flush → query
+- [ ] User registration creates unverified user
+- [ ] Verification email sent with token
+- [ ] Email verification marks user as verified
+- [ ] Login validates credentials + email verification
+- [ ] JWT tokens issued (access 15min, refresh 7d)
+- [ ] Token refresh rotates refresh token
+- [ ] Password recovery sends email with token
+- [ ] Password reset validates token and updates password
+- [ ] Integration events published
+- [ ] Unit tests >= 90% coverage
+- [ ] Integration tests: full auth flows
 
 ---
 
 ## Definition of "Phase 1b Completed"
 
-1. All audit infrastructure functional
-2. All acceptance criteria checked (5 items)
-3. Integration tests pass
-4. Phase 1c can begin (Identity uses audit)
+1. All 8 endpoints functional
+2. All security measures implemented
+3. Integration events published
+4. Tests pass (unit + integration)
+5. Phase 1c can begin
+
+---
+
+**Next Sub-Phase:** [Phase 1c: Outbox Pattern](./phase-1c.md)

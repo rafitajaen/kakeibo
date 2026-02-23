@@ -29,7 +29,7 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 
 ## 🚧 Version 3.0 - Single-Tenant MVP
 
-**Current Status:** 🔨 **Phase 0 (Base Infrastructure) - Partially Complete**
+**Current Status:** 🔨 **Phase 1a (Infrastructure Base) - Partially Complete**
 
 ⚠️ **Early Development Notice:** This project is in the foundation phase. Most features are planned but not yet implemented. The current focus is establishing the architectural foundation, development environment, and core infrastructure.
 
@@ -345,7 +345,7 @@ Backend formatting (`dotnet format`) is **never** run by Claude — the user run
 
 ## 📊 Roadmap
 
-**Current Phase:** Phase 0 - Base Infrastructure (Partially Complete)
+**Current Phase:** Phase 1a - Infrastructure Base (Partially Complete)
 
 For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
