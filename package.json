@@ -1,6 +1,6 @@
 {
   "name": "kakeibo",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,14 +8,12 @@
     "api:build": "dotnet build Kakeibo.slnx --configuration Release",
     "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
     "api:test": "dotnet test tests/Kakeibo.Modules.Identity.Tests/ --configuration Release",
-
     "email:install": "cd services/Kakeibo.Email && bun install",
     "email:typecheck": "cd services/Kakeibo.Email && bun run typecheck",
     "email:lint": "cd services/Kakeibo.Email && bun run lint",
     "email:format": "cd services/Kakeibo.Email && bun run format",
     "email:format:check": "cd services/Kakeibo.Email && bun run format:check",
     "email:test": "cd services/Kakeibo.Email && bun run test",
-
     "app:install": "cd sites/Kakeibo.App && bun install",
     "app:dev": "cd sites/Kakeibo.App && bun run dev",
     "app:build": "cd sites/Kakeibo.App && bun run build",
@@ -26,7 +24,6 @@
     "app:format:check": "cd sites/Kakeibo.App && bun run format:check",
     "app:test:unit": "cd sites/Kakeibo.App && bun run test:unit",
     "app:test:e2e": "cd sites/Kakeibo.App && bun run test:e2e",
-
     "docker:build:api": "docker build -f src/Kakeibo.Api/Dockerfile -t kakeibo-api .",
     "docker:build:email": "docker build -f services/Kakeibo.Email/Dockerfile -t kakeibo-email ./services/Kakeibo.Email",
     "docker:build:app": "docker build -f sites/Kakeibo.App/Dockerfile -t kakeibo-app ./sites/Kakeibo.App",
