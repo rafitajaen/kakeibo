@@ -1,0 +1,53 @@
+{
+  "name": "kakeibo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api:restore": "dotnet restore Kakeibo.slnx",
+    "api:build": "dotnet build Kakeibo.slnx --configuration Release",
+    "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
+    "api:test": "dotnet test tests/Kakeibo.Modules.Identity.Tests/ --configuration Release",
+
+    "email:install": "cd services/Kakeibo.Email && bun install",
+    "email:typecheck": "cd services/Kakeibo.Email && bun run typecheck",
+    "email:lint": "cd services/Kakeibo.Email && bun run lint",
+    "email:format": "cd services/Kakeibo.Email && bun run format",
+    "email:format:check": "cd services/Kakeibo.Email && bun run format:check",
+    "email:test": "cd services/Kakeibo.Email && bun run test",
+
+    "app:install": "cd sites/Kakeibo.App && bun install",
+    "app:dev": "cd sites/Kakeibo.App && bun run dev",
+    "app:build": "cd sites/Kakeibo.App && bun run build",
+    "app:typecheck": "cd sites/Kakeibo.App && bun run typecheck",
+    "app:lint": "cd sites/Kakeibo.App && bun run lint",
+    "app:lint:check": "cd sites/Kakeibo.App && bun run lint:check",
+    "app:format": "cd sites/Kakeibo.App && bun run format",
+    "app:format:check": "cd sites/Kakeibo.App && bun run format:check",
+    "app:test:unit": "cd sites/Kakeibo.App && bun run test:unit",
+    "app:test:e2e": "cd sites/Kakeibo.App && bun run test:e2e",
+
+    "docker:build:api": "docker build -f src/Kakeibo.Api/Dockerfile -t kakeibo-api .",
+    "docker:build:email": "docker build -f services/Kakeibo.Email/Dockerfile -t kakeibo-email ./services/Kakeibo.Email",
+    "docker:build:app": "docker build -f sites/Kakeibo.App/Dockerfile -t kakeibo-app ./sites/Kakeibo.App",
+    "docker:build:all": "bun run docker:build:api && bun run docker:build:email && bun run docker:build:app"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.0",
+    "@semantic-release/npm": "^12.0.0",
+    "@semantic-release/release-notes-generator": "^14.0.0",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
+    "lefthook": "^1.10.8",
+    "semantic-release": "^24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rafitajaen/kakeibo.git"
+  }
+}

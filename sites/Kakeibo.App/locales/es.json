@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Kakeibo",
+    "welcome": "Bienvenido a Kakeibo",
+    "tagline": "Gestión consciente del dinero para presupuestos personales y gastos colaborativos"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar"
+  }
+}

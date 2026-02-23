@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kakeibo.Api/Kakeibo.Api.csproj" />
+    <Project Path="src/Kakeibo.Common/Kakeibo.Common.csproj" />
+    <Project Path="src/Kakeibo.Contracts/Kakeibo.Contracts.csproj" />
+    <Project Path="src/Kakeibo.Infrastructure/Kakeibo.Infrastructure.csproj" />
+    <Project Path="src/Kakeibo.Modules.Identity/Kakeibo.Modules.Identity.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kakeibo.Modules.Identity.Tests/Kakeibo.Modules.Identity.Tests.csproj" />
+  </Folder>
+</Solution>

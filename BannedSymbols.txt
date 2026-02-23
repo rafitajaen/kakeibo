@@ -1,0 +1,16 @@
+# Banned API symbols for Microsoft.CodeAnalysis.BannedApiAnalyzers
+# Format: Fully qualified type or member name
+
+# CRITICAL: Guid.CreateVersion7() has broken byte order for PostgreSQL indexing
+# Use Guid7.NewGuid() from Kakeibo.Common.Utils instead
+M:System.Guid.CreateVersion7;Use Guid7.NewGuid() instead - CreateVersion7() has broken byte order
+
+# CRITICAL: DateTime/DateTimeOffset/DateOnly are prohibited - use NodaTime
+T:System.DateTime;Use NodaTime types instead
+T:System.DateTimeOffset;Use NodaTime types instead
+T:System.DateOnly;Use NodaTime types instead
+P:System.DateTime.Now;Use SystemClock.Instance.GetCurrentInstant() instead
+P:System.DateTime.UtcNow;Use SystemClock.Instance.GetCurrentInstant() instead
+P:System.DateTime.Today;Use SystemClock.Instance.GetCurrentInstant().InUtc().Date instead
+P:System.DateTimeOffset.Now;Use SystemClock.Instance.GetCurrentInstant() instead
+P:System.DateTimeOffset.UtcNow;Use SystemClock.Instance.GetCurrentInstant() instead

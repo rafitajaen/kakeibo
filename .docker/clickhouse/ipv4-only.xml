@@ -1,0 +1,4 @@
+<clickhouse>
+    <!-- Force IPv4 only - fixes "Address family not supported" warnings in Docker -->
+    <listen_host>0.0.0.0</listen_host>
+</clickhouse>
