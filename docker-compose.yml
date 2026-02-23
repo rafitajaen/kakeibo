@@ -1,0 +1,167 @@
+services:
+  # PostgreSQL 18 - Main relational database
+  postgresdb:
+    image: postgres:18.1-alpine
+    container_name: kakeibo-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"  ## REMOVE ON PRODUCTION
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - postgres-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Redis 8.4 - Distributed cache
+  redis:
+    image: redis:8.4-alpine
+    container_name: kakeibo-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - redis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  # Redis Insight - Redis GUI
+  redis-insight:
+    image: redis/redisinsight:3.0.2
+    container_name: kakeibo-redis-insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis-insight-data:/data
+    networks:
+      - redis-network
+    restart: unless-stopped
+
+  # RustFS - S3-compatible storage (alpha.83)
+  rustfs:
+    image: rustfs/rustfs:1.0.0-alpha.83
+    container_name: kakeibo-rustfs
+    command: server /data --console-address :9001
+    environment:
+      RUSTFS_ROOT_USER: ${STORAGE_ACCESS_KEY}
+      RUSTFS_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    volumes:
+      - rustfs-data:/data
+      - rustfs-logs:/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ClickHouse 24.12 - Analytical database
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    container_name: kakeibo-clickhouse
+    ports:
+      - "8123:8123"  # HTTP
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+      - ./.docker/clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro
+      - ./.docker/clickhouse/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml:ro
+      - ./.docker/clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro
+    networks:
+      - clickhouse-network
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Mailpit - Development email capture
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: kakeibo-mailpit
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025/api/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  # Email Renderer - Bun + Hono + React Email
+  email-renderer:
+    build:
+      context: ./services/Kakeibo.Email
+      dockerfile: Dockerfile
+    container_name: kakeibo-email-renderer
+    ports:
+      - "3050:3050"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3050/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  # Aspire Dashboard - OpenTelemetry UI
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:10.0
+    container_name: kakeibo-aspire-dashboard
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "18888:18888"  # Dashboard UI
+      - "18889:18889"  # OTLP gRPC receiver
+    restart: unless-stopped
+
+networks:
+  postgres-network:
+    name: kakeibo-postgres-network
+  redis-network:
+    name: kakeibo-redis-network
+  clickhouse-network:
+    name: kakeibo-clickhouse-network
+
+volumes:
+  postgres-data:
+    name: kakeibo-postgres-data
+  redis-data:
+    name: kakeibo-redis-data
+  redis-insight-data:
+    name: kakeibo-redis-insight-data
+  rustfs-data:
+    name: kakeibo-rustfs-data
+  rustfs-logs:
+    name: kakeibo-rustfs-logs
+  clickhouse-data:
+    name: kakeibo-clickhouse-data
+  clickhouse-logs:
+    name: kakeibo-clickhouse-logs

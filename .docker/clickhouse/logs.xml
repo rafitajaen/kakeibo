@@ -1,0 +1,21 @@
+<clickhouse>
+    <!-- Set log level to warning (reduce noise) -->
+    <logger>
+        <level>warning</level>
+    </logger>
+
+    <!-- Enable query log with 30-day TTL -->
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <ttl>30</ttl>
+    </query_log>
+
+    <!-- Disable noisy internal logs -->
+    <metric_log remove="1"/>
+    <query_thread_log remove="1"/>
+    <text_log remove="1"/>
+    <trace_log remove="1"/>
+    <asynchronous_metric_log remove="1"/>
+    <part_log remove="1"/>
+</clickhouse>

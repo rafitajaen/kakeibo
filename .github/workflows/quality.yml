@@ -1,0 +1,144 @@
+name: Quality Gates
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality-api:
+    name: Quality - API
+    runs-on: ubuntu-latest
+    if: false  # Disabled by default - change to true to activate
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:10.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore Kakeibo.slnx
+
+      - name: Check code formatting
+        run: dotnet format Kakeibo.slnx --verify-no-changes
+
+      - name: Build solution
+        run: dotnet build Kakeibo.slnx --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test tests/Kakeibo.Modules.Identity.Tests/ --configuration Release --no-build
+
+  quality-email:
+    name: Quality - Email
+    runs-on: ubuntu-latest
+    if: false  # Disabled by default - change to true to activate
+    container:
+      image: oven/bun:1.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('services/Kakeibo.Email/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: cd services/Kakeibo.Email && bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: cd services/Kakeibo.Email && bun run typecheck
+
+      - name: Lint
+        run: cd services/Kakeibo.Email && bun run lint
+
+      - name: Check formatting
+        run: cd services/Kakeibo.Email && bun run format:check
+
+      - name: Run tests
+        run: cd services/Kakeibo.Email && bun run test
+
+  quality-app:
+    name: Quality - App
+    runs-on: ubuntu-latest
+    if: false  # Disabled by default - App does not exist yet, change to true when sites/Kakeibo.App is created
+    container:
+      image: oven/bun:1.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('sites/Kakeibo.App/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: cd sites/Kakeibo.App && bun install --frozen-lockfile
+
+      - name: Lint
+        run: cd sites/Kakeibo.App && bun run lint:check
+
+      # Note: oxfmt check disabled due to DataCloneError in Bun CI (Bun #25610, oxc #17801)
+      # Pre-commit hook enforces formatting locally
+
+      - name: Run unit tests
+        run: cd sites/Kakeibo.App && bun run test:unit
+
+      - name: Build
+        run: cd sites/Kakeibo.App && bun run build
+
+  quality-docker:
+    name: Quality - Docker
+    runs-on: ubuntu-latest
+    if: false  # Disabled by default - change to true to activate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/Kakeibo.Api/Dockerfile
+          push: false
+          tags: kakeibo-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Email image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/Kakeibo.Email
+          file: services/Kakeibo.Email/Dockerfile
+          push: false
+          tags: kakeibo-email:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build App image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./sites/Kakeibo.App
+          file: sites/Kakeibo.App/Dockerfile
+          push: false
+          tags: kakeibo-app:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

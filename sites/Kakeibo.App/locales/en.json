@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": "Kakeibo",
+    "welcome": "Welcome to Kakeibo",
+    "tagline": "Mindful money management for personal budgeting and collaborative expenses"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  }
+}
