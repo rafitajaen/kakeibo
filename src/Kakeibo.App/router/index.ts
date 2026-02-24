@@ -47,6 +47,48 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/auth/ResetPasswordView.vue"),
         meta: { requiresGuest: true },
     },
+    {
+        path: "/wallets",
+        name: "wallets",
+        component: () => import("@/views/wallets/WalletsView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/new",
+        name: "wallets-create",
+        component: () => import("@/views/wallets/CreateWalletView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:id",
+        name: "wallet-detail",
+        component: () => import("@/views/wallets/WalletDetailView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:id/edit",
+        name: "wallet-edit",
+        component: () => import("@/views/wallets/EditWalletView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:id/members",
+        name: "wallet-members",
+        component: () => import("@/views/wallets/SharedWalletView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:id/invite",
+        name: "wallet-invite",
+        component: () => import("@/views/wallets/InviteMemberView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        // No requiresAuth — view handles unauthenticated users with redirect-to-login flow.
+        path: "/wallets/invitations/:code/accept",
+        name: "accept-invitation",
+        component: () => import("@/views/wallets/AcceptInvitationView.vue"),
+    },
 ];
 
 const router = createRouter({

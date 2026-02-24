@@ -29,22 +29,24 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 
 ## 🚧 Version 3.0 - Single-Tenant MVP
 
-**Current Status:** 🔨 **Phase 1a (Infrastructure Base) - Partially Complete**
-
-⚠️ **Early Development Notice:** This project is in the foundation phase. Most features are planned but not yet implemented. The current focus is establishing the architectural foundation, development environment, and core infrastructure.
+**Current Status:** 🔨 **Phase 2b (Wallets + Collaboration) - Complete**
 
 ### What Works Now
 - ✅ Solution structure: 2 projects (Kakeibo.Api + Kakeibo.Tests)
 - ✅ Docker Compose environment (8 infrastructure services)
-- ✅ CI/CD pipeline skeleton (GitHub Actions)
-- ✅ Development tooling (lefthook, commitlint, semantic-release)
-- ✅ Email rendering service (Bun + Hono + React Email)
+- ✅ CI/CD pipeline (GitHub Actions + semantic-release)
+- ✅ Development tooling (lefthook, commitlint, oxlint, oxfmt)
+- ✅ Email rendering service (Bun + Hono + React Email) — `WalletInvitation` template
 - ✅ Core abstractions: Entity, Result&lt;T&gt;, Error, IEndpoint, IEventBus, ChannelEventBus, EventDispatcher
 - ✅ Architecture tests: naming convention enforcement (Kakeibo.Tests)
+- ✅ **Phase 1 — Identity:** Registration, login, JWT tokens, sessions, password recovery, audit logging, full auth frontend
+- ✅ **Phase 2a — Personal Wallets:** Backend (CRUD + events + migration) + Frontend (store, components, views, i18n)
+- ✅ **Phase 2b — Shared Wallets + Invitations:** Backend (WalletMember, Invitation, member management endpoints, email integration) + Frontend (member list, invitation form, accept flow) + Email template
 
 ### What's Coming
-- 🔨 **Phase 1 (In Progress):** Identity - Authentication, registration, email verification, JWT tokens, password recovery
-- ⏳ **Phases 2-6 (Planned):** Business domains - Wallets, Transactions, Budgets, Goals, Recurring
+- 🔨 **Phase 3 (Next):** Transactions + Categories - Recording income/expense/transfer, categorization, balance tracking
+- ⏳ **Phase 2c (After Phase 3b):** Transaction Splits, Debt Calculation, Settlements
+- ⏳ **Phases 4-6 (Planned):** Budgets, Goals, Recurring
 - ⏳ **Phase 7 (Planned):** Notifications + Auditing
 - ⏳ **Phase 8 (Planned):** Dashboard + Production launch
 
@@ -67,10 +69,10 @@ Kakeibo uses a **simple monolith** with vertical slices and screaming architectu
 
 | Tier | Domain | Status | Description |
 |------|--------|--------|-------------|
-| **Platform Core** | Identity | 🔨 In Progress | Authentication, user accounts, sessions, password recovery |
+| **Platform Core** | Identity | ✅ Done | Authentication, user accounts, sessions, password recovery |
 | **Platform Core** | Notifications | ⏳ Planned | Multi-channel notifications (email, push, in-app) |
-| **Platform Core** | Auditing | ⏳ Planned | Activity logs, audit trail, immutable event recording |
-| **Financial Core** | Wallets | ⏳ Planned | Personal + shared wallets, invitations, splits, debts, settlements |
+| **Platform Core** | Auditing | ✅ Done (Phase 1c) | Activity logs, audit trail, immutable event recording |
+| **Financial Core** | Wallets | 🔨 Partial (2a+2b done, 2c deferred) | Personal + shared wallets, invitations, splits, debts, settlements |
 | **Financial Core** | Transactions | ⏳ Planned | Income, expense, transfer recording + categorization |
 | **Planning** | Budgets | ⏳ Planned | Spending limits, budget monitoring, alerts |
 | **Planning** | Goals | ⏳ Planned | Savings targets, progress tracking, milestones |
@@ -342,7 +344,7 @@ Backend formatting (`dotnet format`) is **never** run by Claude — the user run
 
 ## 📊 Roadmap
 
-**Current Phase:** Phase 1a - Infrastructure Base (Partially Complete)
+**Current Phase:** Phase 2b - Wallets + Collaboration (Complete)
 
 For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
@@ -350,11 +352,13 @@ For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/r
 
 | Phase | Status | Deliverables |
 |-------|--------|-------------|
-| **1a - Infrastructure Base** | 🔨 Partial | Solution structure, Docker Compose, CI pipeline, Email service, core abstractions, ChannelEventBus |
-| **1b - Identity Backend** | ⏳ Planned | Registration, login, JWT tokens, sessions, password recovery |
-| **1c - Audit Logging** | ⏳ Planned | ClickHouse integration, IEventHandler implementations |
-| **1d - Identity Frontend** | ⏳ Planned | Login/register screens, token refresh, route guards |
-| **2 - Wallets + Collaboration** | ⏳ Planned | Personal/shared wallets, invitations, splits, debts, settlements |
+| **1a - Infrastructure Base** | ✅ Done | Solution structure, Docker Compose, CI pipeline, Email service, core abstractions, ChannelEventBus |
+| **1b - Identity Backend** | ✅ Done | Registration, login, JWT tokens, sessions, password recovery |
+| **1c - Audit Logging** | ✅ Done | ClickHouse integration, IEventHandler implementations |
+| **1d - Identity Frontend** | ✅ Done | Login/register screens, token refresh, route guards |
+| **2a - Personal Wallets** | ✅ Done | Personal wallet CRUD, archive, events, frontend store + views |
+| **2b - Shared Wallets + Invitations** | ✅ Done | Shared wallets, member management, invitation flow, email template |
+| **2c - Splits + Debts + Settlements** | ⏳ Deferred (after Phase 3b) | Transaction splits, debt calculation, settlement recording |
 | **3 - Transactions + Categories** | ⏳ Planned | Recording, editing, deletion, categorization, 12 system categories |
 | **4 - Budgets** | ⏳ Planned | Personal + shared budgets, spending tracking, warnings |
 | **5 - Goals** | ⏳ Planned | Savings targets, milestones, progress tracking |

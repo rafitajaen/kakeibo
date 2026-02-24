@@ -84,5 +84,76 @@
       "tokenInvalid": "Este enlace no es válido.",
       "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
     }
+  },
+  "wallets": {
+    "title": "Carteras",
+    "personal": "Personal",
+    "shared": "Compartida",
+    "archived": "Archivada",
+    "empty": "Sin carteras",
+    "emptyPersonal": "No tienes carteras personales. Crea una para empezar.",
+    "emptyShared": "No tienes carteras compartidas.",
+    "emptyArchived": "No tienes carteras archivadas.",
+    "balance": "Saldo",
+    "currency": "Moneda",
+    "createNew": "Nueva cartera",
+    "type": {
+      "personal": "Personal",
+      "shared": "Compartida"
+    },
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "p. ej. Cuenta corriente",
+      "type": "Tipo",
+      "typePlaceholder": "Selecciona un tipo",
+      "submit": "Crear cartera",
+      "submitEdit": "Guardar cambios"
+    },
+    "actions": {
+      "edit": "Editar",
+      "archive": "Archivar",
+      "archiveConfirm": "¿Seguro que quieres archivar esta cartera?"
+    },
+    "errors": {
+      "conflict": "Ya existe una cartera con este nombre.",
+      "notFound": "Cartera no encontrada.",
+      "forbidden": "No tienes acceso a esta cartera.",
+      "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+    },
+    "members": {
+      "title": "Miembros",
+      "invite": "Invitar miembro",
+      "owner": "Propietario",
+      "joinedAt": "Se unió",
+      "removeSelf": "Abandonar cartera",
+      "removeMember": "Eliminar",
+      "removeConfirm": "¿Seguro que quieres eliminar a este miembro?",
+      "leaveConfirm": "¿Seguro que quieres abandonar esta cartera?",
+      "empty": "Sin miembros todavía.",
+      "debtSection": "Resumen de deudas (próximamente)",
+      "errors": {
+        "conflict": "Este usuario ya es miembro.",
+        "forbidden": "No tienes permiso para realizar esta acción.",
+        "notFound": "Miembro no encontrado.",
+        "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+      }
+    },
+    "invitation": {
+      "title": "Invitar a la cartera",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "amigo{'@'}ejemplo.com",
+      "submit": "Enviar invitación",
+      "success": "Invitación enviada correctamente.",
+      "acceptTitle": "¡Has sido invitado!",
+      "acceptDescription": "Has sido invitado a unirte a una cartera compartida. Inicia sesión para aceptar.",
+      "accept": "Aceptar invitación",
+      "accepted": "Invitación aceptada. Ahora eres miembro de la cartera.",
+      "errors": {
+        "notFound": "Invitación no encontrada o expirada.",
+        "validation": "Esta invitación ya no es válida (expirada o revocada).",
+        "conflict": "Ya eres miembro de esta cartera.",
+        "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+      }
+    }
   }
 }

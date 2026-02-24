@@ -84,5 +84,76 @@
       "tokenInvalid": "This link is invalid.",
       "unexpected": "Something went wrong. Please try again."
     }
+  },
+  "wallets": {
+    "title": "Wallets",
+    "personal": "Personal",
+    "shared": "Shared",
+    "archived": "Archived",
+    "empty": "No wallets yet",
+    "emptyPersonal": "No personal wallets. Create one to get started.",
+    "emptyShared": "No shared wallets.",
+    "emptyArchived": "No archived wallets.",
+    "balance": "Balance",
+    "currency": "Currency",
+    "createNew": "New wallet",
+    "type": {
+      "personal": "Personal",
+      "shared": "Shared"
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "e.g. Checking Account",
+      "type": "Type",
+      "typePlaceholder": "Select a type",
+      "submit": "Create wallet",
+      "submitEdit": "Save changes"
+    },
+    "actions": {
+      "edit": "Edit",
+      "archive": "Archive",
+      "archiveConfirm": "Are you sure you want to archive this wallet?"
+    },
+    "errors": {
+      "conflict": "A wallet with this name already exists.",
+      "notFound": "Wallet not found.",
+      "forbidden": "You do not have access to this wallet.",
+      "unexpected": "Something went wrong. Please try again."
+    },
+    "members": {
+      "title": "Members",
+      "invite": "Invite member",
+      "owner": "Owner",
+      "joinedAt": "Joined",
+      "removeSelf": "Leave wallet",
+      "removeMember": "Remove",
+      "removeConfirm": "Are you sure you want to remove this member?",
+      "leaveConfirm": "Are you sure you want to leave this wallet?",
+      "empty": "No members yet.",
+      "debtSection": "Debt summary (coming soon)",
+      "errors": {
+        "conflict": "This user is already a member.",
+        "forbidden": "You do not have permission to perform this action.",
+        "notFound": "Member not found.",
+        "unexpected": "Something went wrong. Please try again."
+      }
+    },
+    "invitation": {
+      "title": "Invite to wallet",
+      "email": "Email address",
+      "emailPlaceholder": "friend{'@'}example.com",
+      "submit": "Send invitation",
+      "success": "Invitation sent successfully.",
+      "acceptTitle": "You've been invited!",
+      "acceptDescription": "You have been invited to join a shared wallet. Sign in to accept.",
+      "accept": "Accept invitation",
+      "accepted": "Invitation accepted. You are now a member of the wallet.",
+      "errors": {
+        "notFound": "Invitation not found or has expired.",
+        "validation": "This invitation is no longer valid (expired or revoked).",
+        "conflict": "You are already a member of this wallet.",
+        "unexpected": "Something went wrong. Please try again."
+      }
+    }
   }
 }
