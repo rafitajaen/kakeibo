@@ -15,7 +15,8 @@ public sealed class RemoveMemberHandler(AppDbContext db, IEventBus eventBus)
         Guid requesterId,
         CancellationToken ct)
     {
-        var wallet = await db.Wallets.FirstOrDefaultAsync(w => w.Id == walletId, ct);
+        var wallet = await db.Wallets
+            .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
         if (wallet is null)
             return Error.NotFound("Wallet not found.");
 
@@ -35,6 +36,11 @@ public sealed class RemoveMemberHandler(AppDbContext db, IEventBus eventBus)
 
         if (member is null)
             return Error.NotFound("Member not found in this wallet.");
+
+        // Enforce minimum 2 members — a shared wallet cannot drop to a single participant
+        var memberCount = await db.WalletMembers.CountAsync(m => m.WalletId == walletId, ct);
+        if (memberCount <= 1)
+            return Error.Validation("A shared wallet must have at least 2 members. Archive the wallet instead of removing the last member.");
 
         // Hard-delete WalletMember — audit trail is in ClickHouse (plan decision)
         db.WalletMembers.Remove(member);

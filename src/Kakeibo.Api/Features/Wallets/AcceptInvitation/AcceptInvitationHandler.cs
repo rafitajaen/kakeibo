@@ -5,6 +5,7 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
+using Npgsql;
 
 namespace Kakeibo.Api.Features.Wallets.AcceptInvitation;
 
@@ -66,7 +67,15 @@ public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus,
             UserId = userId
         });
 
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == "23505")
+        {
+            // Unique constraint violation — two concurrent requests accepted the same invitation
+            return Error.Conflict("You are already a member of this wallet.");
+        }
 
         return new AcceptInvitationEndpoint.AcceptInvitationResponse(
             invitation.WalletId,

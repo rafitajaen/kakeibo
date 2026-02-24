@@ -54,4 +54,17 @@ internal static class TestDbContextFactory
         await context.Database.EnsureCreatedAsync();
         return context;
     }
+
+    // Creates a second DbContext pointing to the same database as an existing context.
+    // Use this for concurrency tests where two contexts must share the same DB state.
+    public static AppDbContext CreateSecondContext(AppDbContext existingContext)
+    {
+        var connStr = existingContext.Database.GetConnectionString()!;
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(connStr, npgsql => npgsql.UseNodaTime())
+            .UseSnakeCaseNamingConvention()
+            .Options;
+
+        return new AppDbContext(options);
+    }
 }

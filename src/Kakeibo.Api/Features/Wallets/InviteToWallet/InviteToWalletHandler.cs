@@ -6,6 +6,7 @@ using Kakeibo.Api.Infrastructure.Email;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.InviteToWallet;
@@ -15,7 +16,8 @@ public sealed class InviteToWalletHandler(
     AppDbContext db,
     IEventBus eventBus,
     IEmailService emailService,
-    IClock clock)
+    IClock clock,
+    ILogger<InviteToWalletHandler> logger)
 {
     // Max pending invitations per wallet to prevent spam
     private const int MaxPendingInvitations = 50;
@@ -100,15 +102,22 @@ public sealed class InviteToWalletHandler(
 
         await db.SaveChangesAsync(ct);
 
-        // Send invitation email fire-and-forget — do not await to avoid blocking the response
+        // Send invitation email fire-and-forget — do not await to avoid blocking the response.
+        // Failures are logged but do not roll back the invitation (it exists in DB with a valid code).
         var inviterUser = await db.Users.FirstOrDefaultAsync(u => u.Id == requesterId, ct);
         _ = emailService.SendWalletInvitationEmailAsync(
-            invitation.Id,
-            request.InviteeEmail,
-            wallet.Name,
-            inviterUser?.Email ?? requesterId.ToString(),
-            invitation.Code,
-            CancellationToken.None);
+                invitation.Id,
+                request.InviteeEmail,
+                wallet.Name,
+                inviterUser?.Email ?? requesterId.ToString(),
+                invitation.Code,
+                CancellationToken.None)
+            .ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    logger.LogError(t.Exception, "Failed to send wallet invitation email to {InviteeEmail} for wallet {WalletId}.",
+                        request.InviteeEmail, walletId);
+            }, TaskScheduler.Default);
 
         return new InviteToWalletEndpoint.InviteToWalletResponse(
             invitation.Id,

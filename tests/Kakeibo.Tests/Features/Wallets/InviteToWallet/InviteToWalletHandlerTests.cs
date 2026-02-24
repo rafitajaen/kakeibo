@@ -3,6 +3,7 @@ using Kakeibo.Api.Features.Wallets.Events;
 using Kakeibo.Api.Features.Wallets.InviteToWallet;
 using Kakeibo.Api.Infrastructure.Events;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kakeibo.Tests.Features.Wallets.InviteToWallet;
 
@@ -50,7 +51,7 @@ public sealed class InviteToWalletHandlerTests
         var clock = new FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0));
         var eventBus = Substitute.For<IEventBus>();
         var emailService = Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>();
-        var handler = new InviteToWalletHandler(db, eventBus, emailService, clock);
+        var handler = new InviteToWalletHandler(db, eventBus, emailService, clock, NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db, "owner@example.com");
         var wallet = await CreateWalletAsync(db, owner.Id);
@@ -87,7 +88,8 @@ public sealed class InviteToWalletHandlerTests
             db,
             Substitute.For<IEventBus>(),
             Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>(),
-            new FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0)));
+            new FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0)),
+            NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db);
         var wallet = await CreateWalletAsync(db, owner.Id, WalletType.Personal);
@@ -109,7 +111,8 @@ public sealed class InviteToWalletHandlerTests
             db,
             Substitute.For<IEventBus>(),
             Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>(),
-            new FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0)));
+            new FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0)),
+            NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db, "owner@example.com");
         var outsider = await CreateUserAsync(db, "outsider@example.com");
@@ -133,7 +136,8 @@ public sealed class InviteToWalletHandlerTests
             db,
             Substitute.For<IEventBus>(),
             Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>(),
-            clock);
+            clock,
+            NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db);
         var wallet = await CreateWalletAsync(db, owner.Id);
@@ -159,7 +163,8 @@ public sealed class InviteToWalletHandlerTests
             db,
             Substitute.For<IEventBus>(),
             Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>(),
-            clock);
+            clock,
+            NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db, "owner@example.com");
         var member = await CreateUserAsync(db, "member@example.com");
@@ -188,7 +193,8 @@ public sealed class InviteToWalletHandlerTests
             db,
             Substitute.For<IEventBus>(),
             Substitute.For<Kakeibo.Api.Infrastructure.Email.IEmailService>(),
-            clock);
+            clock,
+            NullLogger<InviteToWalletHandler>.Instance);
 
         var owner = await CreateUserAsync(db, "owner@example.com");
         var member = await CreateUserAsync(db, "member@example.com");

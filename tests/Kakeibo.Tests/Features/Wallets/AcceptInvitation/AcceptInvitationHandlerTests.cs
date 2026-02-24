@@ -199,4 +199,39 @@ public sealed class AcceptInvitationHandlerTests
             () => Assert.True(result.IsFailure),
             () => Assert.Equal("conflict", result.Error.Code));
     }
+
+    [Fact]
+    public async Task HandleAsync_ConcurrentAccept_DbConstraintViolationReturnsConflict()
+    {
+        // Simulates the race condition where two requests pass the application-level
+        // alreadyMember check before either commits. The second SaveChangesAsync hits
+        // the (WalletId, UserId) unique constraint and must return Conflict, not 500.
+        await using var db1 = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var clock = new FakeClock(Instant.FromUtc(2026, 3, 1, 11, 0));
+
+        var owner = await CreateUserAsync(db1, "concurrent-owner@example.com");
+        var invitee = await CreateUserAsync(db1, "concurrent-invitee@example.com");
+        var (wallet, invitation) = await CreateWalletWithInvitationAsync(db1, owner.Id);
+
+        // db2 shares the same database as db1 — simulates the "first concurrent request" committing
+        await using var db2 = TestDbContextFactory.CreateSecondContext(db1);
+
+        // "First request" (db2): bypasses application checks and directly commits member + accepts invitation.
+        // This simulates the race condition where db2 wins the commit race.
+        db2.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = invitee.Id });
+        var inv2 = await db2.Invitations.FindAsync([invitation.Id], ct);
+        inv2!.AcceptedAt = clock.GetCurrentInstant();
+        await db2.SaveChangesAsync(ct);
+
+        // "Second request" (db1 handler): invitation still looks un-accepted in db1's context,
+        // so the handler passes the application-level check and tries to SaveChangesAsync.
+        // This must hit the (WalletId, UserId) unique constraint → DbUpdateException → Error.Conflict.
+        var handler = new AcceptInvitationHandler(db1, Substitute.For<IEventBus>(), clock);
+        var result = await handler.HandleAsync(invitation.Code, invitee.Id, ct);
+
+        Assert.Multiple(
+            () => Assert.True(result.IsFailure),
+            () => Assert.Equal("conflict", result.Error.Code));
+    }
 }

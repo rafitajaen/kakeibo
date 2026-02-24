@@ -12,7 +12,8 @@ public sealed class GetWalletHandler(AppDbContext db)
         Guid userId,
         CancellationToken ct)
     {
-        var wallet = await db.Wallets.FirstOrDefaultAsync(w => w.Id == walletId, ct);
+        var wallet = await db.Wallets
+            .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
             return Error.NotFound("Wallet not found.");
