@@ -9,6 +9,9 @@
   <ItemGroup>
     <!-- Authentication -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+    <!-- Audit -->
+    <PackageReference Include="ClickHouse.Client" />
     <!-- Caching -->
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="ZiggyCreatures.FusionCache" />
@@ -32,6 +35,7 @@
     <!-- NodaTime -->
     <PackageReference Include="NodaTime" />
     <!-- OpenAPI/Scalar -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
     <!-- OpenTelemetry -->
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
