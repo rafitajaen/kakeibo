@@ -34,15 +34,17 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 ⚠️ **Early Development Notice:** This project is in the foundation phase. Most features are planned but not yet implemented. The current focus is establishing the architectural foundation, development environment, and core infrastructure.
 
 ### What Works Now
-- ✅ Solution structure with 12 projects (4 infrastructure + 8 modules)
+- ✅ Solution structure: 2 projects (Kakeibo.Api + Kakeibo.Tests)
 - ✅ Docker Compose environment (8 infrastructure services)
 - ✅ CI/CD pipeline skeleton (GitHub Actions)
 - ✅ Development tooling (lefthook, commitlint, semantic-release)
 - ✅ Email rendering service (Bun + Hono + React Email)
+- ✅ Core abstractions: Entity, Result&lt;T&gt;, Error, IEndpoint, IEventBus, AppDbContext
+- ✅ Architecture tests: naming convention enforcement (Kakeibo.Tests)
 
 ### What's Coming
-- 🔨 **Phase 1 (In Progress):** Identity module - Authentication, registration, email verification
-- ⏳ **Phases 2-6 (Planned):** Business modules - Wallets, Transactions, Budgets, Goals, Recurring
+- 🔨 **Phase 1 (In Progress):** Identity - Authentication, registration, email verification
+- ⏳ **Phases 2-6 (Planned):** Business domains - Wallets, Transactions, Budgets, Goals, Recurring
 - ⏳ **Phase 7 (Planned):** Notifications + Auditing
 - ⏳ **Phase 8 (Planned):** Dashboard + Production launch
 
@@ -52,18 +54,18 @@ For detailed roadmap, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadm
 
 ## 🏗️ Architecture
 
-### Single-Tenant Modular Monolith
+### Simple Monolith
 
-Version 3.0 adopts a **single-tenant architecture** where each user operates within an isolated financial environment:
+Kakeibo uses a **simple monolith** with vertical slices and screaming architecture:
 
-- **Isolation:** Users cannot see or affect each other's personal financial data
-- **Personal Wallets:** Each user manages their own wallets, transactions, budgets, and goals
-- **Shared Contexts:** Users can create shared wallets for collaborative expense management
-- **Equal Participation:** All shared wallet members have identical permissions—no hierarchy
+- **2 projects:** `src/Kakeibo.Api/` (single runnable host) + `tests/Kakeibo.Tests/`
+- **Domain separation by folder**, not by assembly — `Features/Identity/`, `Features/Wallets/`, etc.
+- **Single `AppDbContext`** for all domains — one schema, one migrations history
+- **In-memory events** via `System.Threading.Channels` — fire-and-forget with no external queue
 
-### Module Structure (8 Modules)
+### Domain Structure (8 Business Domains in `Features/`)
 
-| Tier | Module | Status | Description |
+| Tier | Domain | Status | Description |
 |------|--------|--------|-------------|
 | **Platform Core** | Identity | 🔨 In Progress | Authentication, user accounts, sessions, password recovery |
 | **Platform Core** | Notifications | ⏳ Planned | Multi-channel notifications (email, push, in-app) |
@@ -74,20 +76,18 @@ Version 3.0 adopts a **single-tenant architecture** where each user operates wit
 | **Planning** | Goals | ⏳ Planned | Savings targets, progress tracking, milestones |
 | **Planning** | Recurring | ⏳ Planned | Pattern management, automatic transaction generation |
 
-**Note:** Collaboration features are integrated into the Wallets module. Categories are integrated into the Transactions module.
+**Note:** Collaboration features live in `Features/Wallets/`. Categories live in `Features/Transactions/`.
 
 ### Communication Patterns
 
-- **Sync (IModuleClient):** Request-response for immediate data needs (e.g., Budgets queries Transactions for spending data)
-- **Async (IModuleEventBus + Outbox):** Fire-and-forget with guaranteed delivery via transactional outbox (e.g., TransactionRecordedEvent triggers debt recalculation, budget updates)
+- **In-process events:** `IEventBus` + `ChannelEventBus` + `EventDispatcher` BackgroundService
+- **No message broker, no outbox, no cross-assembly contracts**
 
 ### Key Architectural Decisions
 
-- **Vertical Slices:** Each feature lives in its own folder with endpoint, handler, and validator
+- **Vertical Slices:** Each feature lives in `Features/{Domain}/{Operation}/` with endpoint, handler, and validator
 - **Screaming Architecture:** Folder names reflect business capabilities, not technical layers
-- **Event-Driven:** Modules communicate via integration events, never direct references
-- **One Schema Per Module:** Each module has its own PostgreSQL schema for logical separation
-- **No Cross-Module References:** Module A never references Module B's project (enforced by architecture tests)
+- **Single deployment unit:** One API project, one test project, no per-module projects
 
 ---
 
@@ -97,13 +97,13 @@ Version 3.0 adopts a **single-tenant architecture** where each user operates wit
 
 - **Runtime:** .NET 10 (LTS)
 - **API:** ASP.NET Core Minimal APIs with native REPR pattern (IEndpoint interface)
-- **Database:** PostgreSQL 18 with Entity Framework Core 10.0
+- **Database:** PostgreSQL 18 with Entity Framework Core 10.0 (single AppDbContext)
 - **Validation:** FluentValidation 12.1
 - **Caching:** FusionCache + Redis
 - **Background Jobs:** Hangfire + PostgreSQL storage
 - **Observability:** Serilog + OpenTelemetry + Aspire Dashboard
 - **Resilience:** Polly (retries, circuit breaker, timeouts)
-- **Event Reliability:** Outbox Pattern (transactional event publishing)
+- **Event Bus:** System.Threading.Channels (IEventBus, ChannelEventBus, EventDispatcher)
 - **Health Checks:** AspNetCore.HealthChecks (PostgreSQL, Redis, RustFS, ClickHouse)
 - **API Docs:** Scalar (replaces Swagger)
 - **Email:** MailKit (SMTP client)
@@ -150,9 +150,9 @@ Version 3.0 adopts a **single-tenant architecture** where each user operates wit
 
 ### Testing
 
-- **Backend:** xUnit v3 + NSubstitute + Testcontainers (PostgreSQL)
+- **Backend:** xUnit v3 + NSubstitute + Testcontainers (PostgreSQL) — all in `tests/Kakeibo.Tests/`
 - **Frontend:** Vitest + Playwright
-- **Architecture:** NetArchTest.Rules (module boundary enforcement)
+- **Architecture:** NetArchTest.Rules (naming convention enforcement)
 - **Coverage:** Built-in .NET coverage + Vitest coverage
 
 ---
@@ -224,7 +224,7 @@ The project uses a **layered environment strategy**:
 ## 📂 Project Structure
 
 ```
-Kakeibo.slnx                            # Solution file (.slnx format)
+Kakeibo.slnx                            # Solution file (.slnx format) — 2 projects
 ├── .claude/                            # AI agent configuration
 │   ├── roadmap/                        # Detailed phase planning
 │   ├── rules/                          # Architecture, tech stack, patterns
@@ -236,19 +236,18 @@ Kakeibo.slnx                            # Solution file (.slnx format)
 │       ├── quality.yml                 # PR quality gates
 │       └── release.yml                 # Build + push images to Docker Hub
 ├── src/
-│   ├── Kakeibo.Api/                    # ASP.NET Core host (composition root)
-│   ├── Kakeibo.Common/                 # Shared kernel (zero project references)
-│   ├── Kakeibo.Contracts/              # Inter-module contracts (events, requests, DTOs)
-│   ├── Kakeibo.Infrastructure/         # Cross-cutting concerns (cache, storage, messaging)
-│   └── Kakeibo.Modules.*/              # 8 business modules (Identity, Wallets, Transactions, etc.)
+│   └── Kakeibo.Api/                    # Single runnable project (ASP.NET host + all domains)
+│       ├── Common/                     # Abstractions, Endpoints, Utils
+│       ├── Features/                   # Identity/, Wallets/, Transactions/, Budgets/, Goals/, Recurring/, Notifications/, Auditing/
+│       ├── Infrastructure/             # Caching/, Email/, Storage/, Events/
+│       ├── Persistence/                # AppDbContext.cs, Configurations/, Migrations/
+│       └── Program.cs
 ├── services/
 │   └── Kakeibo.Email/                  # Email renderer (Bun + Hono + React Email)
 ├── sites/
 │   └── Kakeibo.App/                    # Vue 3 PWA (frontend)
 ├── tests/
-│   ├── Kakeibo.Modules.*.Tests/        # Module unit + integration tests
-│   ├── Kakeibo.FunctionalTests/        # API-level tests (WebApplicationFactory)
-│   └── Kakeibo.ArchitectureTests/      # Module boundary enforcement (NetArchTest)
+│   └── Kakeibo.Tests/                  # All tests: unit, integration, architecture (NetArchTest)
 ├── Directory.Build.props               # Centralized MSBuild properties
 ├── Directory.Packages.props            # Centralized NuGet package versions (CPM)
 ├── docker-compose.yml                  # Infrastructure + application services
@@ -380,50 +379,41 @@ For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/r
 
 ## 🏛️ Architecture Highlights
 
-### Module Dependency Diagram
+### Domain Dependency Order
 
 ```
-                      IDENTITY
-               (all modules depend on this)
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-    WALLETS                                   AUDITING ◄── All emit audit events
-(incl Collaboration)
-        │
-        ▼
-  TRANSACTIONS
- (incl Categories)
-        │
-        ├───────────┬─────────────┐
-        ▼           ▼             ▼
-    BUDGETS      GOALS       RECURRING
-        │           │
-        └─────┬─────┘
-              ▼
-      NOTIFICATIONS ◄── All emit notifications
+Identity (foundation)
+    │
+    ▼
+Wallets (incl Collaboration)
+    │
+    ▼
+Transactions (incl Categories)
+    │
+    ├───────────┬─────────────┐
+    ▼           ▼             ▼
+Budgets      Goals       Recurring
+    │           │
+    └─────┬─────┘
+          ▼
+    Notifications ◄── All domains emit
+    Auditing      ◄── All domains log
 ```
 
-### Communication Patterns
+### Event System (System.Threading.Channels)
 
-**Synchronous (IModuleClient)**
-- Use when the caller needs an immediate response to proceed
-- Example: Budgets queries Transactions for spending in a period
+Replaces the Outbox Pattern. Async in-memory communication with no external queue:
 
-**Asynchronous (IModuleEventBus + Outbox)**
-- Use when the caller doesn't need an immediate response
-- Guaranteed delivery via transactional outbox + background polling
-- Example: TransactionRecordedEvent triggers debt recalculation (Wallets), budget update (Budgets), goal progress (Goals)
+```csharp
+// Fire-and-forget — does not block SaveChangesAsync
+eventBus.Publish(new TransactionRecordedEvent { ... });
+await db.SaveChangesAsync(ct);
+```
 
-### Outbox Pattern
-
-1. Handler publishes integration event via `eventBus.PublishAsync()`
-2. Event buffered in-memory (scoped lifetime)
-3. `SaveChangesAsync()` commits entity changes + outbox messages in **one transaction** (via `OutboxInterceptor`)
-4. `OutboxProcessor` background service polls outbox tables
-5. Dispatches events to `IEventConsumer<T>` handlers
-6. Marks messages as processed
-7. Polly retry on failure (3x exponential: 1s, 5s, 15s)
+1. `IEventBus.Publish()` writes event to `Channel<IEvent>` (non-blocking)
+2. `EventDispatcher` (BackgroundService) reads from channel continuously
+3. Resolves `IEventHandler<T>` via DI in a new scope
+4. Invokes each handler, logs errors (handler failures are isolated)
 
 ---
 

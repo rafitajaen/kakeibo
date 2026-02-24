@@ -7,7 +7,7 @@
     "api:restore": "dotnet restore Kakeibo.slnx",
     "api:build": "dotnet build Kakeibo.slnx --configuration Release",
     "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
-    "api:test": "dotnet test tests/Kakeibo.Modules.Identity.Tests/ --configuration Release",
+    "api:test": "dotnet test tests/Kakeibo.Tests/ --configuration Release",
 
     "email:install": "cd services/Kakeibo.Email && bun install",
     "email:typecheck": "cd services/Kakeibo.Email && bun run typecheck",

@@ -1,8 +1,8 @@
 # Phase 7: Notifications & Activity Logging
 
 **Status**: Not Started
-**Blocks**: None
-**Requires**: Phases 4, 5, 6 (Budget/Goal/Recurring events)
+**Blocks**: Phase 8
+**Requires**: Phases 2, 3, 4, 5, 6 (Phase 7a consumes InvitationSentEvent from Phase 2b and TransactionRecordedEvent from Phase 3b)
 
 ---
 

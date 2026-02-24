@@ -1,7 +1,7 @@
-# Phase 1c: Outbox Pattern Implementation
+# Phase 1c: Events System
 
-**Status**: Not Started
-**Objective**: Implement transactional outbox pattern for reliable event delivery across modules
+**Status**: ✅ Complete
+**Objective**: Implement the in-memory async event bus for fire-and-forget event delivery
 
 ---
 
@@ -11,12 +11,10 @@
 |------|--------|
 | Infrastructure Base | ✅ Phase 1a |
 | Identity Backend | ✅ Phase 1b |
-| PostgreSQL 18 + EF Core | ✅ Phase 1a |
-| `Kakeibo.Common` (base entities) | ✅ Phase 1a |
-| `Kakeibo.Contracts` (event interfaces) | ✅ Phase 1a |
-| `Kakeibo.Infrastructure` project | ✅ Phase 1a |
+| `IEvent`, `IEventBus`, `IEventHandler<T>` interfaces | ✅ Phase 1a |
+| `AppDbContext` registered | ✅ Phase 1a |
 
-**Rationale**: Outbox pattern needs Identity implemented first to have real events (UserRegisteredEvent, UserLoggedInEvent) for testing.
+**Rationale**: The event system needs Identity implemented first to have real events (`UserRegisteredEvent`, `UserLoggedInEvent`) for meaningful end-to-end testing.
 
 ---
 
@@ -24,21 +22,18 @@
 
 ### ✅ Included
 
-- `OutboxInterceptor` (SaveChangesInterceptor that harvests domain events from entities)
-- `DomainEventDispatcher` (resolves and invokes `IDomainEventHandler<T>` via DI)
-- `ModuleEventBus` (scoped service that buffers integration events in-memory)
-- `OutboxProcessor` (BackgroundService that polls outbox tables and dispatches to consumers)
-- `OutboxMessage` entity in each module's schema
-- Polly retry policy (3 attempts: 1s, 5s, 15s exponential backoff)
-- `IOutboxSource` interface for per-module DbContext access
-- Integration tests for end-to-end event delivery
+- `ChannelEventBus` — singleton `IEventBus` implementation using `System.Threading.Channels`
+- `EventDispatcher` — `BackgroundService` that reads from the channel and dispatches to handlers
+- DI registration: `ChannelEventBus` as singleton `IEventBus`, `EventDispatcher` as hosted service
+- Scrutor scan: auto-registers all `IEventHandler<T>` implementations from the assembly
+- Architecture test: types under `Infrastructure/Events/` follow naming conventions
 
 ### ❌ Excluded
 
-- Event deduplication (handled by consumer idempotency)
-- Outbox archiving/cleanup (events remain indefinitely in MVP)
-- Event versioning (all events start at v1)
-- Distributed tracing for events (basic logging only)
+- Persistent event store
+- Event replay / backfill
+- Distributed message brokers
+- Guaranteed delivery across process restarts
 
 ---
 
@@ -46,127 +41,69 @@
 
 ### New Files
 
-**Kakeibo.Infrastructure/Outbox/**:
+**`Kakeibo.Api/Infrastructure/Events/`**:
 ```
-OutboxInterceptor.cs           — Harvests domain events + persists outbox messages
-OutboxProcessor.cs             — Background polling + dispatch to consumers
-OutboxOptions.cs               — Configuration (polling interval, batch size, retry)
-IOutboxSource.cs               — Interface for module DbContext outbox access
-```
-
-**Kakeibo.Infrastructure/Messaging/**:
-```
-DomainEventDispatcher.cs       — Resolves IDomainEventHandler<T>, invokes sequentially
-ModuleEventBus.cs              — Scoped buffer for integration events
-ModuleClient.cs                — Sync request dispatcher (IModuleRequestHandler<,>)
-```
-
-**Kakeibo.Common/Abstractions/**:
-```
-IDomainEvent.cs                — Internal module event interface
-IDomainEventHandler.cs         — Handler for domain events
-IIntegrationEvent.cs           — Cross-module event interface
-IEventConsumer.cs              — Consumer for integration events
-OutboxMessage.cs               — Entity for outbox persistence
+ChannelEventBus.cs     — Singleton: writes to Channel<IEvent> in Publish()
+EventDispatcher.cs     — BackgroundService: reads Channel<IEvent>, resolves IEventHandler<T> via DI
 ```
 
 ### Modified Files
 
-**Each module's DbContext** (e.g., `IdentityDbContext.cs`):
-- Add `DbSet<OutboxMessage> OutboxMessages`
-- Implement `IOutboxSource`
-
-**Program.cs**:
-- Register `OutboxInterceptor` as EF Core interceptor
-- Register `OutboxProcessor` as hosted service
-- Configure `OutboxOptions` from appsettings
-
-### Database
-
-Per-module outbox tables:
-```sql
-CREATE TABLE identity.outbox_messages (
-  id UUID PRIMARY KEY,
-  occurred_at TIMESTAMPTZ NOT NULL,
-  event_type VARCHAR(500) NOT NULL,
-  payload JSONB NOT NULL,
-  processed_at TIMESTAMPTZ NULL,
-  processing_attempts INT NOT NULL DEFAULT 0,
-  last_error TEXT NULL
-);
-
-CREATE INDEX idx_outbox_unprocessed
-  ON identity.outbox_messages(occurred_at)
-  WHERE processed_at IS NULL;
-```
+**`Program.cs`**:
+- Register `ChannelEventBus` as singleton `IEventBus`
+- Register `EventDispatcher` as hosted service
+- Scrutor scan registers all `IEventHandler<T>` implementations with scoped lifetime
 
 ---
 
 ## Technical Detail
 
-### Outbox Flow
+### Event Flow
 
-1. **Entity raises domain event**: `entity.AddDomainEvent(new WalletCreatedDomainEvent(...))`
-2. **Handler calls SaveChangesAsync**: EF Core triggers `OutboxInterceptor`
-3. **OutboxInterceptor**:
-   - Harvests domain events from `ChangeTracker.Entries<Entity>()`
-   - Dispatches to `DomainEventDispatcher`
-4. **DomainEventDispatcher**:
-   - Resolves all `IDomainEventHandler<T>` for the event type
-   - Invokes each handler sequentially
-5. **Domain event handler**:
-   - Publishes integration events via `eventBus.PublishAsync()`
-   - Stages audit events via `auditOutbox.Stage()`
-6. **OutboxInterceptor** (continued):
-   - Reads buffered integration events from `ModuleEventBus`
-   - Inserts `OutboxMessage` rows in same transaction
-   - Transaction commits (entity changes + outbox messages atomic)
-7. **OutboxProcessor** (background):
-   - Polls outbox tables every 10s (dev) / 5s (prod)
-   - For each unprocessed message: resolves `IEventConsumer<T>`, invokes
-   - Marks message as processed on success
-   - Increments attempts + logs error on failure
-   - Polly retries: 3x (1s, 5s, 15s)
+```
+Feature handler
+  → eventBus.Publish(new SomeEvent {...})       [non-blocking, returns void]
+  → ChannelEventBus writes to Channel<IEvent>
+
+EventDispatcher (background)
+  → reads IEvent from channel
+  → creates DI scope
+  → resolves all IEventHandler<SomeEvent> from scope
+  → invokes each handler sequentially
+  → if no handler registered: event discarded silently
+```
 
 ### Key Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| Per-module outbox tables | Logical separation, easier to debug per module |
-| Sequential domain event dispatch | Predictable ordering, simpler error handling |
-| In-memory event buffer (scoped) | Simple, no external queue dependency |
-| Polly retry in OutboxProcessor | Handles transient failures (network, DB locks) |
-| No deduplication | Consumers must be idempotent (design principle) |
+| `void Publish()` (fire-and-forget) | Caller never blocks. Handler failures don't affect the originating HTTP request. |
+| `System.Threading.Channels` | Lightweight, built-in, no external broker dependency. |
+| `BackgroundService` dispatcher | Handlers run outside the HTTP request lifecycle. |
+| No persistent store | MVP does not need guaranteed delivery across restarts. |
+| Scrutor scan for handlers | Auto-registers all `IEventHandler<T>` without explicit registration. |
+| No registered handler → discard | Handlers for Notifications and Auditing are added in later phases and pick up events automatically once registered. |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `OutboxInterceptor` harvests domain events from entities via `ChangeTracker`
-- [ ] `DomainEventDispatcher` resolves all `IDomainEventHandler<T>` for event type
-- [ ] Domain event handlers can call `eventBus.PublishAsync()` to stage integration events
-- [ ] `OutboxInterceptor` reads buffered events and inserts `OutboxMessage` rows
-- [ ] Entity changes + outbox messages committed in single transaction
-- [ ] `OutboxProcessor` polls outbox tables at configured interval
-- [ ] `OutboxProcessor` resolves `IEventConsumer<T>` via DI for each message
-- [ ] Processed messages marked with `processed_at` timestamp
-- [ ] Failed messages increment `processing_attempts` and log `last_error`
-- [ ] Polly retry policy: 3 attempts with exponential backoff (1s, 5s, 15s)
-- [ ] Integration test: Domain event → integration event → consumer invoked
-- [ ] Integration test: Failed consumer → retry → eventual success
-- [ ] Integration test: Consumer idempotency (same event twice → no duplicate effects)
+- [x] `ChannelEventBus` (singleton) writes events to `Channel<IEvent>` in `Publish()`
+- [x] `EventDispatcher` (BackgroundService) reads channel and dispatches to handlers
+- [x] All `IEventHandler<T>` implementations auto-registered via Scrutor with scoped lifetime
+- [x] Publishing an event with no registered handler discards it silently (no exception)
+- [x] `EventDispatcher` creates a new DI scope per event to support scoped services in handlers
+- [x] Architecture tests: types under `Infrastructure/Events/` follow naming conventions
+- [x] DI wired correctly in Program.cs
 
 ---
 
 ## Definition of "Phase 1c Completed"
 
-1. All outbox infrastructure implemented
-2. All acceptance criteria checked (13 items)
-3. Integration tests pass (3 scenarios)
-4. Manual test: Domain event in Identity → integration event → Auditing consumer
-5. Code review complete
-6. Documentation: Outbox pattern documented in `/docs/architecture.md`
-7. Phase 1d can begin (Audit uses outbox for staging)
+1. All interfaces and implementations exist
+2. All acceptance criteria checked (7 items)
+3. `EventDispatcher` runs as background service without errors
+4. Phase 1d can begin (Audit handlers register as `IEventHandler<T>`)
 
 ---
 

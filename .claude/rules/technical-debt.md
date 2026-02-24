@@ -434,7 +434,7 @@ Every non-test `.csproj` under `src/` must include `<InternalsVisibleTo>` pointi
 
 **Bad:**
 ```xml
-<!-- src/Kakeibo.Infrastructure/Kakeibo.Infrastructure.csproj -->
+<!-- src/Kakeibo.Api/Kakeibo.Api.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- No InternalsVisibleTo -->
 </Project>
@@ -442,10 +442,10 @@ Every non-test `.csproj` under `src/` must include `<InternalsVisibleTo>` pointi
 
 **Good:**
 ```xml
-<!-- src/Kakeibo.Infrastructure/Kakeibo.Infrastructure.csproj -->
+<!-- src/Kakeibo.Api/Kakeibo.Api.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <InternalsVisibleTo Include="Kakeibo.Infrastructure.Tests" />
+    <InternalsVisibleTo Include="Kakeibo.Tests" />
   </ItemGroup>
 </Project>
 ```
@@ -480,17 +480,17 @@ Scripts in `package.json` that perform solution-wide operations (build, restore,
   "api:build": "dotnet build Kakeibo.slnx",
   "api:restore": "dotnet restore Kakeibo.slnx",
   "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
-  "api:test": "dotnet test Kakeibo.slnx"
+  "api:test": "dotnet test tests/Kakeibo.Tests/ --configuration Release"
 }
 ```
 
 **Applies to:** `package.json`, `scripts/quality-check.ts`
 
 **Detection patterns:**
-- `dotnet build`, `dotnet restore`, `dotnet test`, `dotnet format` without explicit `Kakeibo.slnx` target (excluding project-specific scripts like `api:run` or `api:test:unit`)
+- `dotnet build`, `dotnet restore`, `dotnet format` without explicit `Kakeibo.slnx` target (excluding project-specific scripts like `api:run`)
 - Commands in `package.json` that diverge from their equivalent in `quality-check.ts` (e.g., different target or missing flags)
-- Test projects under `tests/` without a corresponding `api:test:*` script in `package.json`
-- **Exceptions:** `api:run` (runs a single project), `api:test:unit`/`api:test:integration`/`api:test:arch` (target individual test suites), `--no-restore`/`--no-build` flags in `quality-check.ts` (pipeline optimization)
+- `tests/Kakeibo.Tests/` not having a corresponding `api:test` script in `package.json`
+- **Exceptions:** `api:run` (runs a single project), `--no-restore`/`--no-build` flags in `quality-check.ts` (pipeline optimization)
 
 ---
 

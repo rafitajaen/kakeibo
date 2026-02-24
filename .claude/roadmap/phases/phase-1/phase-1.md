@@ -18,7 +18,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 |-------|------|----------|-------------|
 | **1a** | Infrastructure Base | 2-3 days | Docker Compose, CI/CD, project scaffolding, Common interfaces |
 | **1b** | Identity Backend | 4-5 days | User registration, login, JWT tokens, password recovery |
-| **1c** | Outbox Pattern | 2-3 days | Reliable event delivery with domain/integration events |
+| **1c** | Events System | 1-2 days | In-memory async event bus (IEventBus, ChannelEventBus, EventDispatcher) |
 | **1d** | Audit Logging | 1-2 days | ClickHouse integration for audit trail |
 | **1e** | Identity Frontend | 2-3 days | Login/register screens, token refresh, route guards |
 
@@ -33,12 +33,12 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 ### ✅ Included
 
 **Infrastructure (1a)**:
-- All 12 projects scaffolded with minimal structure
+- 2 projects scaffolded (`Kakeibo.Api` + `Kakeibo.Tests`)
 - Docker Compose with 8 services
 - CI/CD pipeline
 - Email renderer service
 - Vue PWA shell
-- Common interfaces
+- Common abstractions (`Entity`, `Result<T>`, `Error`, `IEndpoint`, `IEvent`, `IEventBus`, `IEventHandler<T>`)
 
 **Authentication Backend (1b)**:
 - User registration with email verification
@@ -49,11 +49,10 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - OAuth (Google, Apple) — basic implementation
 
 **Event Infrastructure (1c + 1d)**:
-- Transactional outbox pattern with guaranteed delivery
-- Domain event dispatching via `IDomainEventHandler<T>`
-- Integration event publishing via `IModuleEventBus`
+- In-memory event bus (`IEventBus` / `ChannelEventBus`) with `System.Threading.Channels`
+- `EventDispatcher` BackgroundService dispatches to `IEventHandler<T>` implementations
 - ClickHouse audit trail for all user actions
-- Background processing with Polly retry
+- Audit handlers registered as `IEventHandler<T>`
 
 **Authentication Frontend (1e)**:
 - Login, register, password recovery screens
@@ -74,8 +73,8 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 
 ## Module Architecture
 
-**Module**: `Kakeibo.Modules.Identity`
-**Schema**: `identity`
+**Module folder**: `Kakeibo.Api/Features/Identity/`
+**Schema**: `public` (single schema via `AppDbContext`)
 **Pattern**: Vertical slices
 
 **Key Entities**:
@@ -99,14 +98,14 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 ## MVP Acceptance Criteria
 
 ### Phase 1a — Infrastructure Base
-- [ ] All 12 projects build successfully
+- [ ] 2 projects (`Kakeibo.Api` + `Kakeibo.Tests`) build successfully
 - [ ] Docker Compose starts 8 infrastructure services
 - [ ] Email renderer responds on /health
 - [ ] API responds on /health
 - [ ] Vue PWA builds successfully
 - [ ] CI pipeline has all 4 jobs defined
 - [ ] Pre-commit hooks configured
-- [ ] Common interfaces exist
+- [ ] Common abstractions exist (`Entity`, `Result<T>`, `Error`, `IEndpoint`, `IEvent`, `IEventBus`, `IEventHandler<T>`)
 
 ### Phase 1b — Identity Backend
 - [ ] User registration creates unverified user
@@ -120,20 +119,18 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - [ ] Unit tests >= 90% coverage
 - [ ] Integration tests: full auth flows
 
-### Phase 1c — Outbox Pattern
-- [ ] `OutboxInterceptor` harvests domain events from entities
-- [ ] `DomainEventDispatcher` resolves and invokes `IDomainEventHandler<T>`
-- [ ] `ModuleEventBus` buffers integration events (scoped)
-- [ ] `OutboxProcessor` polls outbox tables every 10s (dev), 5s (prod)
-- [ ] Polly retry: 3 attempts (1s, 5s, 15s exponential backoff)
-- [ ] Integration test: domain event → integration event → consumer
-- [ ] Integration test: failed consumer → retry → success
-- [ ] Integration test: idempotent consumer handling
+### Phase 1c — Events System
+- [ ] `ChannelEventBus` (singleton) writes events to `Channel<IEvent>`
+- [ ] `EventDispatcher` (BackgroundService) reads channel and dispatches to `IEventHandler<T>`
+- [ ] All `IEventHandler<T>` implementations auto-registered via Scrutor
+- [ ] Publishing with no registered handler discards silently (no exception)
+- [ ] DI scope created per event in dispatcher
+- [ ] Architecture tests: Events infrastructure naming conventions
 
 ### Phase 1d — Audit Logging
 - [ ] ClickHouse `audit_events` table with indefinite retention
 - [ ] `ClickHouseAuditService` writes batched events
-- [ ] `IAuditOutbox` stages events in-memory
+- [ ] `IEventHandler<T>` implementations in `Features/Auditing/` receive events from `IEventBus`
 - [ ] Health check for ClickHouse connectivity
 - [ ] Integration test: event persistence and query
 
@@ -162,7 +159,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 1. All five sub-phases (1a, 1b, 1c, 1d, 1e) complete
 2. Infrastructure fully functional (Docker, CI, Email service)
 3. Authentication works end-to-end (register → verify → login → logout)
-4. Outbox Pattern delivers events reliably with retry
+4. Events System delivers events via in-memory channel to registered handlers
 5. Audit logging captures all actions in ClickHouse
 6. All 40 acceptance criteria checked
 7. CI pipeline green (all tests pass)

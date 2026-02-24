@@ -48,7 +48,6 @@
 - [ ] Database migrations run
 - [ ] Backup strategy verified
 - [ ] Monitoring alerts configured
-- [ ] Error tracking setup (Sentry or similar)
 - [ ] Analytics configured (optional)
 - [ ] Privacy policy + terms of service
 

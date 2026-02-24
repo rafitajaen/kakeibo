@@ -2,7 +2,7 @@
 # Format: Fully qualified type or member name
 
 # CRITICAL: Guid.CreateVersion7() has broken byte order for PostgreSQL indexing
-# Use Guid7.NewGuid() from Kakeibo.Common.Utils instead
+# Use Guid7.NewGuid() from Kakeibo.Api.Common.Utils instead
 M:System.Guid.CreateVersion7;Use Guid7.NewGuid() instead - CreateVersion7() has broken byte order
 
 # CRITICAL: DateTime/DateTimeOffset/DateOnly are prohibited - use NodaTime

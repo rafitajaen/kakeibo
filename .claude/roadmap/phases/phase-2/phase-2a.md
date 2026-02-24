@@ -9,10 +9,15 @@
 
 ### ✅ Included
 - Create, read, update, archive personal wallets
-- Balance tracking (current, historical, projected)
-- Wallet metadata (name, currency, balance)
+- Balance display (read from `AppDbContext.WalletBalances` — `WalletBalance` entity implemented in Phase 3b)
+- Wallet metadata (name, currency)
 - Wallet list with filtering
 - Frontend: wallet list, create/edit forms
+
+> **Architectural note:** The `Wallet` entity does **NOT** store a `Balance` field. Balance is
+> maintained by the `WalletBalance` entity in `AppDbContext` and updated atomically with every
+> transaction. Wallets feature handlers query `AppDbContext.WalletBalances` directly — no
+> cross-module indirection needed in a Simple Monolith. This is implemented in Phase 3b.
 
 ### ❌ Excluded
 - Shared wallets — Phase 2b
@@ -23,7 +28,7 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Wallets/Features/**:
+**`Kakeibo.Api/Features/Wallets/`**:
 - CreateWallet, GetWallet, ListWallets, UpdateWallet, ArchiveWallet
 
 **Endpoints**:
@@ -34,10 +39,10 @@
 - `DELETE /api/wallets/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/wallets/**:
+**`sites/Kakeibo.App/views/wallets/`**:
 - WalletsView.vue, CreateWalletView.vue, EditWalletView.vue
 
-**sites/Kakeibo.App/src/components/wallets/**:
+**`sites/Kakeibo.App/components/wallets/`**:
 - WalletCard.vue, WalletForm.vue, WalletList.vue
 
 ---

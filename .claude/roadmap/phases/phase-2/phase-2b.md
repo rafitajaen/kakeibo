@@ -16,14 +16,14 @@
 
 ### ❌ Excluded
 - Debt calculation — Phase 2c
-- Transaction splits — Phase 3c
+- Transaction splits — Phase 2c (absorbed from Phase 3c)
 
 ---
 
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Wallets/Features/**:
+**`Kakeibo.Api/Features/Wallets/`**:
 - InviteToWallet, AcceptInvitation, GetWalletMembers, RemoveMember
 
 **Endpoints**:
@@ -33,10 +33,10 @@
 - `DELETE /api/wallets/{id}/members/{userId}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/wallets/**:
+**`sites/Kakeibo.App/views/wallets/`**:
 - SharedWalletView.vue, InviteMemberView.vue
 
-**sites/Kakeibo.App/src/components/wallets/**:
+**`sites/Kakeibo.App/components/wallets/`**:
 - InvitationForm.vue, MemberList.vue, MemberCard.vue
 
 ---

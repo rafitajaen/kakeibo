@@ -135,12 +135,10 @@ Three Dockerfiles, one per deployable application. All use multi-stage builds to
 ```
 Stage 1: mcr.microsoft.com/dotnet/sdk:10.0  (build)
   → Copy Kakeibo.slnx + Directory.Build.props + Directory.Packages.props
-  → Copy .csproj files for each project (restore cache layer):
-      Kakeibo.Api, Kakeibo.Common, Kakeibo.Contracts, Kakeibo.Infrastructure,
-      Kakeibo.Modules.Households, Kakeibo.Modules.Accounts, Kakeibo.Modules.Transactions,
-      Kakeibo.Modules.Budgets, Kakeibo.Modules.Reports
+  → Copy .csproj file for restore cache layer:
+      src/Kakeibo.Api/Kakeibo.Api.csproj
   → dotnet restore Kakeibo.slnx
-  → Copy source code for each project
+  → Copy source code from src/Kakeibo.Api/
   → dotnet publish -c Release → artifacts/publish/Kakeibo.Api/release/
 
 Stage 2: mcr.microsoft.com/dotnet/aspnet:10.0  (runtime)
@@ -156,9 +154,7 @@ Stage 2: mcr.microsoft.com/dotnet/aspnet:10.0  (runtime)
 
 The restore layer is cached separately from the source copy so NuGet packages are only re-downloaded when `.csproj` or `Directory.Packages.props` files change.
 
-Build context is `.` (repo root) because the Dockerfile copies from multiple `src/` subdirectories. The per-Dockerfile dockerignore is named `Dockerfile.dockerignore` and placed alongside the Dockerfile — Docker resolves it as `{context}/{dockerfile-path}.dockerignore` = `./src/Kakeibo.Api/Dockerfile.dockerignore`.
-
-> **Adding a new module:** When a new `Kakeibo.Modules.*` project is added to the solution, its `.csproj` must be added to both the restore cache layer and the source copy layer in `src/Kakeibo.Api/Dockerfile`.
+Build context is `.` (repo root). The per-Dockerfile dockerignore is named `Dockerfile.dockerignore` and placed alongside the Dockerfile — Docker resolves it as `{context}/{dockerfile-path}.dockerignore` = `./src/Kakeibo.Api/Dockerfile.dockerignore`.
 
 ### `sites/Kakeibo.App/Dockerfile` — Vue 3 PWA
 

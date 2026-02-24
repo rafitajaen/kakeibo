@@ -40,8 +40,8 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Transactions/**:
-- Entities/Category.cs
+**`Kakeibo.Api/Features/Transactions/`**:
+- Categories/Category.cs (entity)
 - Features/CreateCategory, ListCategories, UpdateCategory, ArchiveCategory
 - Seeders/SystemCategoriesSeeder.cs
 
@@ -52,7 +52,7 @@
 - `DELETE /api/categories/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/components/categories/**:
+**`sites/Kakeibo.App/components/categories/`**:
 - CategorySelector.vue, CategoryList.vue, CategoryForm.vue
 
 ---

@@ -11,7 +11,6 @@
 |------|--------|
 | ClickHouse running | ✅ Phase 1a |
 | Outbox Pattern | ✅ Phase 1c |
-| `IAuditOutbox` interface | ✅ Phase 1c |
 
 ---
 
@@ -28,8 +27,8 @@
 
 ### ❌ Excluded
 
-- Audit UI (viewing logs) — Phase 8c
-- Audit search/filtering — Phase 8c
+- Audit UI (viewing logs) — Phase 7b
+- Audit search/filtering — Phase 7b
 - Audit retention policies — indefinite for MVP
 - Audit event versioning — all v1
 

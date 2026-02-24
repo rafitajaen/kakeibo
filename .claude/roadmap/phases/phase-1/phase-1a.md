@@ -20,22 +20,23 @@
 
 ### ✅ Included
 
-- Solution structure: All 12 projects scaffolded with minimal folder structure
+- Solution structure: 2 projects (`Kakeibo.Api` + `Kakeibo.Tests`) with vertical slice folder layout
+- Architecture tests: Naming convention rules in `tests/Kakeibo.Tests/Architecture/` (incremental — additional rules added per phase as new patterns are introduced)
 - Docker Compose: 8 infrastructure services (PostgreSQL, Redis, RustFS, ClickHouse, Mailpit, Redis Insight, Aspire Dashboard, Email Renderer)
 - Email service: Bun + Hono + React Email microservice on port 3050 (with /health endpoint)
 - Vue PWA shell: Vite + Vue 3 + TypeScript + Tailwind CSS v4 + shadcn-vue (with router + Pinia configured)
 - CI pipeline: GitHub Actions quality gates (api, app, email, docker)
 - Pre-commit hooks: lefthook.yml (commitlint, oxlint, oxfmt)
 - Development scripts: `bun run setup`, `bun run dev:infra`, `bun run dev:all`
-- Common interfaces: `IDomainEvent`, `IIntegrationEvent`, `IDomainEventHandler<T>`, `IEventConsumer<T>`, `IModuleRequest<T>`, `IModuleRequestHandler<,>`
-- Empty DbContexts: Each module has `{Module}DbContext.cs` with schema constant
+- Common abstractions: `Entity`, `Result<T>`, `Error`, `ValueObject`, `IEndpoint`, `ValidationFilter`, `EndpointExtensions`
+- Event system interfaces: `IEvent`, `IEventBus`, `IEventHandler<T>` (implementation deferred to Phase 1c)
+- Single `AppDbContext` with `UseSnakeCaseNamingConvention()` and `UseNodaTime()`
 - Program.cs: Functional with /health endpoint and Scalar configured
 - appsettings.json: Structure with all configuration sections (empty values)
 
 ### ❌ Excluded
 
-- Any module implementation (Phase 1b onwards)
-- Architecture tests with real content (will work once modules have code)
+- Any feature implementation (Phase 1b onwards)
 - Semantic release configuration (deferred)
 
 ---
@@ -45,7 +46,7 @@
 ### New Files
 
 **Root**:
-- `Kakeibo.slnx` — Solution with all 12 projects
+- `Kakeibo.slnx` — Solution with 2 projects
 - `Directory.Build.props` — Centralized build properties
 - `Directory.Packages.props` — Central Package Management
 - `.editorconfig` — Code style enforcement
@@ -54,17 +55,27 @@
 - `lefthook.yml` — Pre-commit hooks
 - `scripts/setup-local.sh` — Idempotent setup script
 
-**Infrastructure Projects**:
-- `src/Kakeibo.Api/` — ASP.NET host with Program.cs, /health endpoint
-- `src/Kakeibo.Common/` — Shared kernel with all base interfaces
-- `src/Kakeibo.Contracts/` — Folder structure for 8 modules (empty)
-- `src/Kakeibo.Infrastructure/` — Folder structure for cross-cutting concerns
+**API Project** (`src/Kakeibo.Api/`):
+- `Program.cs` — Composition root with /health and Scalar
+- `Kakeibo.Api.csproj` — Single project with all NuGet references
+- `Common/Abstractions/` — `Entity.cs`, `Result.cs`, `Error.cs`, `ValueObject.cs`
+- `Common/Endpoints/` — `IEndpoint.cs`, `ValidationFilter.cs`, `EndpointExtensions.cs`
+- `Common/Utils/` — `Guid7.cs`, `PasswordHasher.cs`, `DefaultSerializer.cs`, `CharSets.cs`, `RandomString.cs`
+- `Infrastructure/Events/` — `IEvent.cs`, `IEventBus.cs`, `IEventHandler.cs` (interfaces only; ChannelEventBus in Phase 1c)
+- `Infrastructure/Email/` — `IEmailService.cs`, `EmailService.cs`, `SmtpOptions.cs`
+- `Infrastructure/Caching/` — `ICacheService.cs`, `FusionCacheService.cs`, `CachingOptions.cs`
+- `Infrastructure/Storage/` — `IStorageService.cs`, `StorageService.cs`, `StorageOptions.cs`
+- `Persistence/AppDbContext.cs` — Single DbContext (empty DbSets, ready for entity registration)
+- `Features/` — Empty folder structure for future slices
 
-**Module Projects** (8 modules):
-- `src/Kakeibo.Modules.{Module}/` — Each with:
-  - `{Module}DbContext.cs` (empty, with schema constant)
-  - Folder structure: `Entities/`, `Features/`, `Persistence/`, `Services/`
-  - `{Module}ModuleRegistration.cs` (minimal DI registration)
+**Test Project** (`tests/Kakeibo.Tests/`):
+- `Kakeibo.Tests.csproj` — xUnit v3 + Testcontainers + NSubstitute + NetArchTest
+- `Architecture/` — NetArchTest rules:
+  - Endpoints end in `Endpoint`
+  - Validators end in `Validator`
+  - Event handlers end in `Handler` and implement `IEventHandler<T>`
+  - Configuration classes end in `Options` (never `Settings` or `Config`)
+  - *Additional rules added incrementally as new patterns are introduced*
 
 **Frontend**:
 - `sites/Kakeibo.App/` — Vue PWA with router configured, Pinia setup, minimal layout
@@ -74,17 +85,13 @@
 
 **CI/CD**:
 - `.github/workflows/quality.yml` — Quality gates for PR
-- `.github/workflows/release.yml` — Build and push Docker images
-
-**Tests**:
-- `tests/Kakeibo.ArchitectureTests/` — NetArchTest enforcement (may have failing tests until modules have content)
-- `tests/Kakeibo.Modules.{Module}.Tests/` — Empty test projects (one per module)
+- `.github/workflows/release.yml` — Semantic-release + Docker image builds
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] All 12 .csproj files exist and build successfully (`dotnet build Kakeibo.slnx`)
+- [ ] 2 `.csproj` files exist and build successfully (`dotnet build Kakeibo.slnx`)
 - [ ] `docker compose up -d` starts 8 infrastructure services successfully
 - [ ] All infrastructure services pass health checks (PostgreSQL, Redis, RustFS, ClickHouse)
 - [ ] Email renderer service responds HTTP 200 on http://localhost:3050/health
@@ -93,15 +100,18 @@
 - [ ] GitHub Actions CI has all 4 jobs defined (api, app, email, docker)
 - [ ] Pre-commit hooks are configured (commitlint + oxlint + oxfmt)
 - [ ] `bun run setup` completes successfully (idempotent)
-- [ ] All Common interfaces exist: `IDomainEvent`, `IIntegrationEvent`, `IDomainEventHandler<T>`, `IEventConsumer<T>`
-- [ ] All module DbContexts exist with schema constant
+- [ ] Common abstractions exist: `Entity`, `Result<T>`, `Error`, `IEndpoint`
+- [ ] Event interfaces exist: `IEvent`, `IEventBus`, `IEventHandler<T>`
+- [ ] `AppDbContext` exists and is registered in DI
 - [ ] appsettings.json has all sections structured
+- [ ] Architecture tests project exists with base NetArchTest naming rules
+- [ ] Architecture tests pass (all base rules green)
 
 ---
 
 ## Definition of "Phase 1a Completed"
 
-1. All acceptance criteria checked (12 items)
+1. All acceptance criteria checked (15 items)
 2. All services start successfully with Docker Compose
 3. CI pipeline runs without errors (tests may be minimal)
 4. Development environment is fully functional

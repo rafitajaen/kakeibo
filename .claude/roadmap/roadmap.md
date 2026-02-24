@@ -45,10 +45,11 @@ This roadmap defines the strategic development plan for the Kakeibo platform —
 | 8 — Dashboard + Launch | Pending | Not started | Not started | Phases 2–7 |
 
 **Existing foundation:**
-- Solution structure: `Kakeibo.slnx` with 12 projects defined
-- Common abstractions: `Entity`, `Result<T>`, `Error`, `IEndpoint`, `IModuleClient`, `IEventConsumer<T>`
-- Infrastructure placeholders: Email service stub, Docker Compose layout
+- Solution structure: `Kakeibo.slnx` with 2 projects (Kakeibo.Api + Kakeibo.Tests)
+- Common abstractions: `Entity`, `Result<T>`, `Error`, `IEndpoint`, `IEvent`, `IEventBus`, `IEventHandler<T>`
+- Infrastructure: Email service, Docker Compose, ChannelEventBus, EventDispatcher
 - CI pipeline skeleton: GitHub Actions quality gates
+- Architecture tests: Naming convention enforcement (3 tests, all green)
 
 ---
 
@@ -75,17 +76,18 @@ Financial health begins with seeing clearly. By tracking income, expenses, and p
 
 ### Single-Tenant MVP Approach
 
-Kakeibo is built as a **single-tenant modular monolith** with strict module boundaries:
+Kakeibo is built as a **simple monolith** with vertical slices and screaming architecture:
 
-- **Single deployable unit**: One API, one web app, one email service
-- **8 modules in 3 tiers**: Platform Core → Financial Core → Planning
-- **Vertical Slices pattern**: Each feature is self-contained (endpoint, handler, validator)
-- **Event-driven communication**: Modules communicate via integration events and module requests, never direct references
-- **Outbox Pattern**: Reliable event publishing with guaranteed delivery
+- **Single deployable unit**: One API project, one web app, one email service
+- **2 .NET projects**: `src/Kakeibo.Api/` (all domains) + `tests/Kakeibo.Tests/` (all tests)
+- **8 business domains in 3 tiers**: Platform Core → Financial Core → Planning
+- **Vertical Slices**: Each feature is self-contained in `Features/{Domain}/{Operation}/`
+- **In-memory events**: `System.Threading.Channels` (IEventBus, ChannelEventBus, EventDispatcher)
+- **Single AppDbContext**: One context, one schema, one migrations history
 
-### Module Structure (8 modules)
+### Domain Structure (8 domains in `Features/`)
 
-| Tier | Module | Description |
+| Tier | Domain | Description |
 |------|--------|-------------|
 | **1 — Platform Core** | Identity | Authentication, user accounts, sessions, password recovery |
 | **1 — Platform Core** | Notifications | Multi-channel notifications (email, in-app), templates, preferences |
@@ -96,20 +98,19 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 | **3 — Planning** | Goals | Savings targets, progress tracking, milestones |
 | **3 — Planning** | Recurring | Pattern management, automatic transaction generation |
 
-**Total: 12 projects** (4 infrastructure: Api, Common, Contracts, Infrastructure + 8 modules).
+**Total: 2 projects** (Kakeibo.Api + Kakeibo.Tests).
 
 ### Key Architectural Decisions
 
-**Merged Modules** (from original 10 → 8):
-- **Collaboration merged into Wallets**: Collaboration features (invitations, splits, debts, settlements) only exist for shared wallets. No standalone Collaboration module.
-- **Categories merged into Transactions**: Categories only exist to classify transactions. No standalone Categories module.
+**Domain consolidation** (from original 10 → 8):
+- **Collaboration merged into Wallets**: Collaboration features (invitations, splits, debts, settlements) only exist for shared wallets.
+- **Categories merged into Transactions**: Categories only exist to classify transactions.
 
-**Database Strategy**: One PostgreSQL schema per module. All modules share the same connection string — separation is logical (schemas), not physical.
+**Database Strategy**: Single `AppDbContext`. Single `public` schema. One `__ef_migrations_history` table.
 
 **Communication Patterns**:
-- **Sync queries**: `IModuleClient` for request/response patterns
-- **Async events**: `IModuleEventBus` + Outbox Pattern for fire-and-forget with guaranteed delivery
-- **No cross-module references**: Module A NEVER references Module B's project
+- **Async events**: `IEventBus.Publish()` → `ChannelEventBus` → `EventDispatcher` BackgroundService → `IEventHandler<T>`
+- **No cross-assembly contracts**: All code lives in one project
 
 **Tech Stack**:
 - Backend: .NET 10, PostgreSQL 18, Redis, RustFS, ClickHouse, Hangfire
@@ -147,7 +148,7 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 - **Budgets + Goals + Recurring**: Fourth layer — all depend on Transactions (consume transaction events)
 - **Notifications + Auditing**: Cross-cutting — consumed by all modules, depend only on Identity
 
-**Deployment Note**: The diagram shows logical dependencies, not physical deployment boundaries. All modules are deployed together in a single modular monolith. Module boundaries are enforced through architecture tests, not separate processes.
+**Deployment Note**: The diagram shows logical dependencies, not physical deployment boundaries. All domains are deployed together in a single monolith. Domain boundaries are enforced through folder structure, not separate assemblies.
 
 ---
 
@@ -157,18 +158,21 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 **Objective:** Establish foundational infrastructure and implement complete authentication system
 
 **Sub-Phases:**
-- **1a - Infrastructure Base** (2-3 days): Docker Compose, CI/CD, project scaffolding, Common interfaces
+- **1a - Infrastructure Base** (complete): Docker Compose, CI/CD, project scaffolding, core abstractions, Events system
 - **1b - Identity Backend** (4-5 days): User registration, login, JWT tokens, password recovery
-- **1c - Outbox Pattern** (2-3 days): Reliable event delivery with domain/integration events
+- **1c - Events System** (complete, implemented in 1a): IEvent, IEventBus, ChannelEventBus, EventDispatcher
 - **1d - Audit Logging** (1-2 days): ClickHouse integration for audit trail
 - **1e - Identity Frontend** (2-3 days): Login/register screens, token refresh, route guards
 
 **Key Deliverables:**
-- All 12 projects scaffolded with minimal structure
+- 2 projects (Kakeibo.Api + Kakeibo.Tests) built and tested
 - Docker Compose with 8 infrastructure services
 - Complete authentication flow (backend + frontend)
-- Event-driven infrastructure tested with real Identity events
+- Events system (System.Threading.Channels)
 - CI/CD pipeline functional
+- Architecture tests (naming convention enforcement)
+
+**Integration Events Note:** `UserLoggedInEvent` and `UserLoggedOutEvent` (published in Phase 1b) are consumed by the Auditing module (Phase 1d) to record session activity in the audit trail. They have no other consumers.
 
 **Status:** Partially complete (1a infrastructure in progress)
 **Duration:** 10-15 days total
@@ -180,9 +184,9 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 **Objective:** Personal and shared wallet management with invitations, splits, debts, and settlements.
 
 **Key Deliverables:**
-- **Phase 2a: Personal Wallets** — Backend: Wallet CRUD, balance tracking. Frontend: Wallet list screen, create/edit modal, detail view
+- **Phase 2a: Personal Wallets** — Backend: Wallet CRUD. Frontend: Wallet list screen, create/edit modal, detail view
 - **Phase 2b: Shared Wallets + Invitations** — Backend: SharedWallet, WalletMember, Invitation entities. Frontend: Shared wallet screen, invitation flow, member list
-- **Phase 2c: Debt Calculation + Settlements** — Backend: DebtCalculationService (Splitwise algorithm), Settlement entity. Frontend: Debts screen, settlement modal
+- **Phase 2c: Splits + Debt Calculation + Settlements** — Backend: TransactionSplit (Equal/Percentage/Custom), DebtCalculationService (Splitwise algorithm), Settlement entity. Frontend: Split configurator, debts screen, settlement modal. *Implemented after Phase 3b.*
 
 **Status:** Pending (blocked by Phase 1)
 **Link:** [phases/phase-2/phase-2.md](./phases/phase-2/phase-2.md)
@@ -194,8 +198,7 @@ Kakeibo is built as a **single-tenant modular monolith** with strict module boun
 
 **Key Deliverables:**
 - **Phase 3a: Categories** — Backend: Category entity with 12 system categories + custom categories. Frontend: Category management screen
-- **Phase 3b: Transaction Recording** — Backend: Transaction entity (income, expense, transfer), balance update logic. Frontend: Transaction form with calculator UI
-- **Phase 3c: Transaction Splits** — Backend: TransactionSplit entity (equal/percentage/custom). Frontend: Split configuration component
+- **Phase 3b: Transaction Recording** — Backend: Transaction entity (income, expense, transfer), WalletBalance entity (atomic balance tracking in Transactions module). Frontend: Transaction form with calculator UI
 
 **Status:** Pending (blocked by Phase 2)
 **Link:** [phases/phase-3/phase-3.md](./phases/phase-3/phase-3.md)
@@ -278,9 +281,7 @@ Phase 2a (Wallets Backend + UI) → 2b (Shared Wallets Backend + UI)
   v
 Phase 3a (Categories Backend + UI) → 3b (Transactions Backend + Calculator UI)
   │
-  ├──> Phase 2c (Debt Calculation Backend + Debts Screen)  ← requires 3b events
-  │
-  └──> Phase 3c (Splits Backend + Split Component)
+  └──> Phase 2c (Splits + Debt Calculation + Settlements Backend + UI)  ← requires 3b events
   │
   v
 ┌────────────────────────────────────────────────────────────────┐
@@ -296,9 +297,9 @@ Phase 7a (Notifications Backend + In-App Center) → 7b (Activity Backend + Admi
 Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Launch)
 ```
 
-**Critical dependency:** Phase 2c (Debt Calculation) **requires** Phase 3b (Transaction Recording) because debt calculation consumes `TransactionRecordedEvent`, `TransactionUpdatedEvent`, `TransactionDeletedEvent`.
+**Critical dependency:** Phase 2c (Splits + Debt Calculation) **requires** Phase 3b (Transaction Recording) because debt calculation consumes `TransactionRecordedEvent`, `TransactionUpdatedEvent`, `TransactionDeletedEvent`, and splits are configured at transaction record time.
 
-**Actual development order:** 0 → 1a → 1b → 1c → 1d → 2a → 2b → 3a → 3b → 2c → 3c → (4 | 5 | 6 parallel) → 7a → 7b → 8a → 8b → 8c → 8d
+**Actual development order:** 1a → 1b → 1c → 1d → 1e → 2a → 2b → 3a → 3b → 2c → (4 | 5 | 6 parallel) → 7a → 7b → 8a → 8b → 8c → 8d
 
 ---
 
@@ -309,7 +310,6 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 | **4 (Budgets)** | 5 (Goals), 6 (Recurring) | All three consume `TransactionRecordedEvent` but are otherwise independent |
 | **5 (Goals)** | 4 (Budgets), 6 (Recurring) | All three consume `TransactionRecordedEvent` but are otherwise independent |
 | **6 (Recurring)** | 4 (Budgets), 5 (Goals) | All three consume `TransactionRecordedEvent` but are otherwise independent |
-| **2c (Debt Calc)** | 3c (Splits) | Both require Phase 3b complete but are independent of each other |
 | **7a (Notifications)** | 7b (Auditing) | Independent consumers of integration events |
 
 **Strategy:** Maximize parallel development after Phase 3b (Transactions) completes. Phases 4, 5, 6 can all be developed simultaneously by different developers or teams.
@@ -340,7 +340,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 |-------|----------------|--------------|------------------|
 | **Phase 1 (1a-1e)** | Medium | Infrastructure + Outbox + Audit + Auth (API + UI) | Sequential: 1a → 1b → 1c → 1d → 1e |
 | **Phase 2 (2a-2c)** | Medium | Wallets + Collaboration (API + UI) | Sequential: 2a → 2b; Phase 2c deferred until after 3b |
-| **Phase 3 (3a-3c)** | Medium | Transactions + Categories (API + Calculator UI) | Sequential: 3a → 3b → 3c; unblocks 2c, 4, 5, 6 |
+| **Phase 3 (3a-3b)** | Medium | Transactions + Categories (API + Calculator UI) | Sequential: 3a → 3b; unblocks 2c, 4, 5, 6 |
 | **Phase 4 (4a-4b)** | Medium (parallel) | Budgets (API + UI) | Can be developed concurrently with 5, 6 after Phase 3b |
 | **Phase 5 (5a-5b)** | Medium (parallel) | Goals (API + UI) | Can be developed concurrently with 4, 6 after Phase 3b |
 | **Phase 6 (6a-6b)** | Medium (parallel) | Recurring (API + UI) | Can be developed concurrently with 4, 5 after Phase 3b |
@@ -375,8 +375,8 @@ During implementation, every phase should reference these source files from the 
 | **Development approach** | Iterative vertical slices (backend + frontend together) | Each phase delivers complete features (API + UI). Enables early user feedback. Aligns with agile development. Reduces risk of API-UI mismatches discovered late. |
 | **RBAC implementation** | Simple (SuperAdmin + user isolation) | Kakeibo's permission model is intentionally flat. Full RBAC adds complexity for no business value. Shared wallet permissions are membership checks, not role-based. |
 | **Notification module timing** | Late (Phase 7 after business modules) | Consumers need events from all business modules. Building early means constant modification. Building late means implementing once against complete event catalog. |
-| **Phase 2c placement** | In Phase 2 with Phase 3b prerequisite | Conceptually belongs in Wallets module. Prerequisite explicitly documented. Actual dev order: 2a → 2b → 3a → 3b → 2c → 3c. |
-| **Outbox Pattern timing** | Phase 1c (after Identity) | Outbox needs real events from Identity (UserRegisteredEvent, UserLoggedInEvent) for meaningful testing. Sequential order: 1a (infra) → 1b (Identity) → 1c (Outbox tested with Identity events). |
+| **Phase 2c placement** | In Phase 2 with Phase 3b prerequisite | Conceptually belongs in Wallets module (debt calc) and Transactions module (splits). Prerequisite explicitly documented. Actual dev order: 2a → 2b → 3a → 3b → 2c. Phase 3c absorbed into 2c. |
+| **Events System timing** | Phase 1c (after Identity) | The in-memory event bus (`IEventBus` / `ChannelEventBus` / `EventDispatcher`) needs real events from Identity (`UserRegisteredEvent`, `UserLoggedInEvent`) for meaningful end-to-end testing. Sequential order: 1a (infra) → 1b (Identity) → 1c (Events System tested with Identity events). |
 | **Dashboard + Onboarding timing** | Phase 8 (after all modules complete) | Dashboard aggregates data from all 6 business modules. Onboarding guides users through features that must already exist. Settings centralizes preferences from all modules. |
 | **OAuth login** | Post-MVP | OAuth listed in platform.md but not in MVP scope. Focus on email/password for MVP. Google/Apple Sign-In deferred. |
 | **Multi-currency** | Post-MVP | Single-currency MVP per constraints.md. User selects currency at registration. Multi-currency deferred to post-MVP. |
@@ -389,15 +389,15 @@ During implementation, every phase should reference these source files from the 
 
 ### Notifications
 
-- **Phase 1-6:** Integration events published via `IModuleEventBus` and persisted in outbox. No consumer exists — events marked as "no consumer" by `OutboxProcessor`. Safe because outbox pattern handles at-least-once delivery.
-- **Phase 7a:** `Kakeibo.Modules.Notifications` implemented with consumers for all business events. `OutboxProcessor` now resolves `IEventConsumer<T>` for notification events.
+- **Phase 1-6:** Business events published via `IEventBus.Publish()`. The `ChannelEventBus` writes to an in-memory `Channel<IEvent>`. The `EventDispatcher` (BackgroundService) reads the channel and resolves all `IEventHandler<TEvent>` implementations from DI. If no handler is registered for an event, the dispatcher discards the event silently. When Notifications handlers are registered in Phase 7a, events are dispatched automatically.
+- **Phase 7a:** `Features/Notifications/` implemented with `IEventHandler<T>` implementations for all business events.
 
 ### Auditing
 
-- **Phase 1a:** ClickHouse `audit_logs` table created (infrastructure level).
-- **Phase 1d:** Audit pipeline fully operational — `IAuditOutbox.Stage()` and `.PublishAsync()` available to all modules. `AuditOutboxProcessor` running in background.
-- **Phase 2-6:** Each module's `DomainEventHandler` implementations call `auditOutbox.Stage()` within transaction. Audit events flow to ClickHouse automatically.
-- **Phase 7b:** `Kakeibo.Modules.Auditing` adds Activity entity, query endpoints, and admin UI for browsing audit trail.
+- **Phase 1a:** ClickHouse `audit_events` table created at infrastructure level.
+- **Phase 1d:** Audit pipeline fully operational — `IEventHandler<T>` implementations in `Features/Auditing/` receive events published via `IEventBus` and write to ClickHouse.
+- **Phase 2-6:** Each feature handler publishes domain events (`IEvent`) via `IEventBus`. Auditing handlers react asynchronously via `EventDispatcher`.
+- **Phase 7b:** `Features/Auditing/` adds Activity query endpoints and admin UI for browsing audit trail.
 
 ### i18n
 

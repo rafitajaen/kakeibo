@@ -20,14 +20,14 @@
 ### ✅ Included
 
 **User Management**:
-- Registration (email + password)
+- Registration (email + password + currency preference, default: EUR)
 - Email verification (confirmation link)
 - Login (JWT access + refresh tokens)
 - Token refresh with rotation
 - Password recovery (email token)
 - Password reset
-- Session tracking
-- OAuth (Google, Apple) — basic
+- Session tracking (Session entity with device info)
+- Logout all sessions (`POST /api/auth/logout-all`)
 
 **Security**:
 - PBKDF2-SHA512 password hashing
@@ -37,6 +37,7 @@
 
 ### ❌ Excluded
 
+- OAuth (Google, Apple) — Post-MVP
 - MFA — post-MVP
 - Account deletion — Phase 8c
 - Password change UI — Phase 8c
@@ -51,10 +52,10 @@
 **Kakeibo.Modules.Identity/**:
 ```
 Entities/
-  User.cs
+  User.cs              — includes Currency field (selected at registration)
   RefreshToken.cs
   PasswordResetToken.cs
-  Session.cs
+  Session.cs           — Id, UserId, RefreshTokenHash, IpAddress, UserAgent, CreatedAt, ExpiresAt, RevokedAt
 
 Features/
   Register/
@@ -73,11 +74,12 @@ Services/
 
 ### Endpoints
 
-- `POST /api/auth/register`
+- `POST /api/auth/register` — includes `currency` field (required)
 - `POST /api/auth/verify-email`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
 - `POST /api/auth/logout`
+- `POST /api/auth/logout-all` — revokes all active sessions for current user
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`
 - `GET /api/auth/me`
@@ -93,6 +95,7 @@ Services/
 ## Acceptance Criteria
 
 - [ ] User registration creates unverified user
+- [ ] User selects currency at registration (stored in User.Currency field)
 - [ ] Verification email sent with token
 - [ ] Email verification marks user as verified
 - [ ] Login validates credentials + email verification
@@ -100,6 +103,7 @@ Services/
 - [ ] Token refresh rotates refresh token
 - [ ] Password recovery sends email with token
 - [ ] Password reset validates token and updates password
+- [ ] Logout-all revokes all active sessions for current user
 - [ ] Integration events published
 - [ ] Unit tests >= 90% coverage
 - [ ] Integration tests: full auth flows
@@ -108,7 +112,7 @@ Services/
 
 ## Definition of "Phase 1b Completed"
 
-1. All 8 endpoints functional
+1. All 9 endpoints functional
 2. All security measures implemented
 3. Integration events published
 4. Tests pass (unit + integration)

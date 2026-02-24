@@ -34,7 +34,7 @@ jobs:
         run: dotnet build Kakeibo.slnx --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test tests/Kakeibo.Modules.Identity.Tests/ --configuration Release --no-build
+        run: dotnet test tests/Kakeibo.Tests/ --configuration Release --no-build
 
   quality-email:
     name: Quality - Email

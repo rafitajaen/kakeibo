@@ -240,6 +240,66 @@ private async Task<MyDbContext> CreateDbContextAsync()
 
 ---
 
+## KB-010: Migración de Modular Monolith a Simple Monolith (2026-02-24)
+
+**Discovered:** 2026-02-24
+**Affects:** All architectural decisions in `src/` and `tests/`
+
+At ~5% implementation (infrastructure + CI only, zero business logic), the architecture was
+migrated from a Modular Monolith (12 projects: Api, Common, Contracts, Infrastructure + 8 modules)
+to a Simple Monolith (2 projects: Kakeibo.Api + Kakeibo.Tests). The migration was zero-risk at
+this point — no business code existed to break.
+
+### What was removed
+
+| Component | Reason |
+|-----------|--------|
+| `Kakeibo.Common` project | Absorbed into `Kakeibo.Api/Common/` |
+| `Kakeibo.Contracts` project | No inter-module contracts needed (single assembly) |
+| `Kakeibo.Infrastructure` project | Absorbed into `Kakeibo.Api/Infrastructure/` |
+| `Kakeibo.Modules.Identity` project | Features live in `Kakeibo.Api/Features/Identity/` |
+| `Kakeibo.Modules.Identity.Tests` | Merged into `Kakeibo.Tests` |
+| `Outbox Pattern` (OutboxInterceptor, OutboxProcessor, OutboxMessage) | Replaced by `System.Threading.Channels` |
+| `IModuleClient` / `IModuleRequest` / `IModuleRequestHandler` | No cross-assembly communication needed |
+| `IModuleEventBus` / `IIntegrationEvent` / `IEventConsumer<T>` | Replaced by `IEventBus` / `IEvent` / `IEventHandler<T>` |
+| `IDomainEvent` / `IDomainEventHandler<T>` / `AggregateRoot` | Replaced by `IEvent` / `IEventHandler<T>` |
+| `IUnitOfWork` | Replaced by direct `AppDbContext` usage |
+| Per-module DbContexts | Replaced by single `AppDbContext` |
+| Per-module PostgreSQL schemas | Single `public` schema |
+
+### What was created
+
+| Component | Location |
+|-----------|----------|
+| `IEvent`, `IEventHandler<T>`, `IEventBus` | `Kakeibo.Api/Infrastructure/Events/` |
+| `ChannelEventBus` (singleton, fire-and-forget) | `Kakeibo.Api/Infrastructure/Events/` |
+| `EventDispatcher` (BackgroundService) | `Kakeibo.Api/Infrastructure/Events/` |
+| `AppDbContext` (single context) | `Kakeibo.Api/Persistence/AppDbContext.cs` |
+| `Kakeibo.Tests` (single test project) | `tests/Kakeibo.Tests/` |
+| Architecture tests (naming conventions only) | `tests/Kakeibo.Tests/Architecture/` |
+
+### New namespace root
+
+All code lives under `Kakeibo.Api.*`:
+- `Kakeibo.Api.Common.Abstractions` — Entity, Result<T>, Error, ValueObject
+- `Kakeibo.Api.Common.Endpoints` — IEndpoint, ValidationFilter, EndpointExtensions
+- `Kakeibo.Api.Common.Utils` — Guid7, PasswordHasher, DefaultSerializer, CharSets
+- `Kakeibo.Api.Infrastructure.Events` — IEvent, IEventBus, ChannelEventBus, EventDispatcher
+- `Kakeibo.Api.Infrastructure.Caching` — ICacheService, FusionCacheService
+- `Kakeibo.Api.Infrastructure.Email` — IEmailService, EmailService
+- `Kakeibo.Api.Infrastructure.Storage` — IStorageService, StorageService
+- `Kakeibo.Api.Features.Identity.*` — Identity domain features
+- `Kakeibo.Api.Persistence` — AppDbContext, Configurations/
+
+### Build result after migration
+
+```
+dotnet build Kakeibo.slnx → 0 errors, 0 warnings
+dotnet test tests/Kakeibo.Tests/ → 3 tests passed (naming convention architecture tests)
+```
+
+---
+
 ## KB-009: RustFS SSE (Server-Side Encryption) is broken in alpha.83
 
 **Discovered:** 2026-02-19

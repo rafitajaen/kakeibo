@@ -278,8 +278,8 @@ Management of financial containers (personal and shared) and collaborative expen
 - Listens to `TransactionUpdatedEvent` from Transactions → recalculates debts
 - Listens to `TransactionDeletedEvent` from Transactions → recalculates debts
 - Handles `GetWalletMembersRequest` from other modules
-- Handles `GetWalletBalanceRequest` from Goals module
 - Handles `ValidateInvitationRequest` from other modules
+- Sends `GetWalletBalanceRequest` to Transactions module (for balance display — balance is owned by Transactions)
 
 ### 5.2 Transactions (includes Categories)
 
@@ -316,7 +316,8 @@ Recording and tracking of financial events with classification system.
 **Critical Invariants**:
 - Every transaction must have exactly one category
 - Transfer transactions affect two wallets (source and destination)
-- Balance impact is atomic — either both wallets update or neither does
+- Balance impact is atomic — balance stored in `WalletBalance` entity updated in same `SaveChangesAsync()` call as the transaction (both wallets for transfers in a single DB transaction)
+- Balance lives in the Transactions module (`transactions.wallet_balances` table), not in Wallets module
 
 **Integration Points**:
 - Publishes `TransactionRecordedEvent` → consumed by Wallets (debt calc), Budgets, Goals, Auditing
@@ -324,6 +325,7 @@ Recording and tracking of financial events with classification system.
 - Publishes `TransactionDeletedEvent` → consumed by Wallets (debt calc), Budgets, Goals, Auditing
 - Handles `GetTransactionsInPeriodRequest` from Budgets module
 - Handles `GetCategoryByIdRequest` from other modules
+- Handles `GetWalletBalanceRequest` from Goals and Wallets modules (balance owned by Transactions)
 
 ### 5.3 Budgets
 
@@ -380,7 +382,7 @@ Savings target tracking and progress monitoring.
 - Listens to `TransactionRecordedEvent` from Transactions → updates progress (wallet-linked mode)
 - Publishes `GoalMilestoneReachedEvent` → consumed by Notifications
 - Publishes `GoalAchievedEvent` → consumed by Notifications
-- Sends `GetWalletBalanceRequest` to Wallets module
+- Sends `GetWalletBalanceRequest` to Transactions module (balance is owned by Transactions)
 
 ### 5.5 Recurring
 
@@ -473,6 +475,8 @@ Integration events published by each module and their subscribers:
 | Emitting Module | Event | Payload | Subscribed Modules |
 |----------------|-------|---------|-------------------|
 | Identity | `UserRegisteredEvent` | UserId, Email, RegisteredAt | Auditing, Notifications |
+| Identity | `UserLoggedInEvent` | UserId, IpAddress, UserAgent, LoggedInAt | Auditing |
+| Identity | `UserLoggedOutEvent` | UserId, SessionId, LoggedOutAt | Auditing |
 | **Wallets** | `WalletCreatedEvent` | WalletId, UserId, Name, Type, CreatedAt | Auditing, Notifications |
 | **Wallets** | `WalletArchivedEvent` | WalletId, UserId, ArchivedAt | Auditing |
 | **Wallets** | `InvitationSentEvent` | InvitationId, WalletId, InviterUserId, InviteeEmail, SentAt | Notifications |
@@ -497,7 +501,7 @@ Synchronous module requests for cross-module data queries:
 |------------------|---------|----------------|---------------|
 | Any | `GetWalletMembersRequest(WalletId)` | **Wallets** | `List<UserId>` |
 | Budgets | `GetTransactionsInPeriodRequest(WalletId, CategoryId, StartDate, EndDate)` | **Transactions** | `List<TransactionSummaryDto>` |
-| Goals | `GetWalletBalanceRequest(WalletId)` | **Wallets** | `decimal Balance` |
+| Goals, Wallets | `GetWalletBalanceRequest(WalletId)` | **Transactions** | `decimal Balance` |
 | Budgets | `GetCategoryByIdRequest(CategoryId)` | **Transactions** | `CategoryDto` |
 | Any | `ValidateInvitationRequest(InvitationCode)` | **Wallets** | `InvitationStatus` |
 

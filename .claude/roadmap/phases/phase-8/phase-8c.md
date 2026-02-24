@@ -24,8 +24,12 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Identity/Features:**:
+**Kakeibo.Modules.Identity/Features/**:
 - UpdateProfile, ChangePassword, DeleteAccount, ListSessions, RevokeSession
+
+**Kakeibo.Modules.Identity/Jobs/**:
+- `AccountDeletionJob.cs` — Hangfire daily job that permanently deletes users where
+  `DeletionRequestedAt < now() - 30 days` (GDPR 30-day grace period enforcement)
 
 **Endpoints**:
 - `PUT /api/users/me/profile`
@@ -44,7 +48,8 @@
 
 - [ ] Update profile (name, currency)
 - [ ] Change password
-- [ ] Delete account (30-day grace period)
+- [ ] Delete account (marks `DeletionRequestedAt`, starts 30-day grace period)
+- [ ] Background job permanently deletes accounts after 30-day grace period (Hangfire `AccountDeletionJob`)
 - [ ] View active sessions
 - [ ] Revoke session
 - [ ] Frontend: settings navigation
@@ -56,5 +61,6 @@
 ## Definition of "Phase 8c Completed"
 
 1. Settings functional
-2. All 8 acceptance criteria checked
-3. Phase 8d can begin
+2. AccountDeletionJob operational (Hangfire daily schedule)
+3. All acceptance criteria checked
+4. Phase 8d can begin

@@ -33,8 +33,7 @@ inside its own project directory. Dockerfiles must never be placed at the monore
 | `sites/Kakeibo.App/` | `sites/Kakeibo.App/Dockerfile` | `sites/Kakeibo.App/.dockerignore` | `./sites/Kakeibo.App` |
 | `services/Kakeibo.Email/` | `services/Kakeibo.Email/Dockerfile` | `services/Kakeibo.Email/.dockerignore` | `./services/Kakeibo.Email` |
 
-The API requires repo-root context because its Dockerfile copies from multiple `src/`
-subdirectories. In that case the per-Dockerfile dockerignore is named `Dockerfile.dockerignore`
+The API uses repo-root context (`.`). Its per-Dockerfile dockerignore is named `Dockerfile.dockerignore`
 and placed alongside the Dockerfile (Docker resolves it as `{context}/{dockerfile-path}.dockerignore`).
 
 ## Rule 4: Never Use `.WithReuse(true)` in Testcontainers
@@ -72,9 +71,9 @@ site, or a service — it must be simultaneously registered in all four quality 
 1. **`package.json`** — Scripts `{project}:*` for the project's core operations (build, test,
    lint, format, typecheck…). Examples by project type:
 
-   **Backend test project:**
+   **Backend test project (new site or service only — all backend tests go in `tests/Kakeibo.Tests/`):**
    ```json
-   "api:test:notifications": "dotnet test tests/Kakeibo.Modules.Notifications.Tests/..."
+   "api:test": "dotnet test tests/Kakeibo.Tests/ --configuration Release"
    ```
 
    **Frontend site or service:**
@@ -101,10 +100,10 @@ site, or a service — it must be simultaneously registered in all four quality 
 3. **`.github/workflows/ci.yml`** — A dedicated job for the project, or a new step inside an
    existing job if the project is a subcomponent. Examples:
 
-   **Backend test project (step inside `quality-api` job):**
+   **Backend tests (single step inside `quality-api` job — all tests in `Kakeibo.Tests`):**
    ```yaml
-   - name: Test notifications module
-     run: dotnet test tests/Kakeibo.Modules.Notifications.Tests/... --no-build --configuration Release
+   - name: Run tests
+     run: dotnet test tests/Kakeibo.Tests/ --configuration Release --no-build
    ```
 
    **Frontend site or service (dedicated job):**

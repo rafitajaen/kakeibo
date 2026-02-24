@@ -1,6 +1,6 @@
 # Kakeibo
 
-Personal finance and shared expense management platform inspired by traditional Japanese budgeting. Modular monolith monorepo with event-driven architecture. Current phase: **Phase 1a (Infrastructure Base) — partially complete**.
+Personal finance and shared expense management platform inspired by traditional Japanese budgeting. Simple monolith monorepo with event-driven architecture. Current phase: **Phase 1a (Infrastructure Base) — partially complete**.
 
 **Language:** Always respond in Spanish. All code, commits, PRs, code comments, and documentation must be in English.
 
@@ -10,9 +10,8 @@ Personal finance and shared expense management platform inspired by traditional 
 
 - **TDD**: When building features or fixing bugs, follow TDD (red-green-refactor). Invoke the `/kakeibo-testing` skill for test structure, infrastructure patterns, and coverage decisions.
 - **Documentation**: After any change that introduces or modifies a pattern, flow, or architectural concept, document it in the appropriate `.claude/rules/` file (architecture.md, technical-debt.md, knowledge.md, etc.).
-- **README.md**: Keep the root `README.md` up to date at each phase milestone: update the phase status line, project structure (new modules or services), key commands, and service URLs whenever a phase is started or completed.
+- **README.md**: Keep the root `README.md` up to date at each phase milestone: update the phase status line, project structure, key commands, and service URLs whenever a phase is started or completed.
 - **No prohibited technologies**: See `.claude/rules/tech-stack.md` and the Prohibited section below.
-- **No cross-module references**: Module A never references Module B's project. Enforced by architecture tests.
 - **NuGet versions**: All versions in `Directory.Packages.props`. Never `Version="x.x.x"` in `.csproj`.
 - **Solution format**: `Kakeibo.slnx` (not `.sln`).
 - **Guid7**: Use `Guid7.NewGuid()` for entity IDs. `Guid.CreateVersion7()` is PROHIBITED.
@@ -27,7 +26,7 @@ Personal finance and shared expense management platform inspired by traditional 
 > Full tech stack: `.claude/rules/tech-stack.md`
 
 Key technologies: .NET 10 Minimal APIs, EF Core + PostgreSQL 18, FusionCache + Redis,
-Outbox Pattern, Hangfire (background jobs), Vue 3 Composition API + Pinia + shadcn-vue,
+System.Threading.Channels (in-process events), Hangfire (background jobs), Vue 3 Composition API + Pinia + shadcn-vue,
 Bun, xUnit v3 + Testcontainers / Vitest + Playwright.
 
 ---
@@ -51,6 +50,8 @@ Bun, xUnit v3 + Testcontainers / Vitest + Playwright.
 | `lucide-vue-next` | `@hugeicons/vue` + `@hugeicons/core-free-icons` |
 | `FluentAssertions` | Use xUnit v3 native `Assert.*` methods manually |
 | `npx` | `bunx` (or `bunx --bun` when Bun runtime is required) |
+| Outbox Pattern / IModuleEventBus | `IEventBus` + `ChannelEventBus` (System.Threading.Channels) |
+| IModuleClient / IModuleRequest | Direct method calls — single project, no cross-assembly boundaries |
 
 > Full list: `.claude/rules/tech-stack.md`
 
@@ -124,7 +125,7 @@ This project uses [semantic-release](https://semantic-release.gitbook.io/) for a
 
 All scripts are defined in `package.json` (root). Run with `bun run <script>`.
 
-**Currently available:** `api:*`, `email:*`, `docker:*`, `check:*`, `dev:*`
+**Currently available:** `api:*`, `email:*`, `docker:*`
 
 **Future (when implemented):** `app:*` commands will be added when `sites/Kakeibo.App` is created.
 
@@ -133,9 +134,9 @@ All scripts are defined in `package.json` (root). Run with `bun run <script>`.
 **EF Core migrations:**
 ```bash
 dotnet ef migrations add <Name> \
-  --project src/Kakeibo.Modules.<Module> \
+  --project src/Kakeibo.Api \
   --startup-project src/Kakeibo.Api \
-  --context <Module>DbContext \
+  --context AppDbContext \
   --output-dir Persistence/Migrations
 ```
 
@@ -147,26 +148,26 @@ dotnet ef migrations add <Name> \
 
 ### Architecture
 
-Vertical Slices + Screaming Architecture + Modular Monolith. Full spec: `.claude/rules/architecture.md` — module anatomy, inter-module communication (`IModuleClient` / `IModuleEventBus`), dependency rules, DI registration pattern.
+Vertical Slices + Screaming Architecture + Simple Monolith. Full spec: `.claude/rules/architecture.md` — feature folder structure, event system (`IEventBus` / `IEventHandler<T>`), DI registration pattern.
 
-Each feature lives in `src/Kakeibo.Modules.{Module}/Features/{Operation}/` with up to 3 files: `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Validator.cs`. Handlers are plain classes auto-registered by Scrutor. No MVC controllers, no FastEndpoints, no MediatR.
+Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up to 3 files: `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Validator.cs`. Handlers are plain classes auto-registered by Scrutor. No MVC controllers, no FastEndpoints, no MediatR.
 
-### Modules
+### Domain Areas
 
-8 modules total:
+8 business domains, all within `src/Kakeibo.Api/Features/`:
 - **Core:** Identity, Notifications, Auditing
 - **Business:** Wallets (includes Collaboration features), Transactions (includes Categories), Budgets, Goals, Recurring
 
 ### Quick Reference
 
-**EF Core:** `UseSnakeCaseNamingConvention()`, `UseNodaTime()`, never `DateTime`.
+**EF Core:** `UseSnakeCaseNamingConvention()`, `UseNodaTime()`, never `DateTime`. Single `AppDbContext`.
 **Passwords:** `PasswordHasher` (PBKDF2-SHA512). Never BCrypt or Argon2id.
-**JSON:** `DefaultSerializer.Options` (camelCase, nulls ignored, NodaTime support).
+**JSON:** `DefaultSerializer.Options` (camelCase, nulls ignored).
 **IDs:** `Guid7.NewGuid()` for entities. Regular `Guid` allowed elsewhere.
 **Constants:** Hardcoded enumerator strings → `public static class` with `public const string`. Config sections → `{Name}Options` with `const string SectionName`.
-**Naming:** `{Op}Endpoint`, `{Op}Handler`, `{Op}Validator`, nested `{Op}Request`/`{Op}Response`. Never `*Dto` outside `Kakeibo.Contracts`.
+**Naming:** `{Op}Endpoint`, `{Op}Handler`, `{Op}Validator`, nested `{Op}Request`/`{Op}Response`. Never `*Dto` suffix on endpoint types.
 **Endpoint URLs:** Resource → `/api/{resource}` (REST CRUD). Action → `POST /api/{resource}/{id}/{verb}`. Self-service → `/api/users/me/{resource}`.
-**InternalsVisibleTo:** Every `src/` project must expose internals to its test project.
+**InternalsVisibleTo:** `src/Kakeibo.Api/Kakeibo.Api.csproj` exposes internals to `Kakeibo.Tests`.
 **Comments:** Non-trivial methods need a summary comment above the signature + inline `//` for non-obvious logic.
 **C# Style:** File-scoped namespaces, `Nullable` enabled, `TreatWarningsAsErrors` enabled, primary constructors required (`IDE0290`).
 
@@ -198,14 +199,14 @@ Each feature lives in `src/Kakeibo.Modules.{Module}/Features/{Operation}/` with 
 
 ### Creating an API Endpoint
 
-1. Create feature folder: `src/Kakeibo.Modules.{Module}/Features/{Operation}/`
+1. Create feature folder: `src/Kakeibo.Api/Features/{Domain}/{Operation}/`
 2. Create `{Op}Endpoint.cs` implementing `IEndpoint` with nested `{Op}Request`/`{Op}Response` records
 3. Implement static `MapEndpoint(IEndpointRouteBuilder app)` to register the route
 4. Create `{Op}Handler.cs` — plain class with `HandleAsync` method (injected via DI)
 5. Create `{Op}Validator.cs` inheriting `AbstractValidator<T>` with FluentValidation rules
 6. Use `Guid7` for IDs, `NodaTime` for dates, `DefaultSerializer.Options` for JSON
-7. Create test: `tests/Kakeibo.Modules.{Module}.Tests/Features/{Op}/{Op}Tests.cs`
-8. Run: `bun run api:test:unit`
+7. Create test: `tests/Kakeibo.Tests/Features/{Domain}/{Op}/{Op}Tests.cs`
+8. Run: `bun run api:test`
 
 ### Creating a Vue Component
 
@@ -226,22 +227,21 @@ Each feature lives in `src/Kakeibo.Modules.{Module}/Features/{Operation}/` with 
 2. Use setup function style: `defineStore('name', () => { ... })`
 3. Export as `use{Name}Store`
 4. Use `ref()` for state, `computed()` for getters, functions for actions
-5. Follow pattern in `stores/counter.ts` (if/when created)
 
 ### Adding a NuGet Package
 
 1. Add version to `Directory.Packages.props`: `<PackageVersion Include="..." Version="..." />`
-2. Add reference in `.csproj` WITHOUT version: `<PackageReference Include="..." />`
+2. Add reference in `src/Kakeibo.Api/Kakeibo.Api.csproj` WITHOUT version: `<PackageReference Include="..." />`
 3. Run: `bun run api:restore && bun run api:build`
 
 ### Before Committing
 
-1. Backend: `bun run api:test:unit && bun run api:test:arch`
+1. Backend: `bun run api:build && bun run api:test`
 2. Frontend (when exists): `bun run app:format && bun run app:lint && bun run app:test:unit`
 3. Email (if changed): `bun run email:format`
 4. Re-stage any files modified by the formatters before committing: `git add <files>`
 5. Documentation: Update or create the corresponding page in `.claude/rules/` if the change introduces or modifies a pattern, flow, or architectural concept.
-6. README.md: Update the phase status, project structure, and any new commands or service URLs if the change marks a phase milestone or adds a new module/service.
+6. README.md: Update the phase status, project structure, and any new commands or service URLs if the change marks a phase milestone.
 7. Commit with conventional format: `type(scope): description`
 8. Pre-commit hooks will run automatically (commitlint + oxlint + oxfmt on staged files)
 
@@ -253,17 +253,15 @@ Read these files when implementing similar functionality:
 
 | Pattern | File | What it demonstrates |
 |---------|------|---------------------|
-| IEndpoint pattern | `src/Kakeibo.Common/Endpoints/IEndpoint.cs` | Minimal API REPR pattern interface |
-| Validation filter | `src/Kakeibo.Common/Endpoints/ValidationFilter.cs` | Generic FluentValidation endpoint filter |
-| Endpoint scanning | `src/Kakeibo.Common/Endpoints/EndpointExtensions.cs` | Assembly scanning for IEndpoint |
-| DI extensions | `src/Kakeibo.Api/DependencyInjection/` | Modular DI registration (one file per concern) |
-| Password hashing | `src/Kakeibo.Common/Utils/PasswordHasher.cs` | PBKDF2-SHA512, salt generation, constant-time verify |
-| JSON serialization | `src/Kakeibo.Common/Utils/DefaultSerializer.cs` | camelCase, null handling, NodaTime support |
-| ID generation | `src/Kakeibo.Common/Utils/Guid7.cs` | UUIDv7 type-safe wrapper |
+| IEndpoint pattern | `src/Kakeibo.Api/Common/Endpoints/IEndpoint.cs` | Minimal API REPR pattern interface |
+| Validation filter | `src/Kakeibo.Api/Common/Endpoints/ValidationFilter.cs` | Generic FluentValidation endpoint filter |
+| Endpoint scanning | `src/Kakeibo.Api/Common/Endpoints/EndpointExtensions.cs` | Assembly scanning for IEndpoint |
+| Password hashing | `src/Kakeibo.Api/Common/Utils/PasswordHasher.cs` | PBKDF2-SHA512, salt generation, constant-time verify |
+| JSON serialization | `src/Kakeibo.Api/Common/Utils/DefaultSerializer.cs` | camelCase, null handling |
+| ID generation | `src/Kakeibo.Api/Common/Utils/Guid7.cs` | UUIDv7 type-safe wrapper |
+| In-process events | `src/Kakeibo.Api/Infrastructure/Events/` | IEventBus, ChannelEventBus, EventDispatcher |
 | Pinia store | `sites/Kakeibo.App/stores/counter.ts` | Setup function style, ref + computed + functions (when created) |
-| String constants | `src/Kakeibo.Common/Utils/CharSets.cs` | Static class with `public const string` fields |
-| Module registration | `src/Kakeibo.Modules.{Module}/{Module}ModuleRegistration.cs` | DI + endpoint registration per module |
-| Module anatomy | `.claude/rules/architecture.md` | Modular monolith structure, module anatomy, inter-module communication |
+| String constants | `src/Kakeibo.Api/Common/Utils/CharSets.cs` | Static class with `public const string` fields |
 
 ---
 
@@ -272,12 +270,12 @@ Read these files when implementing similar functionality:
 | File | Content |
 |------|---------|
 | `.claude/roadmap/roadmap.md` | Canonical roadmap — phases, dependencies, implementation strategy |
-| `.claude/rules/platform.md` | Canonical business domain: 8 modules, user model, wallets, transactions, collaboration |
+| `.claude/rules/platform.md` | Canonical business domain: 8 domains, user model, wallets, transactions, collaboration |
 | `.claude/rules/tech-stack.md` | All technologies and prohibited list |
-| `.claude/rules/architecture.md` | Modular monolith structure, dependency rules, module anatomy |
+| `.claude/rules/architecture.md` | Simple monolith structure, feature folder anatomy, event system, DI registration |
 | `.claude/rules/technical-debt.md` | Technical debt rules, code patterns to avoid, audit criteria |
 | `.claude/rules/mandatory.md` | Business invariants: Admin role, Dockerfiles, i18n, CI registration, Testcontainers |
-| `.claude/rules/knowledge.md` | Knowledge base KB-001–KB-009: gotchas and lessons learned |
+| `.claude/rules/knowledge.md` | Knowledge base KB-001–KB-010: gotchas and lessons learned |
 | `.claude/rules/infrastructure.md` | Docker Compose, Dockerfiles, env strategy, CI/CD pipeline |
 | `.claude/rules/overview.md` | Platform philosophy, core functionality, key concepts, main flows |
 | `.claude/rules/constraints.md` | Business constraints and limits (transaction amounts, wallet limits, etc.) |

@@ -7,29 +7,50 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Kakeibo.Common\Kakeibo.Common.csproj" />
-    <ProjectReference Include="..\Kakeibo.Contracts\Kakeibo.Contracts.csproj" />
-    <ProjectReference Include="..\Kakeibo.Infrastructure\Kakeibo.Infrastructure.csproj" />
-    <ProjectReference Include="..\Kakeibo.Modules.Identity\Kakeibo.Modules.Identity.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- Authentication -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- Caching -->
+    <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="ZiggyCreatures.FusionCache" />
+    <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" />
+    <!-- Email -->
+    <PackageReference Include="MailKit" />
+    <!-- Entity Framework -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
-    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
+    <PackageReference Include="EFCore.NamingConventions" />
+    <!-- FluentValidation -->
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <!-- HealthChecks -->
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
+    <!-- MinIO/Storage -->
+    <PackageReference Include="Minio" />
+    <!-- NodaTime -->
+    <PackageReference Include="NodaTime" />
+    <!-- OpenAPI/Scalar -->
+    <PackageReference Include="Scalar.AspNetCore" />
+    <!-- OpenTelemetry -->
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <!-- Serilog -->
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.ClickHouse" />
+    <!-- Utilities -->
+    <PackageReference Include="Medo.Uuid7" />
     <PackageReference Include="Scrutor" />
     <PackageReference Include="DotNetEnv" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Kakeibo.FunctionalTests" />
+    <InternalsVisibleTo Include="Kakeibo.Tests" />
   </ItemGroup>
 
 </Project>

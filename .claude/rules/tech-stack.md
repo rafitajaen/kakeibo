@@ -27,7 +27,7 @@
 |-----------|-------------|
 | Minimal APIs | Native REPR pattern with IEndpoint interface |
 | ASP.NET Core Authentication | JWT Bearer with HttpOnly cookies |
-| Modular Monolith | Event-driven architecture, DDD and TDD |
+| Simple Monolith | Single project, vertical slices + screaming architecture, folder-based domain separation |
 | EntityFramework | ORM with SnakeCaseConvention, NodaTime and PostgreSQL |
 | FluentValidation | Model validation |
 | FusionCache | Cache with Redis |
@@ -36,7 +36,7 @@
 | Scalar | API documentation |
 | AspNetCore.HealthChecks | Health endpoints for monitoring |
 | Polly | Resilience: retries, circuit breaker, timeouts |
-| Outbox Pattern | Transactional outbox for reliable event publishing, dispatched to IEventConsumer<T> handlers |
+| System.Threading.Channels | In-memory async event bus (IEventBus, ChannelEventBus, EventDispatcher BackgroundService) |
 | MailKit | SMTP client for sending emails |
 | Hangfire + Hangfire.PostgreSql | Scheduled background jobs with PostgreSQL storage |
 | xUnit v3 | Testing |
@@ -100,8 +100,8 @@
 | Quartz.NET | Use Hangfire instead |
 | Guid.CreateVersion7() | PROHIBITED. Little-endian byte order breaks PostgreSQL sorting. Use Guid7 wrapper (Medo.Uuid7) for entity IDs. Regular Guid is allowed for non-entity purposes |
 | SonarAnalyzer.CSharp | Use .editorconfig and built-in .NET analyzers instead |
-| MassTransit | Use Outbox Pattern + System.Threading.Channels |
-| RabbitMQ | Use Outbox Pattern + System.Threading.Channels |
+| MassTransit | Use System.Threading.Channels (IEventBus + ChannelEventBus) |
+| RabbitMQ | Use System.Threading.Channels (IEventBus + ChannelEventBus) |
 | Keycloak | Use ASP.NET Core native JWT Bearer authentication with in-memory signing |
 | dayjs | Frontend only. Use date-fns instead |
 | datejs | Frontend only. Use date-fns instead |
