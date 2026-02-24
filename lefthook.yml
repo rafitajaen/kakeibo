@@ -7,11 +7,11 @@ pre-commit:
   parallel: true
   commands:
     oxlint:
-      root: "sites/Kakeibo.App/"
+      root: "src/Kakeibo.App/"
       glob: "*.{ts,tsx,vue,js,jsx}"
       run: bunx oxlint --deny-warnings {staged_files}
 
     oxfmt-check:
-      root: "sites/Kakeibo.App/"
+      root: "src/Kakeibo.App/"
       glob: "*.{ts,tsx,vue,js,jsx,css,json}"
       run: bunx oxfmt --check {staged_files}

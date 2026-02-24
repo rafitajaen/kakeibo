@@ -52,10 +52,10 @@
 
 ### Frontend
 
-**sites/Kakeibo.App/public/**:
+**src/Kakeibo.App/public/**:
 - `sw.js` — service worker with `push` event handler (displays notification)
 
-**sites/Kakeibo.App/src/components/notifications/**:
+**src/Kakeibo.App/components/notifications/**:
 - `NotificationBell.vue`, `NotificationList.vue`, `PreferencesForm.vue`
 
 **Push permission flow** (in app initialization):

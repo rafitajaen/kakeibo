@@ -33,7 +33,7 @@
 - `RecurringTransactionGeneratedEvent`
 
 ### Frontend
-**sites/Kakeibo.App/src/components/recurring/**:
+**src/Kakeibo.App/components/recurring/**:
 - ForecastList.vue, UpcomingTransactionCard.vue
 
 ---

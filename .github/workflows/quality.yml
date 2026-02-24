@@ -50,24 +50,24 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('services/Kakeibo.Email/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('src/Kakeibo.Email/bun.lockb') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
       - name: Install dependencies
-        run: cd services/Kakeibo.Email && bun install --frozen-lockfile
+        run: cd src/Kakeibo.Email && bun install --frozen-lockfile
 
       - name: Typecheck
-        run: cd services/Kakeibo.Email && bun run typecheck
+        run: cd src/Kakeibo.Email && bun run typecheck
 
       - name: Lint
-        run: cd services/Kakeibo.Email && bun run lint
+        run: cd src/Kakeibo.Email && bun run lint
 
       - name: Check formatting
-        run: cd services/Kakeibo.Email && bun run format:check
+        run: cd src/Kakeibo.Email && bun run format:check
 
       - name: Run tests
-        run: cd services/Kakeibo.Email && bun run test
+        run: cd src/Kakeibo.Email && bun run test
 
   quality-app:
     name: Quality - App
@@ -83,24 +83,24 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('sites/Kakeibo.App/bun.lockb') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('src/Kakeibo.App/bun.lockb') }}
           restore-keys: |
             ${{ runner.os }}-bun-
 
       - name: Install dependencies
-        run: cd sites/Kakeibo.App && bun install --frozen-lockfile
+        run: cd src/Kakeibo.App && bun install --frozen-lockfile
 
       - name: Lint
-        run: cd sites/Kakeibo.App && bun run lint:check
+        run: cd src/Kakeibo.App && bun run lint:check
 
       # Note: oxfmt check disabled due to DataCloneError in Bun CI (Bun #25610, oxc #17801)
       # Pre-commit hook enforces formatting locally
 
       - name: Run unit tests
-        run: cd sites/Kakeibo.App && bun run test:unit
+        run: cd src/Kakeibo.App && bun run test:unit
 
       - name: Build
-        run: cd sites/Kakeibo.App && bun run build
+        run: cd src/Kakeibo.App && bun run build
 
   quality-docker:
     name: Quality - Docker
@@ -126,8 +126,8 @@ jobs:
       - name: Build Email image
         uses: docker/build-push-action@v6
         with:
-          context: ./services/Kakeibo.Email
-          file: services/Kakeibo.Email/Dockerfile
+          context: ./src/Kakeibo.Email
+          file: src/Kakeibo.Email/Dockerfile
           push: false
           tags: kakeibo-email:test
           cache-from: type=gha
@@ -136,8 +136,8 @@ jobs:
       - name: Build App image
         uses: docker/build-push-action@v6
         with:
-          context: ./sites/Kakeibo.App
-          file: sites/Kakeibo.App/Dockerfile
+          context: ./src/Kakeibo.App
+          file: src/Kakeibo.App/Dockerfile
           push: false
           tags: kakeibo-app:test
           cache-from: type=gha

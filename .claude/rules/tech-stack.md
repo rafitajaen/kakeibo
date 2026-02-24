@@ -20,6 +20,7 @@
 | .env / appsettings.json | Secrets and configuration |
 | InternalsVisibleTo | Every src project exposes internals to its corresponding test project |
 | Primary constructors | C# 12 primary constructors required. Enforced by .editorconfig (IDE0290:warning) |
+| No nested src/ in src/ | Projects under `src/` must not contain a nested `src/` subfolder. See mandatory.md Rule 10. |
 
 ## API (.NET 10)
 

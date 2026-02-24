@@ -23,10 +23,10 @@
 ## Deliverables
 
 ### Frontend
-**sites/Kakeibo.App/src/views/onboarding/**:
+**src/Kakeibo.App/views/onboarding/**:
 - OnboardingView.vue
 
-**sites/Kakeibo.App/src/components/onboarding/**:
+**src/Kakeibo.App/components/onboarding/**:
 - WelcomeStep.vue, WalletSetupStep.vue, TourStep.vue, ProgressIndicator.vue
 
 ---

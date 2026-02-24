@@ -45,7 +45,7 @@
 
 ### New Files
 
-**sites/Kakeibo.App/src/views/auth/**:
+**src/Kakeibo.App/views/auth/**:
 ```
 LoginView.vue
 RegisterView.vue
@@ -54,7 +54,7 @@ ForgotPasswordView.vue
 ResetPasswordView.vue
 ```
 
-**sites/Kakeibo.App/src/components/auth/**:
+**src/Kakeibo.App/components/auth/**:
 ```
 LoginForm.vue
 RegisterForm.vue
@@ -62,12 +62,12 @@ ForgotPasswordForm.vue
 ResetPasswordForm.vue
 ```
 
-**sites/Kakeibo.App/src/stores/**:
+**src/Kakeibo.App/stores/**:
 ```
 auth.ts                 — useAuthStore
 ```
 
-**sites/Kakeibo.App/src/lib/**:
+**src/Kakeibo.App/lib/**:
 ```
 axios.ts                — Axios instance with interceptors
 ```

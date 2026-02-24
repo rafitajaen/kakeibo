@@ -274,9 +274,9 @@ Scopes are defined in `commitlint.config.ts` and enforced by the `commit-msg` ho
 
 | Scope | When to use |
 |-------|-------------|
-| `app` | Changes to the Vue.js web app (`sites/Kakeibo.App/`) |
+| `app` | Changes to the Vue.js web app (`src/Kakeibo.App/`) |
 | `api` | Changes to the .NET API (`src/`) -- feature slices, infrastructure, or API-level changes |
-| `email` | Changes to the email renderer service (`services/Kakeibo.Email/`) |
+| `email` | Changes to the email renderer service (`src/Kakeibo.Email/`) |
 | `docs` | Documentation files (`kakeibo/`, project docs) |
 | `infra` | Infrastructure configuration (Docker, docker-compose, nginx, CI workflows) |
 | `deps` | Dependency updates (NuGet packages, npm packages, Bun lockfile) |
@@ -1094,20 +1094,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: cd sites/Kakeibo.App && bun install --frozen-lockfile
-      - run: cd sites/Kakeibo.App && bun run lint:check
-      - run: cd sites/Kakeibo.App && bun run test:unit -- --run
-      - run: cd sites/Kakeibo.App && bun run build
+      - run: cd src/Kakeibo.App && bun install --frozen-lockfile
+      - run: cd src/Kakeibo.App && bun run lint:check
+      - run: cd src/Kakeibo.App && bun run test:unit -- --run
+      - run: cd src/Kakeibo.App && bun run build
 
   quality-email:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: cd services/Kakeibo.Email && bun install --frozen-lockfile
-      - run: cd services/Kakeibo.Email && bun run typecheck
-      - run: cd services/Kakeibo.Email && bun run lint
-      - run: cd services/Kakeibo.Email && bun run test
+      - run: cd src/Kakeibo.Email && bun install --frozen-lockfile
+      - run: cd src/Kakeibo.Email && bun run typecheck
+      - run: cd src/Kakeibo.Email && bun run lint
+      - run: cd src/Kakeibo.Email && bun run test
 
   quality-docker:
     runs-on: ubuntu-latest
@@ -1115,8 +1115,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f src/Kakeibo.Api/Dockerfile -t kakeibo-api:test .
-      - run: docker build -f sites/Kakeibo.App/Dockerfile -t kakeibo-app:test ./sites/Kakeibo.App
-      - run: docker build -f services/Kakeibo.Email/Dockerfile -t kakeibo-email:test ./services/Kakeibo.Email
+      - run: docker build -f src/Kakeibo.App/Dockerfile -t kakeibo-app:test ./src/Kakeibo.App
+      - run: docker build -f src/Kakeibo.Email/Dockerfile -t kakeibo-email:test ./src/Kakeibo.Email
 ```
 
 ### Release Workflow (`release.yml`)
@@ -1157,8 +1157,8 @@ jobs:
       # Build and push App
       - uses: docker/build-push-action@v6
         with:
-          context: ./sites/Kakeibo.App
-          file: sites/Kakeibo.App/Dockerfile
+          context: ./src/Kakeibo.App
+          file: src/Kakeibo.App/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/kakeibo-app:latest
@@ -1169,8 +1169,8 @@ jobs:
       # Build and push Email
       - uses: docker/build-push-action@v6
         with:
-          context: ./services/Kakeibo.Email
-          file: services/Kakeibo.Email/Dockerfile
+          context: ./src/Kakeibo.Email
+          file: src/Kakeibo.Email/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/kakeibo-email:latest
@@ -1273,12 +1273,12 @@ pre-commit:
   parallel: true
   commands:
     oxlint:
-      root: "sites/Kakeibo.App/"
+      root: "src/Kakeibo.App/"
       glob: "*.{ts,tsx,vue,js,jsx}"
       run: bunx oxlint --deny-warnings {staged_files}
 
     oxfmt-check:
-      root: "sites/Kakeibo.App/"
+      root: "src/Kakeibo.App/"
       glob: "*.{ts,tsx,vue,js,jsx,css,json}"
       run: bunx oxfmt --check {staged_files}
 
@@ -1347,7 +1347,7 @@ bunx commitlint --version
 **"oxlint command failed":**
 ```bash
 # Run the auto-fix first
-cd sites/Kakeibo.App && bunx oxlint --fix .
+cd src/Kakeibo.App && bunx oxlint --fix .
 # Re-stage fixed files
 git add <fixed-files>
 ```
@@ -1355,7 +1355,7 @@ git add <fixed-files>
 **"oxfmt --check failed":**
 ```bash
 # Run the formatter
-cd sites/Kakeibo.App && bunx oxfmt .
+cd src/Kakeibo.App && bunx oxfmt .
 # Re-stage formatted files
 git add <formatted-files>
 ```
@@ -1375,7 +1375,7 @@ ls -la .git/hooks/
 # Verify staged files
 git diff --staged --name-only
 
-# If files are not in sites/Kakeibo.App/ or sites/Kakeibo.Mobile/,
+# If files are not in src/Kakeibo.App/ or sites/Kakeibo.Mobile/,
 # the pre-commit hooks will not run (they only target those directories)
 ```
 
@@ -1635,17 +1635,17 @@ dotnet test Kakeibo.slnx --configuration Release
 **`quality-app` fails:**
 ```bash
 # Lint failed:
-cd sites/Kakeibo.App && bun run lint:check
+cd src/Kakeibo.App && bun run lint:check
 # Fix lint errors:
-cd sites/Kakeibo.App && bun run lint
+cd src/Kakeibo.App && bun run lint
 git add <fixed-files> && git commit -m "style(app): fix lint errors" && git push
 
 # Tests failed:
-cd sites/Kakeibo.App && bun run test:unit -- --run
+cd src/Kakeibo.App && bun run test:unit -- --run
 # Fix failing tests, commit, and push
 
 # Build failed:
-cd sites/Kakeibo.App && bun run build
+cd src/Kakeibo.App && bun run build
 # Fix TypeScript errors, commit, and push
 ```
 

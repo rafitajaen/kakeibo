@@ -52,7 +52,7 @@ Production deployments are handled by GitHub Actions — images are built and pu
 | `rustfs` | `rustfs/rustfs:1.0.0-alpha.83` | `9000:9000`, `9001:9001` | (default) |
 | `clickhouse` | `clickhouse/clickhouse-server:24-alpine` | `8123:8123` | clickhouse-network |
 | `mailpit` | `axllent/mailpit:latest` | `1025:1025`, `8025:8025` | (default) |
-| `kakeibo-email` | Built from `services/Kakeibo.Email/Dockerfile` | `3050:3050` | (default) |
+| `kakeibo-email` | Built from `src/Kakeibo.Email/Dockerfile` | `3050:3050` | (default) |
 | `aspire-dashboard` | `mcr.microsoft.com/dotnet/aspire-dashboard:latest` | `18888:18888`, `18889:18889` | (default) |
 
 > ⚠️ `postgresdb` exposes port `5432` with comment `## REMOVE ON PRODUCTION`. In production, PostgreSQL must not be reachable from outside the Docker network.
@@ -64,7 +64,7 @@ Started with `docker compose --profile app up -d`. Not started by `docker compos
 | Service | Dockerfile | Port | Depends on |
 |---------|------------|------|------------|
 | `kakeibo-api` | `src/Kakeibo.Api/Dockerfile` | `5000:5000` | postgresdb, redis, rustfs, clickhouse, kakeibo-email |
-| `kakeibo-app` | `sites/Kakeibo.App/Dockerfile` | `3000:80` | kakeibo-api |
+| `kakeibo-app` | `src/Kakeibo.App/Dockerfile` | `3000:80` | kakeibo-api |
 
 The `kakeibo-api` container joins three named networks (`postgres-network`, `redis-network`, `clickhouse-network`) so it can reach all backing services by their container names.
 
@@ -127,8 +127,8 @@ Three Dockerfiles, one per deployable application. All use multi-stage builds to
 | Service | Dockerfile | dockerignore | Build context |
 |---------|-----------|--------------|---------------|
 | kakeibo-api | `src/Kakeibo.Api/Dockerfile` | `src/Kakeibo.Api/Dockerfile.dockerignore` | `.` (repo root) |
-| kakeibo-app | `sites/Kakeibo.App/Dockerfile` | `sites/Kakeibo.App/.dockerignore` | `./sites/Kakeibo.App` |
-| kakeibo-email | `services/Kakeibo.Email/Dockerfile` | `services/Kakeibo.Email/.dockerignore` | `./services/Kakeibo.Email` |
+| kakeibo-app | `src/Kakeibo.App/Dockerfile` | `src/Kakeibo.App/.dockerignore` | `./src/Kakeibo.App` |
+| kakeibo-email | `src/Kakeibo.Email/Dockerfile` | `src/Kakeibo.Email/.dockerignore` | `./src/Kakeibo.Email` |
 
 ### `src/Kakeibo.Api/Dockerfile` — .NET API
 
@@ -156,13 +156,13 @@ The restore layer is cached separately from the source copy so NuGet packages ar
 
 Build context is `.` (repo root). The per-Dockerfile dockerignore is named `Dockerfile.dockerignore` and placed alongside the Dockerfile — Docker resolves it as `{context}/{dockerfile-path}.dockerignore` = `./src/Kakeibo.Api/Dockerfile.dockerignore`.
 
-### `sites/Kakeibo.App/Dockerfile` — Vue 3 PWA
+### `src/Kakeibo.App/Dockerfile` — Vue 3 PWA
 
 ```
 Stage 1: oven/bun:latest  (build)
   → Copy package.json + bun.lock (dependency cache layer)
   → bun install --frozen-lockfile
-  → Copy source code (context is ./sites/Kakeibo.App — no path prefix needed)
+  → Copy source code (context is ./src/Kakeibo.App — no path prefix needed)
   → bun run build → /app/dist
 
 Stage 2: nginx:alpine  (serve)
@@ -171,9 +171,9 @@ Stage 2: nginx:alpine  (serve)
   → EXPOSE 80
 ```
 
-Build context is `./sites/Kakeibo.App` — all COPY paths are relative to that directory. The `nginx.conf` lives in the same directory as the Dockerfile and is included in the build context. The `.dockerignore` is a standard `.dockerignore` file placed in `sites/Kakeibo.App/`.
+Build context is `./src/Kakeibo.App` — all COPY paths are relative to that directory. The `nginx.conf` lives in the same directory as the Dockerfile and is included in the build context. The `.dockerignore` is a standard `.dockerignore` file placed in `src/Kakeibo.App/`.
 
-### `services/Kakeibo.Email/Dockerfile` — Email renderer
+### `src/Kakeibo.Email/Dockerfile` — Email renderer
 
 ```
 Stage 1: oven/bun:latest  (runtime)
@@ -184,20 +184,20 @@ Stage 1: oven/bun:latest  (runtime)
   → CMD: bun run src/index.ts
 ```
 
-Single-stage Bun container. Built directly from the `services/Kakeibo.Email/` context in `docker-compose.yml`. Runs the Hono server that renders React Email templates on port 3050.
+Single-stage Bun container. Built directly from the `src/Kakeibo.Email/` context in `docker-compose.yml`. Runs the Hono server that renders React Email templates on port 3050.
 
 ### Per-Dockerfile `.dockerignore` pattern
 
 Each service owns its dockerignore alongside its Dockerfile. Docker resolves the ignore file as follows:
 
-- **Standard naming** (`Dockerfile` + `.dockerignore`): Used when the build context is the project directory (`sites/Kakeibo.App/`, `services/Kakeibo.Email/`).
+- **Standard naming** (`Dockerfile` + `.dockerignore`): Used when the build context is the project directory (`src/Kakeibo.App/`, `src/Kakeibo.Email/`).
 - **Per-Dockerfile naming** (`Dockerfile.dockerignore`): Used when the build context is the repo root and the `--dockerfile` flag points to a subdirectory path. Docker resolves `{context}/{dockerfile-path}.dockerignore` — e.g., `./src/Kakeibo.Api/Dockerfile.dockerignore`.
 
 | File | Scope |
 |------|-------|
 | `.dockerignore` | Fallback — generic exclusions for any build without a specific ignore file |
 | `src/Kakeibo.Api/Dockerfile.dockerignore` | API build — excludes `sites/`, `services/`, `tests/` (only backend source needed) |
-| `sites/Kakeibo.App/.dockerignore` | App build — excludes `src/`, `services/` (scoped to `sites/Kakeibo.App/` context) |
+| `src/Kakeibo.App/.dockerignore` | App build — excludes `src/`, `services/` (scoped to `src/Kakeibo.App/` context) |
 
 ---
 
@@ -371,8 +371,8 @@ Runs after quality gates pass and PR is merged to `main`. Builds and pushes Dock
 | Job | Dockerfile | Image tag(s) |
 |-----|-----------|--------------|
 | `build-push-api` | `src/Kakeibo.Api/Dockerfile` | `latest`, `sha-{git-sha}` |
-| `build-push-app` | `sites/Kakeibo.App/Dockerfile` | `latest`, `sha-{git-sha}` |
-| `build-push-email` | `services/Kakeibo.Email/Dockerfile` | `latest`, `sha-{git-sha}` |
+| `build-push-app` | `src/Kakeibo.App/Dockerfile` | `latest`, `sha-{git-sha}` |
+| `build-push-email` | `src/Kakeibo.Email/Dockerfile` | `latest`, `sha-{git-sha}` |
 
 Uses `docker/build-push-action` with buildx for multi-platform support (linux/amd64, linux/arm64).
 
@@ -432,7 +432,7 @@ Runs `commitlint` to enforce conventional commit format (`type(scope): descripti
 
 ### `pre-commit` (parallel)
 
-Runs two checks in parallel on staged files in `sites/Kakeibo.App/`:
+Runs two checks in parallel on staged files in `src/Kakeibo.App/`:
 
 | Command | Glob | What it checks |
 |---------|------|----------------|

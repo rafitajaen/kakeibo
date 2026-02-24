@@ -543,7 +543,7 @@ import { formatDate } from '@/utils/date';
 import { helper } from './utils';
 ```
 
-**Applies to:** All `*.ts`, `*.tsx`, `*.vue`, `*.js`, `*.jsx` files under `sites/` and `services/`
+**Applies to:** All `*.ts`, `*.tsx`, `*.vue`, `*.js`, `*.jsx` files under `src/`
 
 **Detection patterns:**
 - Import paths starting with `../` (one or more levels up)
@@ -568,7 +568,7 @@ new components.
 **Resolution:** Migrate the affected `components/ui/` files to the canonical icon library,
 then remove the legacy dependency from `package.json`.
 
-**Applies to:** `sites/Kakeibo.App/package.json`, `sites/Kakeibo.App/components/ui/`
+**Applies to:** `src/Kakeibo.App/package.json`, `src/Kakeibo.App/components/ui/`
 
 **Detection patterns:**
 - Two icon library packages declared simultaneously in `package.json`

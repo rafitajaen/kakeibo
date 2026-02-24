@@ -236,15 +236,13 @@ Kakeibo.slnx                            # Solution file (.slnx format) — 2 pro
 │       ├── quality.yml                 # PR quality gates
 │       └── release.yml                 # Build + push images to Docker Hub
 ├── src/
-│   └── Kakeibo.Api/                    # Single runnable project (ASP.NET host + all domains)
-│       ├── Common/                     # Abstractions, Endpoints, Utils
-│       ├── Features/                   # Identity/, Wallets/, Transactions/, Budgets/, Goals/, Recurring/, Notifications/, Auditing/
-│       ├── Infrastructure/             # Caching/, Email/, Storage/, Events/
-│       ├── Persistence/                # AppDbContext.cs, Configurations/, Migrations/
-│       └── Program.cs
-├── services/
-│   └── Kakeibo.Email/                  # Email renderer (Bun + Hono + React Email)
-├── sites/
+│   ├── Kakeibo.Api/                    # Single runnable project (ASP.NET host + all domains)
+│   │   ├── Common/                     # Abstractions, Endpoints, Utils
+│   │   ├── Features/                   # Identity/, Wallets/, Transactions/, Budgets/, Goals/, Recurring/, Notifications/, Auditing/
+│   │   ├── Infrastructure/             # Caching/, Email/, Storage/, Events/
+│   │   ├── Persistence/                # AppDbContext.cs, Configurations/, Migrations/
+│   │   └── Program.cs
+│   ├── Kakeibo.Email/                  # Email renderer (Bun + Hono + React Email)
 │   └── Kakeibo.App/                    # Vue 3 PWA (frontend)
 ├── tests/
 │   └── Kakeibo.Tests/                  # All tests: unit, integration, architecture (NetArchTest)
@@ -329,7 +327,7 @@ All commands run from the **monorepo root** via `bun run <script>`.
 The project uses `lefthook` to enforce quality standards before every commit:
 
 - **commit-msg:** Conventional commits format (`type(scope): description`)
-- **pre-commit:** Runs `oxlint --deny-warnings` + `oxfmt --check` on staged files in `sites/Kakeibo.App/`
+- **pre-commit:** Runs `oxlint --deny-warnings` + `oxfmt --check` on staged files in `src/Kakeibo.App/`
 
 **Important:** Always run auto-fix commands before committing:
 ```bash

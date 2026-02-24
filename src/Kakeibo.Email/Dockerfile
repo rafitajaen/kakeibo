@@ -17,4 +17,4 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --spider -q http://localhost:3050/health || exit 1
 
 # Start server
-CMD ["bun", "run", "src/index.ts"]
+CMD ["bun", "run", "index.ts"]

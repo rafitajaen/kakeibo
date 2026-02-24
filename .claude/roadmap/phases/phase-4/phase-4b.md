@@ -36,7 +36,7 @@
 - `BudgetExceededEvent` (100% threshold)
 
 ### Frontend
-**sites/Kakeibo.App/src/components/budgets/**:
+**src/Kakeibo.App/components/budgets/**:
 - BudgetProgressBar.vue, BudgetStatusBadge.vue
 
 ---

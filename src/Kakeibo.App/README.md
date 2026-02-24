@@ -48,7 +48,7 @@ bun run preview
 ## Project Structure
 
 ```
-sites/Kakeibo.App/
+src/Kakeibo.App/
 ├── src/
 │   ├── components/     # Vue components
 │   ├── stores/         # Pinia stores

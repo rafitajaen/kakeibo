@@ -79,10 +79,10 @@
 
 ### Frontend
 
-**`sites/Kakeibo.App/components/wallets/`**:
+**`src/Kakeibo.App/components/wallets/`**:
 - `DebtList.vue`, `DebtCard.vue`, `SettlementForm.vue`
 
-**`sites/Kakeibo.App/components/transactions/`**:
+**`src/Kakeibo.App/components/transactions/`**:
 - `SplitConfigurator.vue`, `SplitTypeSelector.vue`, `SplitItem.vue`
 
 ---

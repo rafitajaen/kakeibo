@@ -118,7 +118,7 @@ services:
   # Email Renderer - Bun + Hono + React Email
   email-renderer:
     build:
-      context: ./services/Kakeibo.Email
+      context: ./src/Kakeibo.Email
       dockerfile: Dockerfile
     container_name: kakeibo-email-renderer
     ports:

@@ -17,38 +17,34 @@ Simple Monolith with Vertical Slices + Screaming Architecture.
 ```
 Kakeibo.slnx
 ├── src/
-│   └── Kakeibo.Api/                    — Single runnable project (ASP.NET host + all domains)
-│       ├── Common/
-│       │   ├── Abstractions/           — Entity, Result<T>, Error, ValueObject
-│       │   ├── Endpoints/              — IEndpoint, ValidationFilter, EndpointExtensions
-│       │   └── Utils/                  — Guid7, PasswordHasher, DefaultSerializer, CharSets, RandomString
-│       ├── Domain/
-│       │   ├── Entities/               — (future) shared base entities
-│       │   └── ValueObjects/           — (future) shared value objects
-│       ├── Features/
-│       │   ├── Identity/               — RegisterUser/, LoginUser/, ...
-│       │   ├── Wallets/                — CreateWallet/, ListWallets/, InviteToWallet/, ...
-│       │   ├── Transactions/           — RecordTransaction/, ListCategories/, ...
-│       │   ├── Budgets/
-│       │   ├── Goals/
-│       │   ├── Recurring/
-│       │   ├── Notifications/
-│       │   └── Auditing/
-│       ├── Infrastructure/
-│       │   ├── Caching/                — ICacheService, FusionCacheService, CachingOptions
-│       │   ├── Email/                  — IEmailService, EmailService, SmtpOptions, EmailRendererOptions
-│       │   ├── Storage/                — IStorageService, StorageService, StorageOptions
-│       │   └── Events/                 — IEvent, IEventHandler<T>, IEventBus, ChannelEventBus, EventDispatcher
-│       ├── Persistence/
-│       │   ├── AppDbContext.cs         — Single DbContext for all domains
-│       │   └── Configurations/         — IEntityTypeConfiguration<T> per entity
-│       └── Program.cs
-│
-├── services/
+│   ├── Kakeibo.Api/                    — Single runnable project (ASP.NET host + all domains)
+│   │   ├── Common/
+│   │   │   ├── Abstractions/           — Entity, Result<T>, Error, ValueObject
+│   │   │   ├── Endpoints/              — IEndpoint, ValidationFilter, EndpointExtensions
+│   │   │   └── Utils/                  — Guid7, PasswordHasher, DefaultSerializer, CharSets, RandomString
+│   │   ├── Domain/
+│   │   │   ├── Entities/               — (future) shared base entities
+│   │   │   └── ValueObjects/           — (future) shared value objects
+│   │   ├── Features/
+│   │   │   ├── Identity/               — RegisterUser/, LoginUser/, ...
+│   │   │   ├── Wallets/                — CreateWallet/, ListWallets/, InviteToWallet/, ...
+│   │   │   ├── Transactions/           — RecordTransaction/, ListCategories/, ...
+│   │   │   ├── Budgets/
+│   │   │   ├── Goals/
+│   │   │   ├── Recurring/
+│   │   │   ├── Notifications/
+│   │   │   └── Auditing/
+│   │   ├── Infrastructure/
+│   │   │   ├── Caching/                — ICacheService, FusionCacheService, CachingOptions
+│   │   │   ├── Email/                  — IEmailService, EmailService, SmtpOptions, EmailRendererOptions
+│   │   │   ├── Storage/                — IStorageService, StorageService, StorageOptions
+│   │   │   └── Events/                 — IEvent, IEventHandler<T>, IEventBus, ChannelEventBus, EventDispatcher
+│   │   ├── Persistence/
+│   │   │   ├── AppDbContext.cs         — Single DbContext for all domains
+│   │   │   └── Configurations/         — IEntityTypeConfiguration<T> per entity
+│   │   └── Program.cs
+│   ├── Kakeibo.App/                    — Web app (Vue PWA)
 │   └── Kakeibo.Email/                  — Email template rendering (Bun + Hono + React Email)
-│
-├── sites/
-│   └── Kakeibo.App/                    — Web app (Vue PWA)
 │
 └── tests/
     └── Kakeibo.Tests/

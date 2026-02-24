@@ -78,10 +78,10 @@
   - *Additional rules added incrementally as new patterns are introduced*
 
 **Frontend**:
-- `sites/Kakeibo.App/` — Vue PWA with router configured, Pinia setup, minimal layout
+- `src/Kakeibo.App/` — Vue PWA with router configured, Pinia setup, minimal layout
 
 **Email Service**:
-- `services/Kakeibo.Email/` — Bun + Hono service with /health endpoint
+- `src/Kakeibo.Email/` — Bun + Hono service with /health endpoint
 
 **CI/CD**:
 - `.github/workflows/quality.yml` — Quality gates for PR

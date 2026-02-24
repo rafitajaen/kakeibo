@@ -38,7 +38,7 @@ Both workflows have **conditional jobs** that can be enabled/disabled:
 
 **`quality.yml`:**
 - `quality-api`: ✅ Enabled when Identity module has tests
-- `quality-app`: ⏸️ Disabled until `sites/Kakeibo.App` exists
+- `quality-app`: ⏸️ Disabled until `src/Kakeibo.App` exists
 - `quality-email`: ✅ Enabled
 - `quality-docker`: ⏸️ Disabled until services are production-ready
 
@@ -274,8 +274,8 @@ These outputs are used by downstream jobs (`build-push-*`) to conditionally run.
 
 Three jobs build and push Docker images to Docker Hub:
 - `build-push-api`: Builds `src/Kakeibo.Api/Dockerfile` → `<username>/kakeibo-api`
-- `build-push-app`: Builds `sites/Kakeibo.App/Dockerfile` → `<username>/kakeibo-app`
-- `build-push-email`: Builds `services/Kakeibo.Email/Dockerfile` → `<username>/kakeibo-email`
+- `build-push-app`: Builds `src/Kakeibo.App/Dockerfile` → `<username>/kakeibo-app`
+- `build-push-email`: Builds `src/Kakeibo.Email/Dockerfile` → `<username>/kakeibo-email`
 
 **Condition:**
 ```yaml
@@ -518,7 +518,7 @@ if: needs.semantic-release.outputs.new_release_published == 'true' && true
 
 **When to enable:**
 - `build-push-api`: When Identity module is complete and API is production-ready
-- `build-push-app`: When `sites/Kakeibo.App` exists and frontend is production-ready
+- `build-push-app`: When `src/Kakeibo.App` exists and frontend is production-ready
 - `build-push-email`: When Email service is production-ready
 
 ### CHANGELOG.md has wrong content

@@ -645,7 +645,7 @@ quality:e2e:
     paths:
       - .playwright-browsers/
   script:
-    - cd sites/Kakeibo.App
+    - cd src/Kakeibo.App
     - bun install --frozen-lockfile
     # Install only chromium — headless-only for CI (no GPU required)
     - bunx playwright install --with-deps chromium
@@ -653,7 +653,7 @@ quality:e2e:
   artifacts:
     when: on_failure
     paths:
-      - sites/Kakeibo.App/playwright-report/
+      - src/Kakeibo.App/playwright-report/
     expire_in: 7 days
 ```
 

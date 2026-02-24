@@ -24,9 +24,9 @@ Before loading any reference material, determine the type of target from the `ta
 |-----------|------|-----------|-------------|
 | Path starts with `src/Kakeibo.Api/Features/` | `backend-domain` | `backend` | Feature slice domain within the Simple Monolith |
 | Path is `src/Kakeibo.Api` (whole API) | `backend-api` | `backend` | Entire API project |
-| Target is `Kakeibo.App` (path: `sites/Kakeibo.App`) | `frontend-app` | `frontend` | Vue 3 SPA management application |
+| Target is `Kakeibo.App` (path: `src/Kakeibo.App`) | `frontend-app` | `frontend` | Vue 3 SPA management application |
 | Target is `Kakeibo.Mobile` (path: `sites/Kakeibo.Mobile`) | `mobile-app` | `mobile` | Vue 3 + Capacitor mobile application |
-| Target is `Kakeibo.Email` (path: `services/Kakeibo.Email`) | `service` | `service` | Bun/Hono email renderer service |
+| Target is `Kakeibo.Email` (path: `src/Kakeibo.Email`) | `service` | `service` | Bun/Hono email renderer service |
 | No specific path or `all` | `full-solution` | `solution` | Entire monorepo |
 
 Record: **detected type**, **type-slug**, and **resolved path** for use in later steps.
@@ -44,15 +44,15 @@ Determine which test projects/folders **must exist** for this target. These will
 - `tests/Kakeibo.Tests/Architecture/` — naming conventions → verify existence
 
 **frontend-app** (`Kakeibo.App`):
-- `sites/Kakeibo.App/test/` — unit tests (Vitest) → **REQUIRED**
-- `sites/Kakeibo.App/e2e/` — E2E tests (Playwright) → **REQUIRED**
+- `src/Kakeibo.App/test/` — unit tests (Vitest) → **REQUIRED**
+- `src/Kakeibo.App/e2e/` — E2E tests (Playwright) → **REQUIRED**
 
 **mobile-app** (`Kakeibo.Mobile`):
 - `sites/Kakeibo.Mobile/test/` — unit tests (Vitest + Capacitor mocks) → **REQUIRED**
 - `sites/Kakeibo.Mobile/e2e/` — E2E tests (Playwright) → **REQUIRED** (or document why absent)
 
 **service** (`Kakeibo.Email`):
-- `services/Kakeibo.Email/test/` or `services/Kakeibo.Email/src/__tests__/` → **REQUIRED**
+- `src/Kakeibo.Email/test/` or `src/Kakeibo.Email/src/__tests__/` → **REQUIRED**
 
 ### Reference files to load in Step 1
 
@@ -232,7 +232,7 @@ For each expected test project/folder identified in Step 0 and verified in Step 
 Missing project checklist items:
 - Test folder missing (`tests/Kakeibo.Tests/Features/{Domain}/`) for backend domains
 - Test project missing (`tests/Kakeibo.Tests/`) for the full API
-- E2E folder missing (`sites/Kakeibo.App/e2e/` or `sites/Kakeibo.Mobile/e2e/`)
+- E2E folder missing (`src/Kakeibo.App/e2e/` or `sites/Kakeibo.Mobile/e2e/`)
 - Test setup file missing (`test/setup.ts`, `vitest.config.ts`)
 - Architecture tests missing (`tests/Kakeibo.Tests/Architecture/NamingConventionTests.cs`)
 
@@ -321,7 +321,7 @@ The report MUST follow this exact structure:
 | `tests/Kakeibo.Tests/` | MISSING / OK | {what is completely untested if missing} |
 | `tests/Kakeibo.Tests/Features/{Domain}/` | MISSING / OK / N/A | {impact} |
 | `tests/Kakeibo.Tests/Architecture/` | MISSING / OK / N/A | {impact} |
-| `sites/Kakeibo.App/e2e/` | MISSING / OK / N/A | {impact} |
+| `src/Kakeibo.App/e2e/` | MISSING / OK / N/A | {impact} |
 | `sites/Kakeibo.Mobile/e2e/` | MISSING / OK / N/A | {impact} |
 
 {If any row is MISSING, add a bold callout:}

@@ -1386,7 +1386,7 @@ public class ArchiveWalletHandlerTests
 
 ### 4.1 Component Unit Tests (Vitest)
 
-**Location:** `sites/Kakeibo.App/src/components/__tests__/` (co-located with components)
+**Location:** `src/Kakeibo.App/components/__tests__/` (co-located with components)
 
 **Dependencies:**
 ```json
@@ -1435,7 +1435,7 @@ export default defineConfig({
 #### Example: WalletCard component test
 
 ```typescript
-// sites/Kakeibo.App/src/components/__tests__/WalletCard.test.ts
+// src/Kakeibo.App/components/__tests__/WalletCard.test.ts
 
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -1535,7 +1535,7 @@ describe('WalletCard', () => {
 #### Example: Form component test with user interaction
 
 ```typescript
-// sites/Kakeibo.App/src/components/__tests__/CreateWalletForm.test.ts
+// src/Kakeibo.App/components/__tests__/CreateWalletForm.test.ts
 
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -1618,10 +1618,10 @@ describe('CreateWalletForm', () => {
 
 ### 4.2 Store Tests (Pinia)
 
-**Location:** `sites/Kakeibo.App/src/stores/__tests__/`
+**Location:** `src/Kakeibo.App/stores/__tests__/`
 
 ```typescript
-// sites/Kakeibo.App/src/stores/__tests__/wallets.test.ts
+// src/Kakeibo.App/stores/__tests__/wallets.test.ts
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -1779,10 +1779,10 @@ describe('useWalletsStore', () => {
 
 ### 4.3 Composable Tests
 
-**Location:** `sites/Kakeibo.App/src/composables/__tests__/`
+**Location:** `src/Kakeibo.App/composables/__tests__/`
 
 ```typescript
-// sites/Kakeibo.App/src/composables/__tests__/useCurrency.test.ts
+// src/Kakeibo.App/composables/__tests__/useCurrency.test.ts
 
 import { describe, it, expect } from 'vitest'
 import { useCurrency } from '@/composables/useCurrency'
@@ -1826,7 +1826,7 @@ describe('useCurrency', () => {
 ```
 
 ```typescript
-// sites/Kakeibo.App/src/composables/__tests__/useBudgetProgress.test.ts
+// src/Kakeibo.App/composables/__tests__/useBudgetProgress.test.ts
 
 import { describe, it, expect } from 'vitest'
 import { useBudgetProgress } from '@/composables/useBudgetProgress'
@@ -1901,7 +1901,7 @@ describe('useBudgetProgress', () => {
 
 Critical user journeys tested against the full stack. Use the Page Object pattern for maintainability.
 
-**Location:** `sites/Kakeibo.App/e2e/`
+**Location:** `src/Kakeibo.App/e2e/`
 
 **Configuration (`playwright.config.ts`):**
 
@@ -1934,7 +1934,7 @@ export default defineConfig({
 #### Page Object pattern
 
 ```typescript
-// sites/Kakeibo.App/e2e/pages/WalletsPage.ts
+// src/Kakeibo.App/e2e/pages/WalletsPage.ts
 
 import type { Page, Locator } from '@playwright/test'
 
@@ -1978,7 +1978,7 @@ export class WalletsPage {
 ```
 
 ```typescript
-// sites/Kakeibo.App/e2e/pages/LoginPage.ts
+// src/Kakeibo.App/e2e/pages/LoginPage.ts
 
 import type { Page, Locator } from '@playwright/test'
 
@@ -2012,7 +2012,7 @@ export class LoginPage {
 #### Example: Wallet creation E2E flow
 
 ```typescript
-// sites/Kakeibo.App/e2e/wallets/wallet-creation.spec.ts
+// src/Kakeibo.App/e2e/wallets/wallet-creation.spec.ts
 
 import { test, expect } from '@playwright/test'
 import { LoginPage } from '../pages/LoginPage'
@@ -2067,7 +2067,7 @@ test.describe('Wallet Creation Flow', () => {
 #### Test data setup/teardown
 
 ```typescript
-// sites/Kakeibo.App/e2e/helpers/seed.ts
+// src/Kakeibo.App/e2e/helpers/seed.ts
 
 // Seed test data via the API before E2E tests.
 // The API must be running with a test database.

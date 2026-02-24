@@ -52,7 +52,7 @@
 - `DELETE /api/categories/{id}`
 
 ### Frontend
-**`sites/Kakeibo.App/components/categories/`**:
+**`src/Kakeibo.App/components/categories/`**:
 - CategorySelector.vue, CategoryList.vue, CategoryForm.vue
 
 ---

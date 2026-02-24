@@ -7,7 +7,7 @@ Lessons learned and gotchas discovered during development.
 ## KB-001: vue-i18n `@` symbol must be escaped in locale files
 
 **Discovered:** 2026-02-13
-**Affects:** All `.json` files under `sites/Kakeibo.App/locales/`
+**Affects:** All `.json` files under `src/Kakeibo.App/locales/`
 
 vue-i18n reserves the `@` character for linked message syntax (`@:key`). Any literal `@` in locale values (email addresses, social handles, etc.) must be escaped as `{'@'}`.
 
@@ -39,7 +39,7 @@ When a type has a boolean property that implies the nullability of another membe
 ## KB-003: Use `bunx --bun` to add shadcn-vue components
 
 **Discovered:** 2026-02-17
-**Affects:** All projects under `sites/` that use shadcn-vue
+**Affects:** All projects under `src/` that use shadcn-vue
 
 The official shadcn-vue docs show `npx shadcn-vue@latest add <component>`, but this project uses Bun as the package manager. Using `npx` in a Bun monorepo can resolve the wrong registry or install with npm instead of Bun.
 
@@ -53,7 +53,7 @@ Run the command **from the target project folder** (not the monorepo root):
 
 | Bad | Good |
 |-----|------|
-| `npx shadcn-vue@latest add tooltip` (from any dir) | `cd sites/Kakeibo.App && bunx --bun shadcn-vue@latest add tooltip` |
+| `npx shadcn-vue@latest add tooltip` (from any dir) | `cd src/Kakeibo.App && bunx --bun shadcn-vue@latest add tooltip` |
 | `bunx shadcn-vue@latest add tooltip` (missing `--bun`) | `bunx --bun shadcn-vue@latest add tooltip` |
 
 **Symptom without `--bun`:** Component may be installed via npm/npx even inside a Bun workspace, leading to lockfile inconsistencies.
@@ -66,7 +66,7 @@ Run the command **from the target project folder** (not the monorepo root):
 **Affects:** All commits touching `.ts/.tsx/.vue/.js/.jsx/.css/.json` files in any project
 
 The pre-commit hook (lefthook) runs `oxfmt --check` and `oxlint --deny-warnings` on **staged**
-files in `sites/Kakeibo.App/`. It uses check mode only — it never auto-fixes. If any staged file
+files in `src/Kakeibo.App/`. It uses check mode only — it never auto-fixes. If any staged file
 is not properly formatted or has lint warnings, the commit is rejected.
 
 The same principle applies to all other projects (Email): always run auto-fix first
@@ -130,7 +130,7 @@ The test catches regressions; the comment explains the reasoning.
 
 **Discovered:** 2026-02-18
 **Resolved:** 2026-02-18 (migrated to `@hugeicons/vue`)
-**Affects:** `sites/Kakeibo.App/components/ui/dialog/`, `components/ui/dropdown-menu/`, `components/ui/select/`
+**Affects:** `src/Kakeibo.App/components/ui/dialog/`, `components/ui/dropdown-menu/`, `components/ui/select/`
 
 shadcn-vue copies its components as editable files into the project (not node_modules).
 When adding a new icon library, these files must be updated manually — they will not be

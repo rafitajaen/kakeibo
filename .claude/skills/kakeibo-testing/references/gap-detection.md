@@ -362,12 +362,12 @@ Script to find i18n keys used in code but missing from locale files:
 
 ```bash
 # Find all t('key') calls in Vue/TS files
-grep -rh "t('" sites/Kakeibo.App/src/ --include="*.vue" --include="*.ts" \
+grep -rh "t('" src/Kakeibo.App/ --include="*.vue" --include="*.ts" \
     | grep -oP "t\('([^']+)'\)" | sort -u > /tmp/used-keys.txt
 
 # Find all keys defined in locale files
 node -e "
-const en = require('./sites/Kakeibo.App/locales/en.json')
+const en = require('./src/Kakeibo.App/locales/en.json')
 const flatten = (obj, prefix='') => Object.keys(obj).flatMap(k =>
     typeof obj[k] === 'object' ? flatten(obj[k], prefix + k + '.') : [prefix + k])
 console.log(flatten(en).join('\n'))

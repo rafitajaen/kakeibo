@@ -35,7 +35,7 @@
 - `GoalAchievedEvent`
 
 ### Frontend
-**sites/Kakeibo.App/src/components/goals/**:
+**src/Kakeibo.App/components/goals/**:
 - GoalProgressBar.vue, GoalMilestoneIndicator.vue
 
 ---

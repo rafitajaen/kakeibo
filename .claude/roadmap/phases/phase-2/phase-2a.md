@@ -39,10 +39,10 @@
 - `DELETE /api/wallets/{id}`
 
 ### Frontend
-**`sites/Kakeibo.App/views/wallets/`**:
+**`src/Kakeibo.App/views/wallets/`**:
 - WalletsView.vue, CreateWalletView.vue, EditWalletView.vue
 
-**`sites/Kakeibo.App/components/wallets/`**:
+**`src/Kakeibo.App/components/wallets/`**:
 - WalletCard.vue, WalletForm.vue, WalletList.vue
 
 ---

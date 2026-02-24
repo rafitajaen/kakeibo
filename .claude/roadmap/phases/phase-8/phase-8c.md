@@ -39,7 +39,7 @@
 - `DELETE /api/users/me/sessions/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/settings/**:
+**src/Kakeibo.App/views/settings/**:
 - SettingsView.vue, ProfileView.vue, SecurityView.vue, SessionsView.vue
 
 ---

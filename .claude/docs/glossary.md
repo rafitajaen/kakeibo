@@ -874,11 +874,11 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 - `useWallets()` -- fetches and caches wallet list, provides wallet creation
 - `useBudgetStatus()` -- computes budget progress and alerts from transaction data
 
-**Technical Notes:** Composables are located in `sites/Kakeibo.App/composables/`. They use the `@/` path alias for imports. Composables should use TypeScript with strict typing. State shared across the entire application belongs in Pinia stores, not composables.
+**Technical Notes:** Composables are located in `src/Kakeibo.App/composables/`. They use the `@/` path alias for imports. Composables should use TypeScript with strict typing. State shared across the entire application belongs in Pinia stores, not composables.
 
 **Usage in Code:**
 - **Backend:** N/A (frontend concept only)
-- **Frontend:** `sites/Kakeibo.App/composables/use{Name}.ts`
+- **Frontend:** `src/Kakeibo.App/composables/use{Name}.ts`
 - **Database:** N/A
 
 ---
@@ -1532,7 +1532,7 @@ test(goals): add milestone notification integration test
 - `pre-commit` hook rejects commits with lint errors or formatting issues in staged `.ts/.vue/.js/.css/.json` files
 - Both hooks run in check mode only -- they never auto-fix
 
-**Technical Notes:** Configuration in `lefthook.yml` at repo root. Pre-commit runs two parallel commands on staged files in `sites/Kakeibo.App/`: `oxlint --deny-warnings` and `oxfmt --check`. Always run auto-fix commands (`bun run app:format && bun run app:lint`) and re-stage files before committing (KB-004).
+**Technical Notes:** Configuration in `lefthook.yml` at repo root. Pre-commit runs two parallel commands on staged files in `src/Kakeibo.App/`: `oxlint --deny-warnings` and `oxfmt --check`. Always run auto-fix commands (`bun run app:format && bun run app:lint`) and re-stage files before committing (KB-004).
 
 **Usage in Code:**
 - **Backend:** `lefthook.yml` at repo root

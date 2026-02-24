@@ -32,10 +32,10 @@
 - `DELETE /api/budgets/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/budgets/**:
+**src/Kakeibo.App/views/budgets/**:
 - BudgetsView.vue, CreateBudgetView.vue
 
-**sites/Kakeibo.App/src/components/budgets/**:
+**src/Kakeibo.App/components/budgets/**:
 - BudgetList.vue, BudgetForm.vue
 
 ---

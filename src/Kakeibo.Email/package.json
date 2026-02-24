@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts",
+    "dev": "bun run --watch index.ts",
+    "start": "bun run index.ts",
     "lint": "bunx oxlint .",
     "format": "bunx oxfmt .",
     "format:check": "bunx oxfmt --check .",

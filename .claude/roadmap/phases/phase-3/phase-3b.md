@@ -45,10 +45,10 @@
 - `DELETE /api/transactions/{id}`
 
 ### Frontend
-**`sites/Kakeibo.App/views/transactions/`**:
+**`src/Kakeibo.App/views/transactions/`**:
 - TransactionsView.vue, RecordTransactionView.vue
 
-**`sites/Kakeibo.App/components/transactions/`**:
+**`src/Kakeibo.App/components/transactions/`**:
 - TransactionList.vue, TransactionForm.vue, CalculatorInput.vue
 
 ---

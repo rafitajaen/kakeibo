@@ -177,7 +177,7 @@ Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up t
 
 > Full rules: `.claude/rules/technical-debt.md` (TD-017–TD-018) — i18n rule: `.claude/rules/mandatory.md` (Rule 5)
 
-**Note:** `sites/Kakeibo.App` exists. The shell and development tooling are in place but business screens are pending (Phase 1d onwards).
+**Note:** `src/Kakeibo.App` exists. The shell and development tooling are in place but business screens are pending (Phase 1d onwards).
 
 **Components:** `<script setup lang="ts">` always. SFC order: script → template → style scoped. PascalCase filenames.
 **Pinia:** Setup function style (`defineStore('name', () => {...})`). `ref()` for state, `computed()` for getters, functions for actions.
@@ -210,20 +210,20 @@ Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up t
 
 ### Creating a Vue Component
 
-**Note:** Apply when `sites/Kakeibo.App` is implemented.
+**Note:** Apply when `src/Kakeibo.App` is implemented.
 
-1. Create file with PascalCase: `sites/Kakeibo.App/components/{Name}.vue`
+1. Create file with PascalCase: `src/Kakeibo.App/components/{Name}.vue`
 2. Use `<script setup lang="ts">` — never Options API
 3. Follow SFC order: script → template → style scoped
 4. Use shadcn-vue components, Tailwind CSS v4 for styling
-5. Create test: `sites/Kakeibo.App/test/components/{Name}.spec.ts`
+5. Create test: `src/Kakeibo.App/test/components/{Name}.spec.ts`
 6. Run: `bun run app:lint:check && bun run app:test:unit`
 
 ### Creating a Pinia Store
 
-**Note:** Apply when `sites/Kakeibo.App` is implemented.
+**Note:** Apply when `src/Kakeibo.App` is implemented.
 
-1. Create file: `sites/Kakeibo.App/stores/{name}.ts`
+1. Create file: `src/Kakeibo.App/stores/{name}.ts`
 2. Use setup function style: `defineStore('name', () => { ... })`
 3. Export as `use{Name}Store`
 4. Use `ref()` for state, `computed()` for getters, functions for actions
@@ -260,7 +260,7 @@ Read these files when implementing similar functionality:
 | JSON serialization | `src/Kakeibo.Api/Common/Utils/DefaultSerializer.cs` | camelCase, null handling |
 | ID generation | `src/Kakeibo.Api/Common/Utils/Guid7.cs` | UUIDv7 type-safe wrapper |
 | In-process events | `src/Kakeibo.Api/Infrastructure/Events/` | IEventBus, ChannelEventBus, EventDispatcher |
-| Pinia store | `sites/Kakeibo.App/stores/counter.ts` | Setup function style, ref + computed + functions (when created) |
+| Pinia store | `src/Kakeibo.App/stores/counter.ts` | Setup function style, ref + computed + functions (when created) |
 | String constants | `src/Kakeibo.Api/Common/Utils/CharSets.cs` | Static class with `public const string` fields |
 
 ---

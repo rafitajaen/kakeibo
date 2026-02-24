@@ -32,7 +32,7 @@
 - `DELETE /api/goals/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/goals/**:
+**src/Kakeibo.App/views/goals/**:
 - GoalsView.vue, CreateGoalView.vue
 
 ---

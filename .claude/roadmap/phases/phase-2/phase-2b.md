@@ -33,10 +33,10 @@
 - `DELETE /api/wallets/{id}/members/{userId}`
 
 ### Frontend
-**`sites/Kakeibo.App/views/wallets/`**:
+**`src/Kakeibo.App/views/wallets/`**:
 - SharedWalletView.vue, InviteMemberView.vue
 
-**`sites/Kakeibo.App/components/wallets/`**:
+**`src/Kakeibo.App/components/wallets/`**:
 - InvitationForm.vue, MemberList.vue, MemberCard.vue
 
 ---

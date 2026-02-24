@@ -31,7 +31,7 @@
 - `DELETE /api/recurring-patterns/{id}`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/recurring/**:
+**src/Kakeibo.App/views/recurring/**:
 - RecurringView.vue, CreatePatternView.vue
 
 ---

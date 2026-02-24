@@ -120,8 +120,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./services/Kakeibo.Email
-          file: services/Kakeibo.Email/Dockerfile
+          context: ./src/Kakeibo.Email
+          file: src/Kakeibo.Email/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -133,7 +133,7 @@ jobs:
     name: Build & Push - App
     runs-on: ubuntu-latest
     needs: semantic-release
-    if: needs.semantic-release.outputs.new_release_published == 'true' && false  # Double-gated: disabled until sites/Kakeibo.App exists
+    if: needs.semantic-release.outputs.new_release_published == 'true' && false  # Double-gated: disabled until src/Kakeibo.App is production-ready
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -163,8 +163,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./sites/Kakeibo.App
-          file: sites/Kakeibo.App/Dockerfile
+          context: ./src/Kakeibo.App
+          file: src/Kakeibo.App/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -30,8 +30,8 @@ inside its own project directory. Dockerfiles must never be placed at the monore
 | Project | Dockerfile | dockerignore | Build context |
 |---------|-----------|--------------|---------------|
 | `src/Kakeibo.Api/` | `src/Kakeibo.Api/Dockerfile` | `src/Kakeibo.Api/Dockerfile.dockerignore` | `.` (repo root) |
-| `sites/Kakeibo.App/` | `sites/Kakeibo.App/Dockerfile` | `sites/Kakeibo.App/.dockerignore` | `./sites/Kakeibo.App` |
-| `services/Kakeibo.Email/` | `services/Kakeibo.Email/Dockerfile` | `services/Kakeibo.Email/.dockerignore` | `./services/Kakeibo.Email` |
+| `src/Kakeibo.App/` | `src/Kakeibo.App/Dockerfile` | `src/Kakeibo.App/.dockerignore` | `./src/Kakeibo.App` |
+| `src/Kakeibo.Email/` | `src/Kakeibo.Email/Dockerfile` | `src/Kakeibo.Email/.dockerignore` | `./src/Kakeibo.Email` |
 
 The API uses repo-root context (`.`). Its per-Dockerfile dockerignore is named `Dockerfile.dockerignore`
 and placed alongside the Dockerfile (Docker resolves it as `{context}/{dockerfile-path}.dockerignore`).
@@ -51,7 +51,7 @@ can run, causing tests to **fail** instead of being skipped in CI environments w
 
 ## Rule 5: All User-Visible Text Must Use i18n in Frontend Apps
 
-Every string displayed to users in `sites/Kakeibo.App/` **must** be
+Every string displayed to users in `src/Kakeibo.App/` **must** be
 translated via vue-i18n's `t()` function. Hardcoded text in any language is prohibited.
 
 - All user-visible strings in `<template>` must use `{{ t('key') }}` or `:prop="t('key')"`.
@@ -78,8 +78,8 @@ site, or a service — it must be simultaneously registered in all four quality 
 
    **Frontend site or service:**
    ```json
-   "app:lint": "cd sites/Kakeibo.App && bunx oxlint .",
-   "app:test:unit": "cd sites/Kakeibo.App && bun run vitest"
+   "app:lint": "cd src/Kakeibo.App && bunx oxlint .",
+   "app:test:unit": "cd src/Kakeibo.App && bun run vitest"
    ```
 
 2. **`scripts/quality-check.ts`** — Entry in the `CHECKS` array with the correct `project`
@@ -177,3 +177,16 @@ The `--bun` flag must be added when the tool needs to run under the Bun runtime.
 | `npx commitlint --edit` | `bunx commitlint --edit` |
 | `npx lefthook install` | `bunx lefthook install` |
 | `npx oxlint .` | `bunx oxlint .` |
+
+## Rule 10: Projects inside `src/` Must Not Have a Nested `src/` Subfolder
+
+Any project added to `src/` must place its source files directly in the project root — never in a `src/` subfolder inside it.
+
+- `src/Kakeibo.App/main.ts` ✓ — `src/Kakeibo.App/src/main.ts` ✗
+- `src/Kakeibo.Email/index.ts` ✓ — `src/Kakeibo.Email/src/index.ts` ✗
+
+This rule exists to avoid confusing `src/Kakeibo.App/src/` double-nesting and to maintain a flat, readable project structure inside the monorepo's `src/` folder.
+
+**When scaffolding new frontend or service projects** (Vite, Bun/Hono, etc.) that default to a `src/` subfolder:
+- Move all files from `src/` to the project root immediately after scaffolding.
+- Update all config files that reference `./src` (vite.config.ts, tsconfig.json, vitest.config.ts, Dockerfile CMD, package.json scripts, etc.).

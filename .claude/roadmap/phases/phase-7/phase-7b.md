@@ -30,10 +30,10 @@
 - `GET /api/activity?start=...&end=...&type=...`
 
 ### Frontend
-**sites/Kakeibo.App/src/views/activity/**:
+**src/Kakeibo.App/views/activity/**:
 - ActivityView.vue
 
-**sites/Kakeibo.App/src/components/activity/**:
+**src/Kakeibo.App/components/activity/**:
 - ActivityFeed.vue, ActivityItem.vue, ActivityFilters.vue
 
 ---

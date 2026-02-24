@@ -27,10 +27,10 @@
 **No new endpoints** — aggregates data from existing modules
 
 ### Frontend
-**sites/Kakeibo.App/src/views/**:
+**src/Kakeibo.App/views/**:
 - DashboardView.vue
 
-**sites/Kakeibo.App/src/components/dashboard/**:
+**src/Kakeibo.App/components/dashboard/**:
 - BalanceOverview.vue, RecentTransactions.vue, BudgetSummary.vue, GoalSummary.vue, QuickActions.vue
 
 ---
