@@ -23,10 +23,10 @@ Use these priorities to decide which tests to write first and which can wait:
 
 ```
 □ Edge cases: null optional inputs, exact boundary values, empty collections
-□ Idempotency for all consumers (same event twice → no duplicate data)
-□ Domain event handler publishes correct integration event + stages audit entry
+□ Idempotency for all event handlers (same event twice → no duplicate data)
+□ Event handler publishes correct downstream event and calls external service correctly
 □ External service failure: notification fails, handler doesn't throw
-□ Architecture tests for new module naming conventions
+□ Architecture tests for new naming conventions
 □ Permission coverage: each permission has a 2xx test and a 403 test
 ```
 
@@ -112,7 +112,7 @@ reportgenerator \
 2. All validation rules → test both the valid boundary and the invalid boundary
 3. All happy paths in handlers → basic creation/update test
 4. All authorization checks → at least one 403 test per permission-gated endpoint
-5. All domain event handlers → at least one publish test and one audit-stage test
+5. All event handlers → at least one publish test (IEventBus) or external call test
 
 ---
 
@@ -165,13 +165,13 @@ Mutation testing changes the source code in small ways (mutants) and checks if y
 # Install globally (one-time)
 dotnet tool install -g dotnet-stryker
 
-# Run on a specific module
-dotnet stryker --project "src/Kakeibo.Modules.Members/Kakeibo.Modules.Members.csproj"
+# Run on the API project
+dotnet stryker --project "src/Kakeibo.Api/Kakeibo.Api.csproj"
 
-# Run with specific test project
+# Run with the test project explicitly specified
 dotnet stryker \
-    --project "src/Kakeibo.Modules.Members/Kakeibo.Modules.Members.csproj" \
-    --test-project "tests/Kakeibo.Modules.Members.Tests/Kakeibo.Modules.Members.Tests.csproj"
+    --project "src/Kakeibo.Api/Kakeibo.Api.csproj" \
+    --test-project "tests/Kakeibo.Tests/Kakeibo.Tests.csproj"
 
 # View HTML report
 open StrykerOutput/{timestamp}/reports/mutation-report.html
@@ -248,9 +248,9 @@ For every new handler implemented, verify these test cases exist:
 □ Not found:      entity doesn't exist → NotFound error with correct Error.Code
 □ Validation:     required fields empty → Validation error mentioning the field
 □ Authorization:  caller lacks permission → Forbidden (tested at Level 5)
-□ Idempotency:    (for consumers) calling twice → same final state, no duplicates
-□ Domain event:   correct domain event added to the entity (if applicable)
-□ Integration event: published to outbox via eventBus (if applicable)
+□ Idempotency:    (for event handlers) calling twice → same final state, no duplicates
+□ Event published: correct event published via IEventBus (if applicable)
+□ External call:  external service called with correct arguments (if applicable)
 □ External failure: external service unavailable → error handled gracefully, operation continues or fails cleanly
 ```
 
@@ -258,15 +258,15 @@ For every new handler implemented, verify these test cases exist:
 
 ## Error Code Coverage
 
-Every `Error` defined in `Errors/` of a module must have at least one test that reaches it.
+Every `Error` defined in feature `Errors/` files must have at least one test that reaches it.
 
 ```bash
-# Find all Error.Code values defined in a module
-grep -rh "Error\." src/Kakeibo.Modules.Members/Errors/ --include="*.cs" \
+# Find all Error.Code values defined in the API
+grep -rh "Error\." src/Kakeibo.Api/Features/ --include="*.cs" \
     | grep -oP '"[A-Z][^"]*"' | sort -u
 
 # Find all Error.Code values asserted in tests
-grep -rh "Error\.Code" tests/Kakeibo.Modules.Members.Tests/ --include="*.cs" \
+grep -rh "Error\.Code" tests/Kakeibo.Tests/ --include="*.cs" \
     | grep -oP '"[A-Z][^"]*"' | sort -u
 
 # The diff = uncovered error codes (gaps to fill)
@@ -282,24 +282,23 @@ covers it — or add the test in the same PR:
 | New type | Verify this architecture test exists |
 |----------|--------------------------------------|
 | New `IEndpoint` implementation | `EndpointImplementations_ShouldEndWithEndpoint` |
-| New `IEventConsumer<T>` | `Consumers_ShouldEndWithConsumer` |
-| New `IDomainEventHandler<T>` | `DomainEventHandlers_ShouldEndWithDomainEventHandler` |
-| New `AbstractValidator<T>` | `Validators_ShouldEndWithValidator` |
-| New cross-module reference | `Modules_ShouldNotReferenceOtherModules` |
+| New `IEventHandler<T>` implementation | `EventHandlers_ShouldEndWithHandler` |
+| New `AbstractValidator<T>` | `ValidatorImplementations_ShouldEndWithValidator` |
+| New handler class | `Handlers_ShouldEndWithHandler` |
 | New configuration class | `ConfigurationClasses_ShouldEndWithOptions` |
 
 If the architecture test doesn't exist yet, create it in the same PR as the new type.
 
 ---
 
-## Consumer Coverage Checklist
+## Event Handler Coverage Checklist
 
-Every `IEventConsumer<T>` must have:
+Every `IEventHandler<T>` must have:
 
 ```
-□ Happy path: event processed correctly, expected state change in DB
+□ Happy path: event processed correctly, expected state change in DB or external call made
 □ Idempotency: same event received twice → same final state (no duplicate data)
-□ Failure case: consumer throws exception → message remains unprocessed
+□ Failure case: handler throws exception → EventDispatcher catches it and continues
 □ Edge case: event with null/missing optional fields → handled gracefully
 ```
 
@@ -318,14 +317,14 @@ Every permission seeded in the Identity module seeder must appear in at least on
 To find unseeded permissions:
 
 ```bash
-grep -r "permissions:" src/Kakeibo.Modules.Identity/Persistence/Seeders/ --include="*.cs" \
+grep -r "permissions:" src/Kakeibo.Api/Persistence/ --include="*.cs" \
     | grep -oP '"[a-z]+:[a-z]+"' | sort -u
 ```
 
 To find permissions tested at Level 5:
 
 ```bash
-grep -r "403\|Forbidden\|WithoutPermission" tests/Kakeibo.Api.IntegrationTests/ --include="*.cs" \
+grep -r "403\|Forbidden\|WithoutPermission" tests/Kakeibo.Tests/ --include="*.cs" \
     | grep -oP '"[a-z]+:[a-z]+"' | sort -u
 ```
 
@@ -468,8 +467,8 @@ function createMemberFixture(overrides: Partial<Member> = {}): Member {
 
 When reviewing test coverage for an existing module:
 
-1. **Grep error codes**: find all `Error.Code` in `Errors/` — check each has a test
-2. **Grep consumers**: find all `IEventConsumer<T>` — check each has idempotency test
+1. **Grep error codes**: find all `Error.Code` in feature `Errors/` files — check each has a test
+2. **Grep event handlers**: find all `IEventHandler<T>` — check each has an idempotency test
 3. **Grep validators**: find all `AbstractValidator<T>` — check each rule has a boundary test
 4. **Run Stryker**: identify surviving mutants in comparison operators and null checks
 5. **Check permissions**: find all permissions in seeder — verify 2xx and 403 tests exist

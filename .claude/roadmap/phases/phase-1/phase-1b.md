@@ -47,29 +47,57 @@
 
 ## Deliverables
 
-### Module Structure
+### Feature Structure
 
-**Kakeibo.Modules.Identity/**:
+**`src/Kakeibo.Api/`** (vertical slices within single project):
 ```
-Entities/
+Domain/Entities/
   User.cs              — includes Currency field (selected at registration)
   RefreshToken.cs
   PasswordResetToken.cs
   Session.cs           — Id, UserId, RefreshTokenHash, IpAddress, UserAgent, CreatedAt, ExpiresAt, RevokedAt
 
-Features/
-  Register/
+Features/Identity/
+  RegisterUser/
+    RegisterUserEndpoint.cs
+    RegisterUserHandler.cs
+    RegisterUserValidator.cs
   VerifyEmail/
-  Login/
+    VerifyEmailEndpoint.cs
+    VerifyEmailHandler.cs
+    VerifyEmailValidator.cs
+  LoginUser/
+    LoginUserEndpoint.cs
+    LoginUserHandler.cs
+    LoginUserValidator.cs
   RefreshToken/
-  Logout/
+    RefreshTokenEndpoint.cs
+    RefreshTokenHandler.cs
+  LogoutUser/
+    LogoutUserEndpoint.cs
+    LogoutUserHandler.cs
   ForgotPassword/
+    ForgotPasswordEndpoint.cs
+    ForgotPasswordHandler.cs
+    ForgotPasswordValidator.cs
   ResetPassword/
+    ResetPasswordEndpoint.cs
+    ResetPasswordHandler.cs
+    ResetPasswordValidator.cs
   GetCurrentUser/
+    GetCurrentUserEndpoint.cs
+    GetCurrentUserHandler.cs
+  Events/
+    UserRegisteredEvent.cs
+    UserLoggedInEvent.cs
+    UserLoggedOutEvent.cs
 
-Services/
+Infrastructure/Auth/
   JwtService.cs
-  PasswordHasher.cs
+
+Persistence/Configurations/
+  UserConfiguration.cs
+  SessionConfiguration.cs
 ```
 
 ### Endpoints
@@ -116,8 +144,8 @@ Services/
 2. All security measures implemented
 3. Integration events published
 4. Tests pass (unit + integration)
-5. Phase 1c can begin
+5. Phase 1c (Audit Logging) can begin
 
 ---
 
-**Next Sub-Phase:** [Phase 1c: Outbox Pattern](./phase-1c.md)
+**Next Sub-Phase:** [Phase 1c: Audit Logging](./phase-1c.md)

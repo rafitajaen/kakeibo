@@ -24,9 +24,9 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Budgets/**:
-- Consumers/TransactionRecordedConsumer.cs
-- Features/GetBudgetStatus
+**`src/Kakeibo.Api/Features/Budgets/`**:
+- Events/TransactionRecordedHandler.cs — `IEventHandler<TransactionRecordedEvent>` for spending updates
+- GetBudgetStatus/
 
 **Endpoints**:
 - `GET /api/budgets/{id}/status`

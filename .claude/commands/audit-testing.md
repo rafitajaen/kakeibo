@@ -4,7 +4,7 @@ model: opus
 allowed-tools: Read, Glob, Grep, Bash, Write, Task
 arguments:
   - name: target
-    description: "Project or module to audit (e.g. Kakeibo.Mobile, Kakeibo.App, src/Kakeibo.Modules.Members)"
+    description: "Project or domain to audit (e.g. Kakeibo.Email, Kakeibo.App, src/Kakeibo.Api/Features/Wallets)"
     required: true
 ---
 
@@ -22,8 +22,8 @@ Before loading any reference material, determine the type of target from the `ta
 
 | Condition | Type | type-slug | Description |
 |-----------|------|-----------|-------------|
-| Path starts with `src/Kakeibo.Modules.` | `backend-module` | `backend` | Business or shared module with its own DbContext |
-| Path is `src/Kakeibo.Common`, `src/Kakeibo.Infrastructure`, or `src/Kakeibo.Contracts` | `backend-shared` | `backend` | Shared kernel / cross-cutting concerns |
+| Path starts with `src/Kakeibo.Api/Features/` | `backend-domain` | `backend` | Feature slice domain within the Simple Monolith |
+| Path is `src/Kakeibo.Api` (whole API) | `backend-api` | `backend` | Entire API project |
 | Target is `Kakeibo.App` (path: `sites/Kakeibo.App`) | `frontend-app` | `frontend` | Vue 3 SPA management application |
 | Target is `Kakeibo.Mobile` (path: `sites/Kakeibo.Mobile`) | `mobile-app` | `mobile` | Vue 3 + Capacitor mobile application |
 | Target is `Kakeibo.Email` (path: `services/Kakeibo.Email`) | `service` | `service` | Bun/Hono email renderer service |
@@ -35,14 +35,13 @@ Record: **detected type**, **type-slug**, and **resolved path** for use in later
 
 Determine which test projects/folders **must exist** for this target. These will be verified in Step 2.
 
-**backend-module** (`src/Kakeibo.Modules.{X}`):
-- `tests/Kakeibo.Modules.{X}.Tests/` — unit + integration (Testcontainers) → **REQUIRED**
-- `tests/Kakeibo.FunctionalTests/` — API-level (WebApplicationFactory) → verify existence for the platform
-- `tests/Kakeibo.ArchitectureTests/` — module boundary enforcement (NetArchTest) → verify existence for the platform
+**backend-domain** (`src/Kakeibo.Api/Features/{Domain}`):
+- `tests/Kakeibo.Tests/Features/{Domain}/` — unit + integration (Testcontainers) → **REQUIRED**
+- `tests/Kakeibo.Tests/Architecture/` — naming convention enforcement (NetArchTest) → verify existence for the platform
 
-**backend-shared**:
-- Corresponding `tests/Kakeibo.{Project}.Tests/` if one exists → **REQUIRED if present**
-- `tests/Kakeibo.ArchitectureTests/` → verify existence
+**backend-api** (`src/Kakeibo.Api`):
+- `tests/Kakeibo.Tests/` — all backend tests in single project → **REQUIRED**
+- `tests/Kakeibo.Tests/Architecture/` — naming conventions → verify existence
 
 **frontend-app** (`Kakeibo.App`):
 - `sites/Kakeibo.App/test/` — unit tests (Vitest) → **REQUIRED**
@@ -61,7 +60,7 @@ Based on the detected type, choose what to load:
 
 | Type | Load |
 |------|------|
-| `backend-module`, `backend-shared` | `api-pyramid.md` + `infrastructure.md` |
+| `backend-domain`, `backend-api` | `api-pyramid.md` + `infrastructure.md` |
 | `frontend-app`, `mobile-app` | `frontend-pyramid.md` + `infrastructure.md` |
 | `service` | `frontend-pyramid.md` (Bun/Vitest applies) |
 | `full-solution` | All four reference files |
@@ -77,7 +76,7 @@ Load reference material according to the type determined in Step 0:
    - `.claude/skills/kakeibo-testing/SKILL.md` — agent directives, Quick Decision Table, mocking rules, naming conventions
    - `.claude/skills/kakeibo-testing/references/gap-detection.md` — P1/P2/P3 priorities, per-handler checklist, error code coverage, consumer coverage
    - `.claude/skills/kakeibo-testing/references/edge-cases.md` — edge case catalog by component type
-   - If type is `backend-module` or `backend-shared`: `.claude/skills/kakeibo-testing/references/api-pyramid.md`
+   - If type is `backend-domain` or `backend-api`: `.claude/skills/kakeibo-testing/references/api-pyramid.md`
    - If type is `frontend-app`, `mobile-app`, or `service`: `.claude/skills/kakeibo-testing/references/frontend-pyramid.md`
    - If type is `full-solution`: both `api-pyramid.md` and `frontend-pyramid.md`
    - Always: `.claude/skills/kakeibo-testing/references/infrastructure.md`
@@ -91,8 +90,8 @@ Load reference material according to the type determined in Step 0:
 
 Then launch a Task subagent (subagent_type: Explore) to map the current state of the target. Provide the full target path and ask it to return:
 
-**For backend modules** (path starts with `src/`):
-- All `.cs` production files excluding `obj/`, `bin/`, and `Migrations/` — grouped by subdirectory (Entities, Features, Consumers, DomainEventHandlers, RequestHandlers, Services, Persistence, etc.)
+**For backend domains** (path starts with `src/Kakeibo.Api/`):
+- All `.cs` production files excluding `obj/`, `bin/`, and `Migrations/` — grouped by subdirectory (Features/{Domain}/{Op}Endpoint.cs, {Op}Handler.cs, {Op}Validator.cs; Events/{Name}Event.cs; EventHandlers/{Name}Handler.cs; Common/, Infrastructure/, Persistence/, etc.)
 - All `*Tests.cs` files in the corresponding test project under `tests/`
 - The `.csproj` of the test project (to check `InternalsVisibleTo`, `DynamicProxyGenAssembly2`, and package references)
 - Any `*TestDbContextFactory*` or `*TestDataBuilder*` files in the test project
@@ -157,7 +156,7 @@ Read existing test files and flag these anti-patterns:
 | Missing Docker skip guard | CRITICAL | `ContainerStartTask.Value` awaited outside a `try-catch` with `Assert.Skip` |
 | Tests that depend on each other | WARNING | Shared mutable static state between tests, or `[CollectionDefinition]` with shared DB writes |
 | Incorrect test level (mocking what should use Testcontainers) | WARNING | Handler test that uses `NSubstitute` for DB instead of real PostgreSQL |
-| Missing idempotency test for consumers | WARNING | `IEventConsumer<T>` without a test that calls `ConsumeAsync` twice |
+| Missing idempotency test for event handlers | WARNING | `IEventHandler<T>` without a test that calls `HandleAsync` twice |
 | Missing error code coverage | WARNING | `Error.Code` values in `Errors/*.cs` with no corresponding `Assert.Equal` in tests |
 
 **Frontend anti-patterns:**
@@ -179,8 +178,8 @@ Cross-reference each existing test against the Quick Decision Table from the kak
 | Component type | Correct level | Common wrong level |
 |----------------|---------------|--------------------|
 | Feature handler | 2 — Testcontainers + real DB | 2 with NSubstitute for DB |
-| Consumer | 2c — Testcontainers + real DB | 2 with mocked DB |
-| Domain event handler | 3 — NSubstitute only, no DB | 2 with Testcontainers (over-engineered) |
+| Event handler (IEventHandler<T>) | 2 — NSubstitute for IEventBus, real DB if needed | 2 with mocked DB only |
+| Domain event handler | (removed — no domain events in Simple Monolith) | N/A |
 | Entity invariants | 1 — pure domain unit | 2 with DB (over-engineered) |
 | Validator | 1 — pure unit | 5 — integration (over-engineered) |
 | Vue component | Component — Vitest + VTU | E2E with Playwright (over-engineered) |
@@ -196,7 +195,7 @@ For each tested component type, check against the edge-case catalog from `refere
 - Not-found path (entity doesn't exist)
 - Validation path (required fields missing, boundary values)
 - Authorization path (401 unauthenticated, 403 insufficient permissions) — at Level 5
-- External service failure (if handler uses `IModuleEventBus`, `IEmailService`, etc.)
+- External service failure (if handler uses `IEventBus`, `IEmailService`, etc.)
 - Idempotency (for consumers only)
 
 **Frontend — for every store with state tests, verify also:**
@@ -227,15 +226,15 @@ For each tested component type, check against the edge-case catalog from `refere
 For each expected test project/folder identified in Step 0 and verified in Step 2, if the result was MISSING:
 - Severity is always **CRITICAL** — no exceptions.
 - State clearly what is completely untested as a consequence.
-- Use direct language: "This module has zero tests. Every feature, handler, consumer, and validator is an untested black box."
-- A module with no test project at all is the single most critical finding and must be **Issue #1** in the Top 10, regardless of any other findings.
+- Use direct language: "This domain has zero tests. Every feature handler, event handler, and validator is an untested black box."
+- A domain with no corresponding test folder at all is the single most critical finding and must be **Issue #1** in the Top 10, regardless of any other findings.
 
 Missing project checklist items:
-- Test project directory missing (`tests/Kakeibo.Modules.{X}.Tests/`)
+- Test folder missing (`tests/Kakeibo.Tests/Features/{Domain}/`) for backend domains
+- Test project missing (`tests/Kakeibo.Tests/`) for the full API
 - E2E folder missing (`sites/Kakeibo.App/e2e/` or `sites/Kakeibo.Mobile/e2e/`)
 - Test setup file missing (`test/setup.ts`, `vitest.config.ts`)
-- Architecture test project missing (`tests/Kakeibo.ArchitectureTests/`)
-- Functional test project missing (`tests/Kakeibo.FunctionalTests/`)
+- Architecture tests missing (`tests/Kakeibo.Tests/Architecture/NamingConventionTests.cs`)
 
 ### Dimension 7: User Journey & Behavioral Coverage
 
@@ -269,11 +268,11 @@ Think like a real user of the platform — member, employee, or admin. Identify 
 1. Run `mkdir -p reports/` via Bash to ensure the directory exists.
 2. Get the current date by running `date +%Y-%m-%d` via Bash.
 3. Compute a **target-slug**: replace `/` and `.` with `-`, lowercase.
-   Example: `src/Kakeibo.Modules.Members` → `kakeibo-modules-members`, `Kakeibo.App` → `kakeibo-app`
+   Example: `src/Kakeibo.Api` → `kakeibo-api`, `Kakeibo.App` → `kakeibo-app`
 4. Use the **type-slug** determined in Step 0 (`backend`, `frontend`, `mobile`, `service`, `solution`).
 5. Write the report to `reports/{DATE}-{target-slug}-{type-slug}-test-audit.md` using the Write tool.
    Examples:
-   - `reports/2026-02-20-kakeibo-modules-members-backend-test-audit.md`
+   - `reports/2026-02-20-kakeibo-api-backend-test-audit.md`
    - `reports/2026-02-20-kakeibo-app-frontend-test-audit.md`
    - `reports/2026-02-20-kakeibo-mobile-mobile-test-audit.md`
 
@@ -319,9 +318,9 @@ The report MUST follow this exact structure:
 
 | Expected project/folder | Status | Impact |
 |------------------------|--------|--------|
-| `tests/Kakeibo.Modules.{X}.Tests/` | MISSING / OK | {what is completely untested if missing} |
-| `tests/Kakeibo.FunctionalTests/` | MISSING / OK / N/A | {impact} |
-| `tests/Kakeibo.ArchitectureTests/` | MISSING / OK / N/A | {impact} |
+| `tests/Kakeibo.Tests/` | MISSING / OK | {what is completely untested if missing} |
+| `tests/Kakeibo.Tests/Features/{Domain}/` | MISSING / OK / N/A | {impact} |
+| `tests/Kakeibo.Tests/Architecture/` | MISSING / OK / N/A | {impact} |
 | `sites/Kakeibo.App/e2e/` | MISSING / OK / N/A | {impact} |
 | `sites/Kakeibo.Mobile/e2e/` | MISSING / OK / N/A | {impact} |
 
@@ -439,7 +438,7 @@ The next {5–10} tests to write, in priority order. Each entry specifies exactl
   - [ ] {scenario 1}
   - [ ] {scenario 2}
   - [ ] {scenario 3}
-- **Reference pattern**: {e.g., "Follow `CreateMemberHandlerTests.cs` in `tests/Kakeibo.Modules.Members.Tests/`"}
+- **Reference pattern**: {e.g., "Follow `CreateWalletHandlerTests.cs` in `tests/Kakeibo.Tests/Features/Wallets/CreateWallet/`"}
 - **kakeibo-testing section**: {e.g., "api-pyramid.md § Level 2 — Feature Handler"}
 
 ### 2. ...

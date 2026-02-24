@@ -10,9 +10,9 @@
 
 | Item | Status | Required For |
 |------|--------|--------------|
-| Authentication | ⏳ Phase 1 | User identification for wallet ownership |
-| Outbox Pattern | ⏳ Phase 1a | Reliable event delivery |
-| Audit Logging | ⏳ Phase 1b | Action traceability |
+| Authentication | ⏳ Phase 1b | User identification for wallet ownership |
+| Events System | ✅ Phase 1a | In-process event delivery via ChannelEventBus |
+| Audit Logging | ⏳ Phase 1c | Action traceability |
 
 ---
 
@@ -60,11 +60,11 @@
 
 ---
 
-## Module Architecture
+## Feature Structure
 
-**Module**: `Kakeibo.Modules.Wallets`
-**Schema**: `wallets`
-**Pattern**: Vertical slices
+**Location**: `src/Kakeibo.Api/Features/Wallets/`
+**Schema**: `public` (single schema, shared with all domains)
+**Pattern**: Vertical slices within single project
 
 **Key Entities**:
 - `Wallet` (aggregate root, personal + shared)

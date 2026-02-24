@@ -86,7 +86,7 @@ public sealed class GetWalletTests(WebApplicationFactory factory)
         await client.LoginAsync("admin@test.com", "Test#12345Abc");
         var response = await client.GetAsync($"/api/members/{memberId}");
 
-        // Generates: tests/Kakeibo.Api.IntegrationTests/snapshots/
+        // Generates: tests/Kakeibo.Tests/snapshots/
         //   GetWalletTests.GetWallet_ExistingMember_MatchesSnapshot.verified.json
         await Verify(response);
     }
@@ -164,10 +164,8 @@ returned by the stub rather than calling the real service.
 Verified files live alongside the test project:
 
 ```
-tests/Kakeibo.Modules.Members.Tests/snapshots/
+tests/Kakeibo.Tests/snapshots/
     CreateWalletHandlerTests.HandleAsync_WithValidRequest_MatchesSnapshot.verified.json
-
-tests/Kakeibo.Api.IntegrationTests/snapshots/
     GetWalletTests.GetWallet_ExistingMember_MatchesSnapshot.verified.json
 ```
 

@@ -23,9 +23,9 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Goals/**:
-- Consumers/TransactionRecordedConsumer.cs
-- Features/GetGoalProgress
+**`src/Kakeibo.Api/Features/Goals/`**:
+- Events/TransactionRecordedHandler.cs — `IEventHandler<TransactionRecordedEvent>` for progress updates
+- GetGoalProgress/
 
 **Endpoints**:
 - `GET /api/goals/{id}/progress`

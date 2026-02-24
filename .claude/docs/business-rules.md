@@ -7,8 +7,8 @@ Exhaustive reference for every business invariant, edge case, validation rule, s
 **Related Documents:**
 - [overview.md](./overview.md) -- Core philosophy and user flows
 - [constraints.md](./constraints.md) -- Numeric limits, rate limits, pagination
-- [architecture.md](./architecture.md) -- Module structure, inter-module communication
-- [platform.md](./platform.md) -- Module catalog, integration events
+- [architecture.md](./architecture.md) -- Feature structure, in-process events
+- [platform.md](./platform.md) -- Domain catalog, event catalog, key flows
 
 ---
 

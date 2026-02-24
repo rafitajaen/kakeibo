@@ -6,10 +6,10 @@ description: >
   or diagnosing gaps in test coverage for any of the 3 projects: API (.NET),
   Kakeibo.App (Vue 3), Kakeibo.Email (Bun/Hono).
   Covers: entity unit, value object equality, middleware unit, feature handlers,
-  request handlers (IModuleRequestHandler), consumers (IEventConsumer), domain
-  event handlers, background jobs, API integration, architecture, infrastructure
-  (OutboxInterceptor, OutboxProcessor, AuditOutbox), smoke tests (7 system flows),
-  Vitest, Playwright, Testcontainers, NSubstitute, TDD, Pinia testing.
+  event handlers (IEventHandler<T>), plain handler classes, background jobs, API
+  integration, architecture, infrastructure (ChannelEventBus, EventDispatcher,
+  ClickHouseAuditService), smoke tests (7 system flows), Vitest, Playwright,
+  Testcontainers, NSubstitute, TDD, Pinia testing.
 user-invocable: false
 ---
 
@@ -40,7 +40,7 @@ the testing knowledge base. Consult it automatically in these situations:
 
 - **Writing any handler test:** Check the Quick Decision Table for the right level and the
   per-handler checklist in gap-detection for completeness.
-- **Adding a new consumer or domain event handler:** Verify the idempotency and audit patterns
+- **Adding a new event handler:** Verify the idempotency and audit patterns
   from the edge-case catalog.
 - **Touching authentication or authorization code:** Review the Auth & Security section of
   edge-cases.md — it has 12 scenarios that are frequently missed.
@@ -157,13 +157,13 @@ When in doubt between two levels, always choose the lowest level that covers the
 | Middleware (`ErrorHandling`, `AuditContext`, `JwtRevocation`) | 1 — Domain Unit | xUnit + NSubstitute | None (mocked `HttpContext`) |
 | FluentValidation validators | 1 — Domain Unit | xUnit | None |
 | Feature handler (`*Handler`) | 2 — Feature Handler | xUnit + Testcontainers | Real PostgreSQL |
-| Request handler (`IModuleRequestHandler`) | 2b — Request Handler | xUnit + Testcontainers | Real PostgreSQL |
-| Consumer (`IEventConsumer<T>`) | 2c — Consumer | xUnit + Testcontainers | Real PostgreSQL |
-| Domain event handler (`IDomainEventHandler<T>`) | 3 — Domain Event Handler | xUnit + NSubstitute | None (mocked) |
+| Cross-domain sync query handler (direct DI injection) | 2b — Query Handler | xUnit + Testcontainers | Real PostgreSQL |
+| Event handler (`IEventHandler<T>`) | 2c — Event Handler | xUnit + Testcontainers | Real PostgreSQL |
+| Event handler with no DB side effects | 3 — Event Handler Unit | xUnit + NSubstitute | None (mocked) |
 | Hangfire background job | 4 — Background Job | xUnit + Testcontainers | Real PostgreSQL |
 | Full HTTP pipeline (routing → handler → DB) | 5 — API Integration | xUnit + WAF | Real PostgreSQL, Docker |
-| Module boundaries, naming conventions | 6 — Architecture | NetArchTest | None |
-| `OutboxInterceptor`, `OutboxProcessor`, `ClickHouseAuditService` | Infra | xUnit + Testcontainers | Real PostgreSQL + ClickHouse stub |
+| Naming conventions | 6 — Architecture | NetArchTest | None |
+| `ChannelEventBus`, `EventDispatcher`, `ClickHouseAuditService` | Infra | xUnit + Testcontainers | Real PostgreSQL + ClickHouse stub |
 | Critical system flows (7 end-to-end flows) | Smoke | xUnit + WAF | Full stack |
 | Vue component, shadcn-vue primitive | Component | Vitest + Vue Test Utils | None |
 | Pinia store logic | Store | Vitest | None (vi.mock API) |
@@ -192,8 +192,7 @@ see [test-doubles.md](references/test-doubles.md).
 
 | Interface | Reason |
 |-----------|--------|
-| `IModuleEventBus` | Cross-module boundary, async dispatch |
-| `IAuditOutbox` | ClickHouse write, external system |
+| `IEventBus` | In-process event bus — fire-and-forget, async channel dispatch |
 | `INotificationService` | External channel (SMTP, WhatsApp, push) |
 | `IClock` → `FakeClock` | Time must be deterministic |
 | `IEmailService` | External SMTP |
@@ -230,19 +229,18 @@ afterEach(() => vi.clearAllMocks())
 Test class:          {ClassUnderTest}Tests
 Test method:         {Method}_{Scenario}_{ExpectedResult}
 Handler tests:       {Operation}HandlerTests.cs
-Consumer tests:      {EventName}ConsumerTests.cs
-Domain event tests:  {EventName}DomainEventHandlerTests.cs
+Event handler tests: {EventName}EventHandlerTests.cs
 Background jobs:     {JobName}Tests.cs
 Integration tests:   {Feature}Tests.cs  (under WebApplicationFactory collection)
-Architecture tests:  NamingConventionTests.cs, DependencyDirectionTests.cs
+Architecture tests:  NamingConventionTests.cs
 
 Examples:
   CreateWalletHandlerTests
-  UserRegisteredConsumerTests
-  WalletCreatedDomainEventHandlerTests
+  UserRegisteredEventHandlerTests
+  WalletCreatedEventHandlerTests
   CheckExpiredBudgetsJobTests
   HandleAsync_DuplicateWalletName_ReturnsConflictError
-  ConsumeAsync_SameEventTwice_IsIdempotent
+  HandleAsync_SameEventTwice_IsIdempotent
 ```
 
 ### Frontend (TypeScript / Playwright)
@@ -271,13 +269,13 @@ Examples:
 
 | File | Content |
 |------|---------|
-| [references/api-pyramid.md](references/api-pyramid.md) | All API levels: Level 1 (entities, value objects, middleware), Level 2 (feature handlers), 2b (request handlers), 2c (consumers), Level 3–6 |
+| [references/api-pyramid.md](references/api-pyramid.md) | All API levels: Level 1 (entities, value objects, middleware), Level 2 (feature handlers), 2b (query handlers), 2c (event handlers), Level 3–6 |
 | [references/frontend-pyramid.md](references/frontend-pyramid.md) | Vitest (components, stores, composables, forms, router, Axios) + Playwright E2E + Email |
 | [references/test-doubles.md](references/test-doubles.md) | Mock vs stub vs fake vs spy: definitions, decision matrix, NSubstitute and vi.mock patterns |
 | [references/infrastructure.md](references/infrastructure.md) | TestDbContextFactory, FakeClock, WebApplicationFactory, AuthTestClient, TestDataBuilder, Playwright config, Vitest i18n setup |
-| [references/infrastructure-tests.md](references/infrastructure-tests.md) | OutboxInterceptor atomicity, OutboxProcessor polling/retry, ClickHouseAuditService integration |
-| [references/smoke-tests.md](references/smoke-tests.md) | 7 critical system flows: domain event, entity-less event, sync inter-module, audit, email, authorization, startup |
-| [references/edge-cases.md](references/edge-cases.md) | Complete edge case catalog: value objects, middleware, infrastructure, auth, DB, outbox, validation, external services, pagination, frontend states |
+| [references/infrastructure-tests.md](references/infrastructure-tests.md) | ChannelEventBus throughput, EventDispatcher dispatch, ClickHouseAuditService integration |
+| [references/smoke-tests.md](references/smoke-tests.md) | 7 critical system flows: in-process event, entity-less event, sync cross-domain, audit, email, authorization, startup |
+| [references/edge-cases.md](references/edge-cases.md) | Complete edge case catalog: value objects, middleware, infrastructure, auth, DB, events, validation, external services, pagination, frontend states |
 | [references/gap-detection.md](references/gap-detection.md) | Coverlet, Stryker.NET, CRAP score, flaky test management, per-handler checklist, P1/P2/P3 priorities, missing architecture tests |
 | [references/snapshot-testing.md](references/snapshot-testing.md) | Verify library: setup, scrubbing NodaTime/GUIDs, API response snapshots, email template snapshots, workflow |
 | [prompts/tdd.md](prompts/tdd.md) | /tdd skill: red-green-refactor loop, tracer bullet, interface design for testability, refactor candidates |
@@ -333,7 +331,7 @@ Go through each point. If any fails, the test is not done.
   enough — add `var inDb = await db.Entity.FindAsync(...)` and assert against it.
 
 - **The boundary test.** Are all system boundaries mocked and all internal details real? If
-  you see `Substitute.For<MembersDbContext>()`, stop. If you see `SystemClock.Instance`, stop.
+  you see `Substitute.For<AppDbContext>()`, stop. If you see `SystemClock.Instance`, stop.
 
 - **The independence test.** Can this test run in any order, after any other test, and produce
   the same result? If it shares mutable state, fix it.

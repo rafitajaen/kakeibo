@@ -158,11 +158,10 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 **Objective:** Establish foundational infrastructure and implement complete authentication system
 
 **Sub-Phases:**
-- **1a - Infrastructure Base** (complete): Docker Compose, CI/CD, project scaffolding, core abstractions, Events system
+- **1a - Infrastructure Base** (complete): Docker Compose, CI/CD, project scaffolding, core abstractions, Events system (ChannelEventBus + EventDispatcher)
 - **1b - Identity Backend** (4-5 days): User registration, login, JWT tokens, password recovery
-- **1c - Events System** (complete, implemented in 1a): IEvent, IEventBus, ChannelEventBus, EventDispatcher
-- **1d - Audit Logging** (1-2 days): ClickHouse integration for audit trail
-- **1e - Identity Frontend** (2-3 days): Login/register screens, token refresh, route guards
+- **1c - Audit Logging** (1-2 days): ClickHouse integration for audit trail, IEventHandler<T> implementations
+- **1d - Identity Frontend** (2-3 days): Login/register screens, token refresh, route guards
 
 **Key Deliverables:**
 - 2 projects (Kakeibo.Api + Kakeibo.Tests) built and tested
@@ -273,7 +272,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 
 ```
 Phase 1 (Foundation & Authentication)
-  1a (Infrastructure) → 1b (Identity Backend) → 1c (Outbox) → 1d (Audit) → 1e (Frontend)
+  1a (Infrastructure + Events) → 1b (Identity Backend) → 1c (Audit) → 1d (Frontend)
   │
   v
 Phase 2a (Wallets Backend + UI) → 2b (Shared Wallets Backend + UI)
@@ -299,7 +298,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 
 **Critical dependency:** Phase 2c (Splits + Debt Calculation) **requires** Phase 3b (Transaction Recording) because debt calculation consumes `TransactionRecordedEvent`, `TransactionUpdatedEvent`, `TransactionDeletedEvent`, and splits are configured at transaction record time.
 
-**Actual development order:** 1a → 1b → 1c → 1d → 1e → 2a → 2b → 3a → 3b → 2c → (4 | 5 | 6 parallel) → 7a → 7b → 8a → 8b → 8c → 8d
+**Actual development order:** 1a → 1b → 1c → 1d → 2a → 2b → 3a → 3b → 2c → (4 | 5 | 6 parallel) → 7a → 7b → 8a → 8b → 8c → 8d
 
 ---
 
@@ -338,7 +337,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 
 | Phase | Relative Effort | Deliverables | Sequencing Notes |
 |-------|----------------|--------------|------------------|
-| **Phase 1 (1a-1e)** | Medium | Infrastructure + Outbox + Audit + Auth (API + UI) | Sequential: 1a → 1b → 1c → 1d → 1e |
+| **Phase 1 (1a-1d)** | Medium | Infrastructure + Events + Identity + Audit (API + UI) | Sequential: 1a → 1b → 1c → 1d |
 | **Phase 2 (2a-2c)** | Medium | Wallets + Collaboration (API + UI) | Sequential: 2a → 2b; Phase 2c deferred until after 3b |
 | **Phase 3 (3a-3b)** | Medium | Transactions + Categories (API + Calculator UI) | Sequential: 3a → 3b; unblocks 2c, 4, 5, 6 |
 | **Phase 4 (4a-4b)** | Medium (parallel) | Budgets (API + UI) | Can be developed concurrently with 5, 6 after Phase 3b |
@@ -376,7 +375,7 @@ During implementation, every phase should reference these source files from the 
 | **RBAC implementation** | Simple (SuperAdmin + user isolation) | Kakeibo's permission model is intentionally flat. Full RBAC adds complexity for no business value. Shared wallet permissions are membership checks, not role-based. |
 | **Notification module timing** | Late (Phase 7 after business modules) | Consumers need events from all business modules. Building early means constant modification. Building late means implementing once against complete event catalog. |
 | **Phase 2c placement** | In Phase 2 with Phase 3b prerequisite | Conceptually belongs in Wallets module (debt calc) and Transactions module (splits). Prerequisite explicitly documented. Actual dev order: 2a → 2b → 3a → 3b → 2c. Phase 3c absorbed into 2c. |
-| **Events System timing** | Phase 1c (after Identity) | The in-memory event bus (`IEventBus` / `ChannelEventBus` / `EventDispatcher`) needs real events from Identity (`UserRegisteredEvent`, `UserLoggedInEvent`) for meaningful end-to-end testing. Sequential order: 1a (infra) → 1b (Identity) → 1c (Events System tested with Identity events). |
+| **Events System timing** | Phase 1a (infrastructure) | The in-memory event bus (`IEventBus` / `ChannelEventBus` / `EventDispatcher`) is part of the infrastructure base. It is wired and operational from Phase 1a. Identity events (`UserRegisteredEvent`, `UserLoggedInEvent`) are the first real events dispatched through it in Phase 1b. |
 | **Dashboard + Onboarding timing** | Phase 8 (after all modules complete) | Dashboard aggregates data from all 6 business modules. Onboarding guides users through features that must already exist. Settings centralizes preferences from all modules. |
 | **OAuth login** | Post-MVP | OAuth listed in platform.md but not in MVP scope. Focus on email/password for MVP. Google/Apple Sign-In deferred. |
 | **Multi-currency** | Post-MVP | Single-currency MVP per constraints.md. User selects currency at registration. Multi-currency deferred to post-MVP. |

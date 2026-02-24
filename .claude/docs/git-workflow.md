@@ -65,7 +65,7 @@ Branch names follow the pattern: `{type}/{short-description}`
 ```
 feature/recurring-transaction-generation
 fix/split-percentage-rounding
-refactor/simplify-outbox-processor
+refactor/simplify-event-dispatcher
 docs/update-infrastructure-guide
 test/budget-exceeded-event-handler
 chore/bump-efcore-to-10
@@ -275,7 +275,7 @@ Scopes are defined in `commitlint.config.ts` and enforced by the `commit-msg` ho
 | Scope | When to use |
 |-------|-------------|
 | `app` | Changes to the Vue.js web app (`sites/Kakeibo.App/`) |
-| `api` | Changes to the .NET API (`src/`) -- cross-module or API-level changes |
+| `api` | Changes to the .NET API (`src/`) -- feature slices, infrastructure, or API-level changes |
 | `email` | Changes to the email renderer service (`services/Kakeibo.Email/`) |
 | `docs` | Documentation files (`kakeibo/`, project docs) |
 | `infra` | Infrastructure configuration (Docker, docker-compose, nginx, CI workflows) |
@@ -316,13 +316,13 @@ chore: update .editorconfig with new analyzer rules
 ci: add caching to GitHub Actions quality gates
 ```
 
-### Module-Specific Scopes (Not in commitlint -- Use `api`)
+### Domain-Specific Changes (Use `api` scope)
 
-The business modules (wallets, transactions, budgets, goals, recurring, identity, notifications, auditing) do not have dedicated scopes in `commitlint.config.ts`. When committing changes to a specific module, use the `api` scope and mention the module in the description:
+The business domains (wallets, transactions, budgets, goals, recurring, identity, notifications, auditing) do not have dedicated scopes in `commitlint.config.ts`. When committing changes to a specific domain's feature slice, use the `api` scope and mention the domain in the description:
 
 ```
-feat(api): add wallet archiving endpoint to wallets module
-fix(api): correct debt calculation in wallets module
+feat(api): add wallet archiving endpoint
+fix(api): correct debt calculation in wallets domain
 test(api): add integration tests for budget handler
 ```
 
@@ -507,7 +507,7 @@ When reviewing a PR, evaluate against these criteria:
 
 **Architecture:**
 - [ ] Follows vertical slice pattern (endpoint + handler + validator per feature)
-- [ ] No cross-module references (modules communicate via Contracts only)
+- [ ] Cross-domain communication uses `IEventBus.Publish()` or direct handler injection (no shared DbContexts across domains)
 - [ ] Naming conventions followed (TD-009 through TD-013)
 - [ ] Primary constructors used (mandatory.md Rule 8)
 - [ ] NodaTime used instead of DateTime (TD-004)
@@ -544,7 +544,7 @@ When reviewing a PR, evaluate against these criteria:
 **Blocking comments** (Request Changes):
 - Security vulnerabilities
 - Incorrect business logic (wrong balance calculation, missing validation)
-- Architecture violations (cross-module reference, missing Contracts type)
+- Architecture violations (naming convention failure, prohibited technology usage)
 - Missing tests for new functionality
 - Breaking changes without proper notation
 
@@ -699,8 +699,8 @@ git checkout -b fix/critical-balance-drift origin/main
 # ... add regression test ...
 
 # 4. Commit and push
-git add src/Kakeibo.Modules.Wallets/Features/RecalculateBalance/RecalculateBalanceHandler.cs
-git add tests/Kakeibo.Modules.Wallets.Tests/Features/RecalculateBalance/RecalculateBalanceHandlerTests.cs
+git add src/Kakeibo.Api/Features/Wallets/RecalculateBalance/RecalculateBalanceHandler.cs
+git add tests/Kakeibo.Tests/Features/Wallets/RecalculateBalance/RecalculateBalanceHandlerTests.cs
 git commit -m "fix(api): correct balance drift caused by concurrent split updates"
 git push -u origin fix/critical-balance-drift
 
@@ -1394,15 +1394,15 @@ git checkout -b feature/add-budget-alerts origin/main
 
 # 2. Develop incrementally with atomic commits
 # ... implement endpoint ...
-git add src/Kakeibo.Modules.Budgets/Features/CheckBudgetAlert/
+git add src/Kakeibo.Api/Features/Budgets/CheckBudgetAlert/
 git commit -m "feat(api): add budget alert checking endpoint"
 
 # ... implement handler ...
-git add src/Kakeibo.Modules.Budgets/Features/CheckBudgetAlert/CheckBudgetAlertHandler.cs
+git add src/Kakeibo.Api/Features/Budgets/CheckBudgetAlert/CheckBudgetAlertHandler.cs
 git commit -m "feat(api): implement budget alert threshold logic"
 
 # ... add tests ...
-git add tests/Kakeibo.Modules.Budgets.Tests/
+git add tests/Kakeibo.Tests/Features/Budgets/
 git commit -m "test(api): add tests for budget alert threshold calculation"
 
 # 3. Push to remote
@@ -1418,7 +1418,7 @@ Publishes BudgetWarningEvent when spending exceeds 80% of budget limit.
 ## Changes
 - Added CheckBudgetAlertEndpoint with GET /api/budgets/{id}/alerts
 - Added CheckBudgetAlertHandler with 80% threshold logic
-- Added BudgetWarningEvent to Contracts
+- Publishes BudgetWarningEvent via IEventBus
 
 ## Testing
 - [x] Unit tests for threshold calculation
@@ -1448,11 +1448,11 @@ git fetch origin
 git checkout -b fix/wallet-balance-drift origin/main
 
 # 2. Write a failing test first (TDD)
-git add tests/Kakeibo.Modules.Wallets.Tests/Features/RecalculateBalance/
+git add tests/Kakeibo.Tests/Features/Wallets/RecalculateBalance/
 git commit -m "test(api): add regression test for concurrent balance update"
 
 # 3. Implement the fix
-git add src/Kakeibo.Modules.Wallets/
+git add src/Kakeibo.Api/Features/Wallets/
 git commit -m "fix(api): prevent balance drift from concurrent split updates"
 
 # 4. Push and create PR

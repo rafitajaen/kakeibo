@@ -6,8 +6,8 @@ Exhaustive glossary of terms, concepts, and conventions used in the Kakeibo fina
 **Last Updated:** 2026-02-21
 **Related Documents:**
 - [overview.md](./overview.md) -- Core philosophy and user flows
-- [architecture.md](./architecture.md) -- Module structure, inter-module communication
-- [platform.md](./platform.md) -- Module catalog, integration events
+- [architecture.md](./architecture.md) -- Feature folder structure, in-process event system
+- [platform.md](./platform.md) -- Domain catalog, event catalog, key flows
 - [business-rules.md](./business-rules.md) -- Invariants, validation rules, calculation formulas
 - [constraints.md](./constraints.md) -- Numeric limits, rate limits, pagination
 - [tech-stack.md](./tech-stack.md) -- Technology choices and prohibited technologies
@@ -28,24 +28,25 @@ Exhaustive glossary of terms, concepts, and conventions used in the Kakeibo fina
 
 ## 1. Business Domain Terms
 
-### Aggregate Root
+### Entity
 
-**Definition:** A domain object that serves as the root of a consistency boundary. All modifications to entities within the aggregate must go through the aggregate root, which is responsible for enforcing invariants and raising domain events.
+**Definition:** The base class for all domain objects in the Kakeibo system. Every entity has a globally unique identifier (Guid7), creation and update timestamps (NodaTime `Instant`), and a soft-delete timestamp. Entities are the building blocks of the domain model and are persisted to the database via Entity Framework Core.
 
-**Module:** Kakeibo.Common
+**Domain:** Kakeibo.Api
 
-**Related Concepts:** **Entity**, **Domain Event**, **Value Object**
+**Related Concepts:** **Value Object**, **Event**, **Guid7**
 
 **Examples:**
-- `Wallet` is an aggregate root in the Wallets module -- all wallet operations (archiving, balance queries, member management) go through it
-- `Transaction` is an aggregate root in the Transactions module -- all transaction operations (recording, updating, deleting) go through it
+- `Wallet` extends `Entity` with `Name`, `Balance`, `Type`
+- `Transaction` extends `Entity` with `Amount`, `Date`, `CategoryId`
+- `Invitation` extends `Entity` with `Token`, `ExpiresAt`, `Status`
 
-**Technical Notes:** Aggregate roots inherit from `AggregateRoot : Entity`, which provides `Guid Id` (Guid7), `Instant CreatedAt/UpdatedAt`, `bool IsDeleted`, and a domain events list. The `OutboxInterceptor` harvests domain events from aggregate roots during `SaveChangesAsync`.
+**Technical Notes:** The `Entity` base class (in `Kakeibo.Api.Common.Abstractions`) provides: `Guid Id` initialized with `Guid7.NewGuid()`, `Instant CreatedAt` and `Instant UpdatedAt` initialized with `SystemClock.Instance.GetCurrentInstant()`, `Instant? DeletedAt` for soft delete, and `bool IsDeleted => DeletedAt is not null`. All entities use NodaTime -- BCL `DateTime` is prohibited. There is no `AggregateRoot` subclass -- all domain objects extend `Entity` directly.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.AggregateRoot`
+- **Backend:** `Kakeibo.Api.Common.Abstractions.Entity`
 - **Frontend:** N/A (backend concept only)
-- **Database:** The root entity's table is the primary table for the aggregate (e.g., `wallets`, `transactions`)
+- **Database:** Every entity table has `id`, `created_at`, `updated_at`, `deleted_at` columns
 
 ---
 
@@ -84,10 +85,10 @@ Exhaustive glossary of terms, concepts, and conventions used in the Kakeibo fina
 - Transaction recorded in shared wallet -> `TransactionRecordedEvent` logged with full payload (amount, category, wallet, splits)
 - Member joins shared wallet -> `MemberJoinedEvent` logged with inviter and invitee details
 
-**Technical Notes:** Audit events are stored in ClickHouse (analytical database) for high-volume write performance and efficient time-range queries. Domain event handlers stage audit entries during `SaveChangesAsync` via the outbox pattern, ensuring atomicity. Audit logs have indefinite retention and support filtering by user, date range, action type, and affected entity.
+**Technical Notes:** Audit events are stored in ClickHouse (analytical database) for high-volume write performance and efficient time-range queries. Event handlers receive `IEvent` notifications via `IEventBus` / `ChannelEventBus` and write audit entries asynchronously. Audit logs have indefinite retention and support filtering by user, date range, action type, and affected entity.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.Auditing`; `IAuditService` in `Kakeibo.Infrastructure.Audit`; `ClickHouseAuditService`
+- **Backend:** `Kakeibo.Api.Features.Auditing`; `ClickHouseAuditService` implementing `IEventHandler<T>`
 - **Frontend:** Activity feed component displaying recent actions per wallet or user
 - **Database:** ClickHouse `audit_events` table (separate from PostgreSQL)
 
@@ -138,9 +139,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Budget spending is computed at query time from transaction data. Only expense transactions with `is_forecast = false` count toward budget spending. Budget statuses are: "On Track" (spending below expected pace), "Warning" (spending above expected pace but below limit), "Exceeded" (spending at or above limit). Past budgets are immutable (INV-B01). Budgets belong to either a user (personal) or a shared wallet, never both (INV-B05). Only expense categories can have budgets (INV-B04). Non-overlapping constraint prevents duplicate budgets for the same scope, category, and period (INV-B03).
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.Budgets`; `Budget` entity; `CreateBudget/`, `GetBudgetStatus/` feature folders
+- **Backend:** `Kakeibo.Api.Features.Budgets`; `Budget` entity; `CreateBudget/`, `GetBudgetStatus/` feature folders
 - **Frontend:** Budget cards with progress bars, spending trend charts, alert badges
-- **Database:** `budgets` table in the `budgets` schema; `UNIQUE (user_id, category_id, period_type, period_year, period_month)`
+- **Database:** `budgets` table; `UNIQUE (user_id, category_id, period_type, period_year, period_month)`
 
 ---
 
@@ -160,9 +161,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Two category types exist: 12 system categories (immutable, non-deletable, shared by all users) and unlimited custom categories (user-created, can be archived or deleted if unreferenced). Category names must be unique per user per type (income or expense). A category's type is immutable after creation (INV-C05). In shared wallets, all members see the same category for a transaction, set by the transaction creator.
 
 **Usage in Code:**
-- **Backend:** `Category` entity in `Kakeibo.Modules.Transactions/Entities/`; `SystemCategory` value object; `CreateCategory/`, `ListCategories/` feature folders
+- **Backend:** `Category` entity in `Kakeibo.Api.Features.Transactions`; `SystemCategory` value object; `CreateCategory/`, `ListCategories/` feature folders
 - **Frontend:** Category selector dropdown with icons and colors; category breakdown pie charts
-- **Database:** `categories` table in the `transactions` schema; `is_system BOOLEAN NOT NULL DEFAULT FALSE`
+- **Database:** `categories` table; `is_system BOOLEAN NOT NULL DEFAULT FALSE`
 
 ---
 
@@ -225,53 +226,53 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Debt is calculated using the formula: `debt(A owes B) = SUM(splits WHERE user_id = A AND owed_to_user_id = B AND status = 'pending')`. No `debts` table exists -- debt is a derived view over `transaction_splits`. The `DebtCalculationService` implements a net-balance simplification algorithm that minimizes the number of transfers needed to settle all debts in a shared wallet (see INV-D03). Debts are symmetric: both parties see the same debt information.
 
 **Usage in Code:**
-- **Backend:** `DebtCalculationService` in `Kakeibo.Modules.Wallets/Services/`; `GetWalletDebts/` feature folder; `Debt` entity for the computed view
+- **Backend:** `DebtCalculationService` in `Kakeibo.Api.Features.Wallets`; `GetWalletDebts/` feature folder; `Debt` entity for the computed view
 - **Frontend:** Debt summary cards per shared wallet showing who owes whom and how much
 - **Database:** Derived from `transaction_splits` table; no separate `debts` table
 
 ---
 
-### Domain Event
+### Event
 
-**Definition:** An internal, module-scoped event that signals that something meaningful has happened within a module's domain. Domain events are dispatched synchronously during `SaveChangesAsync` by the `OutboxInterceptor` and are handled within the same module. They are used to trigger side effects like publishing integration events and staging audit entries.
+**Definition:** An in-process, fire-and-forget signal that something meaningful has happened. Events are published via `IEventBus` and dispatched asynchronously by `EventDispatcher` (a `BackgroundService`) to registered `IEventHandler<T>` implementations. They are used to trigger side effects like audit logging and notifications without blocking the main request path.
 
-**Module:** Kakeibo.Common (interface), each module (implementations)
+**Domain:** Kakeibo.Api (infrastructure)
 
-**Related Concepts:** **Integration Event**, **Outbox**, **Domain Event Handler**, **Entity**
+**Related Concepts:** **Event Handler**, **ChannelEventBus**, **EventDispatcher**, **Entity**
 
 **Examples:**
-- `WalletCreatedDomainEvent` -- raised when a new wallet is created
-- `TransactionRecordedDomainEvent` -- raised when a new transaction is recorded
-- Domain events are internal to a module and are NOT defined in `Kakeibo.Contracts`
+- `WalletCreatedEvent` -- published when a new wallet is created
+- `TransactionRecordedEvent` -- published when a transaction is recorded
+- `InvitationSentEvent` -- published when an invitation is sent to a new member
 
-**Technical Notes:** Domain events implement `IDomainEvent` with `Guid Id` and `Instant OccurredAt`. They are added to an entity via `entity.AddDomainEvent(event)` before `SaveChangesAsync`. The `OutboxInterceptor` harvests them from `ChangeTracker.Entries<Entity>()`, dispatches them to `IDomainEventHandler<T>` implementations, and then persists any resulting integration events as outbox messages within the same database transaction. Edge case: entity-less events (e.g., failed login attempts) bypass domain events and use `eventBus.PublishAsync()` directly.
+**Technical Notes:** Events implement `IEvent` with `Guid Id` and `Instant OccurredAt`. Feature handlers call `eventBus.Publish(new SomeEvent { ... })` before `SaveChangesAsync`. The `ChannelEventBus` (singleton) writes to a `Channel<IEvent>`. The `EventDispatcher` BackgroundService reads from the channel and resolves `IEventHandler<T>` implementations in a new DI scope. Events are in-memory only -- no outbox table, no guaranteed delivery. If the process crashes before the handler runs, the event is lost.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.IDomainEvent`; implementations in `Kakeibo.Modules.{X}/Events/`; handlers in `Kakeibo.Modules.{X}/DomainEventHandlers/`
+- **Backend:** `Kakeibo.Api.Infrastructure.Events.IEvent`; implementations in `Kakeibo.Api.Features.{Domain}.Events`; handlers in the consuming domain
 - **Frontend:** N/A (backend concept only)
-- **Database:** Not persisted directly; domain events trigger outbox message creation
+- **Database:** Events are not persisted; they are consumed in-memory
 
 ---
 
-### Entity
+### Entity (base class)
 
-**Definition:** The base class for all domain objects in the Kakeibo system. Every entity has a globally unique identifier (Guid7), creation and update timestamps (NodaTime `Instant`), a soft-delete flag, and a list of domain events. Entities are the building blocks of the domain model and are persisted to the database via Entity Framework Core.
+**Definition:** The base class for all domain objects in the Kakeibo system. Every entity has a globally unique identifier (Guid7), creation and update timestamps (NodaTime `Instant`), and a soft-delete timestamp. Entities are the building blocks of the domain model and are persisted to the database via Entity Framework Core.
 
-**Module:** Kakeibo.Common
+**Domain:** Kakeibo.Api
 
-**Related Concepts:** **Aggregate Root**, **Value Object**, **Domain Event**, **Guid7**
+**Related Concepts:** **Value Object**, **Event**, **Guid7**
 
 **Examples:**
-- `Wallet` extends `Entity` (via `AggregateRoot`) with `Name`, `Balance`, `Type`
-- `Transaction` extends `Entity` (via `AggregateRoot`) with `Amount`, `Date`, `CategoryId`
+- `Wallet` extends `Entity` with `Name`, `Balance`, `Type`
+- `Transaction` extends `Entity` with `Amount`, `Date`, `CategoryId`
 - `Invitation` extends `Entity` with `Token`, `ExpiresAt`, `Status`
 
-**Technical Notes:** The `Entity` base class provides: `Guid Id` initialized with `Guid7.NewGuid().ToGuid()`, `Instant CreatedAt` and `Instant UpdatedAt` initialized with `SystemClock.Instance.GetCurrentInstant()`, `bool IsDeleted` for soft delete, and `IReadOnlyList<IDomainEvent> DomainEvents` for event sourcing. Methods: `AddDomainEvent(IDomainEvent)` and `ClearDomainEvents()`. All entities use NodaTime -- BCL `DateTime` is prohibited.
+**Technical Notes:** The `Entity` base class provides: `Guid Id` initialized with `Guid7.NewGuid()`, `Instant CreatedAt` and `Instant UpdatedAt` initialized with `SystemClock.Instance.GetCurrentInstant()`, `Instant? DeletedAt` for soft delete, and `bool IsDeleted => DeletedAt is not null`. There is no `AggregateRoot` subclass and no domain events list -- events are published explicitly via `IEventBus`. All entities use NodaTime -- BCL `DateTime` is prohibited.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.Entity`
+- **Backend:** `Kakeibo.Api.Common.Abstractions.Entity`
 - **Frontend:** N/A (backend concept only)
-- **Database:** Every entity table has `id`, `created_at`, `updated_at`, `is_deleted` columns
+- **Database:** Every entity table has `id`, `created_at`, `updated_at`, `deleted_at` columns
 
 ---
 
@@ -313,7 +314,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Expense transactions have `category.type = 'expense'`. Balance impact: `wallet.balance -= transaction.amount`. Only consolidated expenses (not forecasts) affect the current balance and budget spending. In shared wallets, expenses can have splits attached to divide the cost among members.
 
 **Usage in Code:**
-- **Backend:** `TransactionType.Expense` value object in `Kakeibo.Modules.Transactions/ValueObjects/`
+- **Backend:** `TransactionType.Expense` value object in `Kakeibo.Api.Features.Transactions`
 - **Frontend:** Red-colored transaction entries; expense recording form with category selector
 - **Database:** `transactions` table; `category_type = 'expense'`
 
@@ -357,9 +358,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Three tracking modes: (1) wallet-linked (auto-tracks balance growth in a specific wallet), (2) cross-wallet (tracks total across all wallets), (3) manual (user updates progress). Achievement is automatic: `isAchieved = (currentAmount >= targetAmount)`. If the target increases above the current amount, `isAchieved` reverts to `false`. Linked wallet deletion causes the goal to degrade to manual mode via `ON DELETE SET NULL`. Deadline is optional; maximum 10 years in the future (INV-G02). Target amount must be positive (INV-G01).
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.Goals`; `SavingsGoal` entity; `CreateGoal/`, `UpdateGoalProgress/` feature folders
+- **Backend:** `Kakeibo.Api.Features.Goals`; `SavingsGoal` entity; `CreateGoal/`, `UpdateGoalProgress/` feature folders
 - **Frontend:** Goal cards with progress bars, projected completion date, milestone badges
-- **Database:** `savings_goals` table in the `goals` schema; `linked_wallet_id` FK with `ON DELETE SET NULL`
+- **Database:** `savings_goals` table; `linked_wallet_id` FK with `ON DELETE SET NULL`
 
 ---
 
@@ -379,31 +380,31 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Income transactions have `category.type = 'income'`. Balance impact: `wallet.balance += transaction.amount`. Income categories cannot have budgets (INV-B04). Only consolidated income (not forecasts) affects the current balance.
 
 **Usage in Code:**
-- **Backend:** `TransactionType.Income` value object in `Kakeibo.Modules.Transactions/ValueObjects/`
+- **Backend:** `TransactionType.Income` value object in `Kakeibo.Api.Features.Transactions`
 - **Frontend:** Green-colored transaction entries; income recording form
 - **Database:** `transactions` table; `category_type = 'income'`
 
 ---
 
-### Integration Event
+### Event Handler
 
-**Definition:** A cross-module event that signals something meaningful has happened in one module and other modules need to react. Integration events are persisted in the outbox table within the same database transaction as the originating change, then dispatched asynchronously by the `OutboxProcessor` to `IEventConsumer<T>` handlers in subscribing modules. This guarantees reliable delivery even if the application crashes after the transaction commits.
+**Definition:** A class that reacts to a published `IEvent` and performs a side effect such as sending a notification, writing an audit log entry, or updating derived state. Event handlers implement `IEventHandler<TEvent>` and are auto-registered by Scrutor. They run asynchronously in a dedicated DI scope managed by `EventDispatcher`.
 
-**Module:** Kakeibo.Common (interface), Kakeibo.Contracts (definitions), Kakeibo.Infrastructure (dispatch)
+**Domain:** Kakeibo.Api (infrastructure + features)
 
-**Related Concepts:** **Domain Event**, **Outbox**, **Event Consumer**, **Outbox Processor**
+**Related Concepts:** **Event**, **EventDispatcher**, **ChannelEventBus**
 
 **Examples:**
-- `TransactionRecordedEvent` -- published by Transactions, consumed by Wallets (debt recalculation), Budgets (spending update), Goals (progress update), Auditing
-- `GoalMilestoneReachedEvent` -- published by Goals, consumed by Notifications
-- `InvitationAcceptedEvent` -- published by Wallets, consumed by Auditing and Notifications
+- `TransactionRecordedHandler` (in Auditing) -- writes an audit entry when a transaction is recorded
+- `GoalMilestoneReachedHandler` (in Notifications) -- sends a push notification when a goal milestone is reached
+- `InvitationAcceptedHandler` (in Notifications) -- sends an email when an invitation is accepted
 
-**Technical Notes:** Integration events implement `IIntegrationEvent` with `Guid Id`, `Instant OccurredAt`, and `int Version`. They are defined as `sealed record` types in `Kakeibo.Contracts/{Module}/Events/`. The `ModuleEventBus` buffers events in-memory during the request scope. The `OutboxInterceptor` captures buffered events and writes `OutboxMessage` rows within the same database transaction. The `OutboxProcessor` polls the outbox table and dispatches to `IEventConsumer<T>` handlers with Polly retry (3x exponential: 1s, 5s, 15s).
+**Technical Notes:** Event handlers implement `IEventHandler<TEvent>` with a single method `Task HandleAsync(TEvent, CancellationToken)`. They are scoped services (new instance per event dispatch). Multiple handlers for the same event type are all invoked. Handlers must be idempotent because delivery is at-most-once (no retry on failure). Failures are logged but do not propagate to the caller.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.IIntegrationEvent`; definitions in `Kakeibo.Contracts/{Module}/Events/`; consumers in `Kakeibo.Modules.{X}/Consumers/`
+- **Backend:** `Kakeibo.Api.Infrastructure.Events.IEventHandler<T>`; implementations in consuming feature folders (e.g., `Kakeibo.Api.Features.Auditing`, `Kakeibo.Api.Features.Notifications`)
 - **Frontend:** N/A (backend concept only)
-- **Database:** `outbox_messages` table in each module's schema
+- **Database:** N/A (handlers perform application-level side effects, not persistence of the event itself)
 
 ---
 
@@ -423,7 +424,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Invitation lifecycle: Pending -> Accepted | Declined | Expired (all terminal). Token is 128+ bits, cryptographically random. Constraints: no self-invitation, no invitation to existing members, only one pending invitation per email per shared wallet (resending creates a new token and invalidates the old one). Inviting an unregistered user sends an email; after registration, the invitation is automatically processed. Invitations are managed in the Wallets module (post-consolidation from the former Collaboration module).
 
 **Usage in Code:**
-- **Backend:** `Invitation` entity in `Kakeibo.Modules.Wallets/Entities/`; `InviteToWallet/`, `AcceptInvitation/` feature folders
+- **Backend:** `Invitation` entity in `Kakeibo.Api.Features.Wallets`; `InviteToWallet/`, `AcceptInvitation/` feature folders
 - **Frontend:** Invitation creation form with shareable link/code; pending invitations list; accept/decline actions
 - **Database:** `shared_wallet_invitations` table; `token VARCHAR(128)`, `expires_at TIMESTAMP`, `status VARCHAR(20)`
 
@@ -467,7 +468,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Membership is stored in the `shared_wallet_members` join table with `(shared_wallet_id, user_id) UNIQUE`. Shared wallets must have at least 2 members (INV-W06) -- a removal that would bring the count below 2 is rejected. When a member leaves, their historical transactions and splits persist; pending debts remain visible to remaining members. The departed member can no longer access the wallet. Creator is auto-added as first member.
 
 **Usage in Code:**
-- **Backend:** `WalletMember` entity in `Kakeibo.Modules.Wallets/Entities/`; `GetWalletMembers/` feature folder
+- **Backend:** `WalletMember` entity in `Kakeibo.Api.Features.Wallets`; `GetWalletMembers/` feature folder
 - **Frontend:** Member list in shared wallet settings; member avatars on shared transactions
 - **Database:** `shared_wallet_members` table; `(shared_wallet_id, user_id) UNIQUE`
 
@@ -489,31 +490,31 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Milestones are not separate entities -- they are calculated thresholds. When `currentAmount` crosses a milestone percentage boundary, the Goals module publishes `GoalMilestoneReachedEvent` with `MilestonePercent`, `CurrentAmount`, and `TargetAmount`. Each milestone fires only once (tracked to prevent duplicate notifications).
 
 **Usage in Code:**
-- **Backend:** Milestone logic in goal progress update handler; `GoalMilestoneReachedEvent` in `Kakeibo.Contracts/Goals/Events/`
+- **Backend:** Milestone logic in goal progress update handler; `GoalMilestoneReachedEvent` defined in `Kakeibo.Api.Features.Goals.Events`
 - **Frontend:** Milestone markers on goal progress bars; celebration animation when a milestone is reached
 - **Database:** No separate table; milestone state derived from `current_amount` vs `target_amount`
 
 ---
 
-### Outbox
+### ChannelEventBus
 
-**Definition:** A transactional outbox pattern implementation that guarantees reliable delivery of integration events across module boundaries. Integration events are written to an `outbox_messages` table within the same database transaction as the business data change. A background processor polls the outbox and dispatches events to consumer modules, ensuring that events are never lost even if the application crashes.
+**Definition:** The in-process, fire-and-forget event bus that implements `IEventBus`. It is backed by a `System.Threading.Channels.Channel<IEvent>` and is registered as a singleton. Feature handlers call `eventBus.Publish(event)` to write an event to the channel without blocking. The `EventDispatcher` BackgroundService reads from the channel and dispatches events to `IEventHandler<T>` handlers.
 
-**Module:** Kakeibo.Infrastructure
+**Domain:** Kakeibo.Api (infrastructure)
 
-**Related Concepts:** **Integration Event**, **Outbox Interceptor**, **Outbox Processor**, **Domain Event**
+**Related Concepts:** **Event**, **Event Handler**, **EventDispatcher**
 
 **Examples:**
-- A transaction is recorded and `TransactionRecordedEvent` is written to the outbox in the same DB transaction
-- If the application crashes after commit, the outbox processor will still pick up and dispatch the event on restart
-- Each module has its own `outbox_messages` table within its PostgreSQL schema
+- A wallet is created → handler calls `eventBus.Publish(new WalletCreatedEvent { ... })` before `SaveChangesAsync`
+- The event is written to the channel; the main request returns immediately
+- `EventDispatcher` picks up the event and calls `WalletCreatedHandler.HandleAsync(...)`
 
-**Technical Notes:** The outbox pattern consists of three components: (1) `OutboxInterceptor` -- a `SaveChangesInterceptor` that harvests domain events, dispatches them to handlers, captures resulting integration events, and writes `OutboxMessage` rows; (2) `OutboxProcessor` -- a `BackgroundService` that polls per-module outbox tables and dispatches to `IEventConsumer<T>` handlers with Polly retry (3x exponential: 1s, 5s, 15s); (3) `OutboxMessage` entity with processing status and retry tracking. Each module's schema has its own outbox table with a filtered index on unprocessed messages.
+**Technical Notes:** `ChannelEventBus` is a singleton. `EventDispatcher` is a hosted `BackgroundService` that loops indefinitely reading from the channel. Events are in-memory only -- no outbox table, no guaranteed delivery. If the process crashes between `Publish()` and handler execution, the event is lost. This is an acceptable tradeoff for the MVP. The `IEventBus` interface allows swapping to a durable implementation later.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Outbox.OutboxInterceptor`, `OutboxProcessor`; `Kakeibo.Common.Persistence.OutboxMessage`; `IOutboxSource` per module
+- **Backend:** `Kakeibo.Api.Infrastructure.Events.ChannelEventBus`; `Kakeibo.Api.Infrastructure.Events.EventDispatcher`
 - **Frontend:** N/A (backend concept only)
-- **Database:** `outbox_messages` table per schema with `processed_at`, `retry_count`, `error` columns
+- **Database:** No persistence; events exist only in the in-memory channel
 
 ---
 
@@ -555,7 +556,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Personal wallets have `wallet.user_id NOT NULL` (immutable). The wallet type cannot change after creation -- a personal wallet can never become a shared wallet (INV-W03). Each user has exactly one default personal wallet, enforced by a partial unique index `UNIQUE (user_id) WHERE is_default = TRUE` (INV-W07). Personal wallet transactions cannot have splits (INV-T06). Negative balances are allowed.
 
 **Usage in Code:**
-- **Backend:** `Wallet` entity with `WalletType.Personal` in `Kakeibo.Modules.Wallets/Entities/`
+- **Backend:** `Wallet` entity with `WalletType.Personal` in `Kakeibo.Api.Features.Wallets`
 - **Frontend:** Personal wallet card with balance, name, icon, color
 - **Database:** `wallets` table; `user_id VARCHAR(25) NOT NULL`
 
@@ -577,31 +578,31 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** A Hangfire background job runs daily and generates forecasted transactions up to 90 days ahead. Patterns track `last_generated_date` to prevent duplicate generation (INV-R03). Maximum pattern duration is 10 years (INV-R01). Editing a pattern affects only future occurrences -- past consolidated transactions are preserved (INV-R04). Pausing a pattern stops new forecast generation but keeps existing forecasts visible. Deleting a pattern removes future forecasts but preserves consolidated transactions. Edge cases: day 31 in a 30-day month uses the last day; Feb 29 in non-leap years uses Feb 28.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.Recurring`; `RecurringPattern` entity; Hangfire job for daily generation
+- **Backend:** `Kakeibo.Api.Features.Recurring`; `RecurringPattern` entity; Hangfire job for daily generation
 - **Frontend:** Pattern creation wizard with frequency selector, start/end date pickers, preview of next occurrences
-- **Database:** `recurring_transactions` table in the `recurring` schema; `frequency VARCHAR(20)`, `last_generated_date DATE`
+- **Database:** `recurring_transactions` table; `frequency VARCHAR(20)`, `last_generated_date DATE`
 
 ---
 
 ### Screaming Architecture
 
-**Definition:** An architectural style where the folder and project structure of the codebase directly reflects the business domain, not technical concerns. By looking at the folder structure, you should immediately understand what business capabilities the system provides. In Kakeibo, project names like `Modules.Wallets`, `Modules.Budgets`, and `Modules.Goals` communicate the domain, not names like `Services`, `Repositories`, or `Controllers`.
+**Definition:** An architectural style where the folder structure of the codebase directly reflects the business domain, not technical concerns. By looking at the folder structure, you should immediately understand what business capabilities the system provides. In Kakeibo, feature folders like `Features/Wallets`, `Features/Budgets`, and `Features/Goals` communicate the domain, not names like `Services`, `Repositories`, or `Controllers`.
 
-**Module:** N/A (architectural principle)
+**Domain:** N/A (architectural principle)
 
-**Related Concepts:** **Vertical Slice**, **Modular Monolith**
+**Related Concepts:** **Vertical Slice**, **Simple Monolith**
 
 **Examples:**
-- `Kakeibo.Modules.Wallets/` tells you this module handles wallets -- not `Kakeibo.Services/WalletService.cs`
-- `Kakeibo.Modules.Transactions/Features/RecordTransaction/` tells you exactly what this feature does
-- Business modules are named by capability: Identity, Wallets, Transactions, Budgets, Goals, Recurring, Notifications, Auditing
+- `src/Kakeibo.Api/Features/Wallets/` tells you this area handles wallets -- not `Services/WalletService.cs`
+- `src/Kakeibo.Api/Features/Transactions/RecordTransaction/` tells you exactly what this feature does
+- Business domains are named by capability: Identity, Wallets, Transactions, Budgets, Goals, Recurring, Notifications, Auditing
 
-**Technical Notes:** The solution structure follows `Kakeibo.Modules.{BusinessCapability}/` for all modules. Within each module, feature folders are named by operation (`CreateWallet/`, `RecordTransaction/`, `InviteToWallet/`), not by technical layer. This is enforced by architecture tests in `Kakeibo.ArchitectureTests/`.
+**Technical Notes:** All feature code lives under `src/Kakeibo.Api/Features/{Domain}/{Operation}/`. Each operation folder contains up to three files: `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Validator.cs`. Feature folders are named by operation (`CreateWallet/`, `RecordTransaction/`, `InviteToWallet/`), not by technical layer. Architecture tests live in `tests/Kakeibo.Tests/Architecture/`.
 
 **Usage in Code:**
-- **Backend:** Project names, namespace structure, folder organization
+- **Backend:** Folder and namespace organization under `Kakeibo.Api.Features.{Domain}`
 - **Frontend:** N/A (backend architectural concept)
-- **Database:** Schema names mirror module names (`wallets`, `transactions`, `budgets`, etc.)
+- **Database:** Single `public` schema; table names reflect the business entity (`wallets`, `transactions`, `budgets`, etc.)
 
 ---
 
@@ -620,7 +621,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Settlements operate per-split, not per-aggregate-debt. Each `transaction_split` record is settled individually by marking `status = 'settled'` with `settlement_date` and optional `settlement_notes`. Settlement is irreversible -- once settled, a split cannot return to pending. If the settlement was recorded in error, the transaction itself must be deleted and re-created. Settlement amount cannot exceed the current pending split amount (INV-D04). No wallet balance changes occur.
 
 **Usage in Code:**
-- **Backend:** `Settlement` entity in `Kakeibo.Modules.Wallets/Entities/`; `RecordSettlement/` feature folder; `SettlementRecordedEvent`
+- **Backend:** `Settlement` entity in `Kakeibo.Api.Features.Wallets`; `RecordSettlement/` feature folder; `SettlementRecordedEvent`
 - **Frontend:** "Settle" action button on pending debts; settlement confirmation dialog with notes field
 - **Database:** Settlement data on `transaction_splits` table; `settlement_date`, `settlement_notes` columns
 
@@ -642,7 +643,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Shared wallets live in a separate `shared_wallets` table (not the same as `wallets`). Type is immutable -- a shared wallet can never become a personal wallet (INV-W03). Minimum 2 members enforced by database trigger (INV-W06). Creator is auto-added as first member. All members have identical permissions (no hierarchy). Members can leave at any time, but historical data persists. Debt calculations are per-shared-wallet. Settlements are per-split within the shared wallet context.
 
 **Usage in Code:**
-- **Backend:** `Wallet` entity with `WalletType.Shared` in `Kakeibo.Modules.Wallets/Entities/`; `WalletMember` entity for membership
+- **Backend:** `Wallet` entity with `WalletType.Shared` in `Kakeibo.Api.Features.Wallets`; `WalletMember` entity for membership
 - **Frontend:** Shared wallet cards with member avatars, debt summary, and invitation management
 - **Database:** `shared_wallets` table; `shared_wallet_members` join table
 
@@ -664,7 +665,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Splits only exist for shared wallet transactions (INV-T06). The payer's split is automatically marked `status = settled, is_payer = true`. Non-payer splits start with `status = pending, owed_to_user_id = payer_user_id`. Split validation enforces `SUM(split.amount) == transaction.amount` (INV-T05). Splits are cascade-deleted when the parent transaction is deleted. The `transaction_splits` table drives all debt calculations.
 
 **Usage in Code:**
-- **Backend:** `Split` entity in `Kakeibo.Modules.Wallets/Entities/`; `SplitType` value object (Equal, Percentage, Custom)
+- **Backend:** `Split` entity in `Kakeibo.Api.Features.Wallets`; `SplitType` value object (Equal, Percentage, Custom)
 - **Frontend:** Split configuration UI during shared expense recording; split summary on transaction detail view
 - **Database:** `transaction_splits` table; `split_type VARCHAR(20)`, `amount DECIMAL(10,2)`, `percentage DECIMAL(5,2)`, `status VARCHAR(20)`
 
@@ -698,7 +699,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** System categories have `is_system = true` and are seeded during database initialization by `SystemCategoriesSeeder`. All mutation endpoints check `category.is_system` and reject changes with `Error.Validation("Category.SystemImmutable")` (INV-C01). System category names are globally unique per type.
 
 **Usage in Code:**
-- **Backend:** `SystemCategory` value object in `Kakeibo.Modules.Transactions/ValueObjects/`; `SystemCategoriesSeeder` in `Kakeibo.Modules.Transactions/Persistence/Seeders/`
+- **Backend:** `SystemCategory` value object in `Kakeibo.Api.Features.Transactions`; `SystemCategoriesSeeder` in `Kakeibo.Api.Persistence`
 - **Frontend:** System categories shown first in category selector, visually distinguished from custom categories
 - **Database:** `categories` table; `is_system = TRUE` rows seeded at startup
 
@@ -723,9 +724,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Transaction amount must be 0.01 to 999,999,999.99 with 2 decimal places (INV-T01). Consolidated transactions cannot have future dates (INV-T02). Every transaction belongs to exactly one wallet (personal or shared, never both -- INV-W05). Every transaction has exactly one category (INV-T04). Transfers are modeled as two transactions within the same database transaction for atomicity (INV-T03). Soft-deleted transactions are recoverable for 30 days, then permanently purged by a background job.
 
 **Usage in Code:**
-- **Backend:** `Transaction` aggregate root in `Kakeibo.Modules.Transactions/Entities/`; `TransactionType` value object (Income, Expense, Transfer)
+- **Backend:** `Transaction` entity in `Kakeibo.Api.Features.Transactions`; `TransactionType` value object (Income, Expense, Transfer)
 - **Frontend:** Transaction list, recording form, detail view, edit form
-- **Database:** `transactions` table in the `transactions` schema; `amount DECIMAL(10,2)`, `category_id VARCHAR(25) NOT NULL`
+- **Database:** `transactions` table; `amount DECIMAL(10,2)`, `category_id VARCHAR(25) NOT NULL`
 
 ---
 
@@ -756,7 +757,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 **Module:** Kakeibo.Common
 
-**Related Concepts:** **Entity**, **Aggregate Root**
+**Related Concepts:** **Entity**
 
 **Examples:**
 - `WalletType` -- Personal vs. Shared (compared by value, not identity)
@@ -766,7 +767,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Value objects extend the `ValueObject` base class, which provides structural equality through `GetEqualityComponents()`. The base class overrides `Equals()`, `GetHashCode()`, and the `==`/`!=` operators. Value objects should be immutable -- all properties should be `init`-only or readonly.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.ValueObject`; implementations in `Kakeibo.Modules.{X}/ValueObjects/`
+- **Backend:** `Kakeibo.Api.Common.Abstractions.ValueObject`; implementations in feature folders alongside the entities that own them
 - **Frontend:** Typically represented as TypeScript union types or enums
 - **Database:** Stored as columns on the owning entity's table (e.g., `wallet_type VARCHAR(20)`)
 
@@ -788,7 +789,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Each feature has up to 3 files. Handlers are plain classes with a `HandleAsync` method (no MediatR, no CQRS interfaces). Scrutor auto-registers handlers by name convention (`*Handler`). Cross-cutting concerns (validation, authorization, rate limiting) are applied via endpoint filters, not decorator chains.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.{X}/Features/{Operation}/` folder pattern
+- **Backend:** `src/Kakeibo.Api/Features/{Domain}/{Operation}/` folder pattern
 - **Frontend:** N/A (backend architectural concept, though frontend pages follow a similar feature-folder pattern)
 - **Database:** N/A
 
@@ -809,9 +810,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Wallet type is immutable after creation (INV-W03). Balance accuracy is a critical invariant (INV-W01). Wallets with 1+ transactions cannot be deleted, only archived (INV-W04). Each user has exactly one default personal wallet (INV-W07). Wallet names are not required to be unique -- users differentiate by icon and color. Currency is set at wallet creation (single-currency MVP). Shared wallets must maintain at least 2 members (INV-W06).
 
 **Usage in Code:**
-- **Backend:** `Wallet` aggregate root in `Kakeibo.Modules.Wallets/Entities/`; `WalletType` value object
+- **Backend:** `Wallet` entity in `Kakeibo.Api.Features.Wallets`; `WalletType` value object
 - **Frontend:** Wallet cards on dashboard, wallet selector in transaction forms, wallet management page
-- **Database:** `wallets` table (personal) and `shared_wallets` table (shared) in the `wallets` schema
+- **Database:** `wallets` table (personal) and `shared_wallets` table (shared)
 
 ---
 
@@ -884,44 +885,45 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 ### DbContext
 
-**Definition:** An Entity Framework Core class that represents a session with the database, combining the Unit of Work and Repository patterns. Each module has its own `DbContext` scoped to its PostgreSQL schema, providing `DbSet<T>` properties for querying and persisting entities, and implementing `IOutboxSource` for the outbox pattern.
+**Definition:** The single Entity Framework Core class (`AppDbContext`) that represents a session with the database for the entire application. It combines the Unit of Work and Repository patterns and exposes all `DbSet<T>` properties for all domains. All domains share a single PostgreSQL schema (`public`) and a single migrations history table.
 
-**Module:** Each module (one DbContext per module)
+**Domain:** Kakeibo.Api (persistence layer)
 
-**Related Concepts:** **Entity**, **Outbox**, **PostgreSQL Schema**
+**Related Concepts:** **Entity**
 
 **Examples:**
-- `WalletsDbContext` with schema `wallets` -- contains `DbSet<Wallet>`, `DbSet<OutboxMessage>`
-- `TransactionsDbContext` with schema `transactions` -- contains `DbSet<Transaction>`, `DbSet<Category>`
-- `BudgetsDbContext` with schema `budgets` -- contains `DbSet<Budget>`
+- `AppDbContext` with `DbSet<Wallet>`, `DbSet<Transaction>`, `DbSet<Budget>`, `DbSet<Goal>`, etc.
+- A single migration history table manages all schema changes across all domains
+- All entities use `UseSnakeCaseNamingConvention()` and `UseNodaTime()`
 
-**Technical Notes:** Each DbContext uses `const string SchemaName` for its schema. Registration uses `UseNpgsql` with `UseNodaTime()` and `UseSnakeCaseNamingConvention()`. Migrations are generated per-module with `--context {Module}DbContext --output-dir Persistence/Migrations`. The `OutboxInterceptor` is attached to each DbContext to harvest domain events and persist outbox messages during `SaveChangesAsync`.
+**Technical Notes:** `AppDbContext` is registered once in `Program.cs`. Migrations are generated with `--context AppDbContext --output-dir Persistence/Migrations`. `ApplyConfigurationsFromAssembly` picks up all `IEntityTypeConfiguration<T>` classes automatically. There is no `OutboxInterceptor` -- events are published explicitly by feature handlers before `SaveChangesAsync`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.{X}/Persistence/{X}DbContext.cs`
+- **Backend:** `Kakeibo.Api.Persistence.AppDbContext`; configurations in `Kakeibo.Api.Persistence.Configurations`
 - **Frontend:** N/A (backend concept only)
-- **Database:** Each DbContext maps to one PostgreSQL schema
+- **Database:** Single `public` schema; single `__EFMigrationsHistory` table
 
 ---
 
-### Domain Event Handler
+### Feature Handler
 
-**Definition:** An internal handler class that reacts to a domain event by performing side effects such as publishing integration events and staging audit entries. Domain event handlers are dispatched synchronously by the `DomainEventDispatcher` during `SaveChangesAsync`, ensuring that all side effects are captured within the same database transaction.
+**Definition:** A plain class with a `HandleAsync` method that contains all the business logic for a single feature operation. Feature handlers are automatically registered as scoped services by Scrutor (scanning for `*Handler` by name convention). They are injected directly into endpoint delegates via .NET's DI container.
 
-**Module:** Each module (internal handlers)
+**Domain:** Kakeibo.Api
 
-**Related Concepts:** **Domain Event**, **Integration Event**, **Outbox Interceptor**
+**Related Concepts:** **Endpoint**, **Validator**, **Vertical Slice**
 
 **Examples:**
-- `WalletCreatedDomainEventHandler` -- publishes `WalletCreatedEvent` integration event and stages an audit entry
-- `TransactionRecordedDomainEventHandler` -- publishes `TransactionRecordedEvent` and stages audit
+- `CreateWalletHandler` -- validates no duplicate name, creates the wallet, publishes `WalletCreatedEvent`, calls `SaveChangesAsync`
+- `ListTransactionsHandler` -- queries transactions with filters, returns a paginated response
+- `RecordTransactionHandler` -- validates wallet membership, creates the transaction, updates balance, publishes event
 
-**Technical Notes:** Handlers implement `IDomainEventHandler<T>` with `Task HandleAsync(T, CancellationToken)`. They are auto-registered by Scrutor with `publicOnly: false` (since domain event handlers are internal). Located in `Kakeibo.Modules.{X}/DomainEventHandlers/`. The `DomainEventDispatcher` resolves all handlers for a given event type via DI reflection and invokes them sequentially.
+**Technical Notes:** Handlers are plain classes with no base class and no interface. They use primary constructors for DI injection. The naming convention `*Handler` is what Scrutor uses to auto-register them. Feature handlers must NOT implement `IEventHandler<T>` -- that interface is reserved for side-effect handlers in `Infrastructure/Events`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.IDomainEventHandler<TEvent>`; implementations in `Kakeibo.Modules.{X}/DomainEventHandlers/`
+- **Backend:** `Kakeibo.Api.Features.{Domain}.{Operation}.{Op}Handler`; injected into endpoint delegate via DI
 - **Frontend:** N/A
-- **Database:** N/A (side effects are persisted via outbox messages and audit staging)
+- **Database:** N/A (handlers call `AppDbContext.SaveChangesAsync()` directly)
 
 ---
 
@@ -941,7 +943,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Endpoints implement `static abstract void MapEndpoint(IEndpointRouteBuilder app)` from the `IEndpoint` interface. Request/response records are nested inside the endpoint class and follow `{Operation}Request`/`{Operation}Response` naming (TD-013). Cross-cutting concerns are applied via endpoint filters: `.WithValidation<TRequest>()`, `.RequireAuthorization()`, `.RequireRateLimiting("standard")`. Endpoints delegate all business logic to handlers.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Endpoints.IEndpoint`; implementations in `Kakeibo.Modules.{X}/Features/{Op}/{Op}Endpoint.cs`
+- **Backend:** `Kakeibo.Api.Common.Endpoints.IEndpoint`; implementations in `src/Kakeibo.Api/Features/{Domain}/{Op}/{Op}Endpoint.cs`
 - **Frontend:** N/A (backend concept, but frontend consumes these endpoints via Axios)
 - **Database:** N/A
 
@@ -949,23 +951,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 ### Event Consumer
 
-**Definition:** A handler class that processes integration events published by other modules. Event consumers implement `IEventConsumer<T>` and are invoked by the `OutboxProcessor` after it reads processed messages from the outbox table. They are the receiving side of async inter-module communication.
+**Definition:** Replaced by **Event Handler** (`IEventHandler<T>`) in the Simple Monolith architecture. See the **Event Handler** entry in this section. The old `IEventConsumer<T>` / Outbox pattern no longer exists.
 
-**Module:** Each module (consumers of external events)
-
-**Related Concepts:** **Integration Event**, **Outbox Processor**, **Module Event Bus**
-
-**Examples:**
-- `TransactionRecordedConsumer` in the Wallets module -- recalculates debts when a shared wallet transaction is recorded
-- `BudgetExceededConsumer` in the Notifications module -- sends alert notifications when a budget is exceeded
-- `UserRegisteredConsumer` in the Wallets module -- creates a default personal wallet for new users
-
-**Technical Notes:** Consumers implement `IEventConsumer<TEvent>` with `Task ConsumeAsync(TEvent @event, CancellationToken ct)`. They are auto-registered by Scrutor. Located in `Kakeibo.Modules.{X}/Consumers/`. Consumers must be idempotent because the `OutboxProcessor` may retry delivery. Class names must end in `Consumer` (enforced by architecture tests).
-
-**Usage in Code:**
-- **Backend:** `Kakeibo.Common.Modules.IEventConsumer<TEvent>`; implementations in `Kakeibo.Modules.{X}/Consumers/`
-- **Frontend:** N/A
-- **Database:** N/A (consumers process events from `outbox_messages`)
+**Related Concepts:** **Event Handler**, **ChannelEventBus**, **EventDispatcher**
 
 ---
 
@@ -973,7 +961,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 **Definition:** A distributed caching library that combines in-memory (L1) and distributed (L2) cache layers with advanced features like stale data serving, cache stampede prevention, and soft/hard timeouts. In Kakeibo, FusionCache uses Redis as its L2 distributed cache backend.
 
-**Module:** Kakeibo.Infrastructure
+**Module:** `Kakeibo.Api.Infrastructure.Caching`
 
 **Related Concepts:** **Redis**, **ICacheService**
 
@@ -985,7 +973,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** FusionCache is configured via `CachingOptions` with `const string SectionName = "Caching"`. The `ICacheService` interface abstracts caching operations. Cache entries have configurable durations. Redis connection is configured via `REDIS_PASSWORD` environment variable.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Caching.ICacheService`, `FusionCacheService`, `CachingOptions`
+- **Backend:** `Kakeibo.Api.Infrastructure.Caching.ICacheService`, `FusionCacheService`, `CachingOptions`
 - **Frontend:** N/A (backend concept; frontend uses Pinia for client-side state)
 - **Database:** N/A (cache is stored in Redis, not PostgreSQL)
 
@@ -995,7 +983,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 **Definition:** A plain C# class with a `HandleAsync` method that contains the business logic for a feature operation. Handlers are NOT interfaces, abstract classes, or MediatR request handlers -- they are concrete classes registered by Scrutor via the `*Handler` naming convention. Handlers use primary constructors for dependency injection.
 
-**Module:** All modules (one handler per feature operation)
+**Module:** All domains (one handler per feature operation)
 
 **Related Concepts:** **Endpoint**, **Validator**, **Vertical Slice**, **Result<T>**
 
@@ -1004,10 +992,10 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 - `RecordTransactionHandler` -- validates wallet access, creates transaction, calculates splits for shared wallets, publishes events
 - `GetBudgetStatusHandler` -- queries transaction data, computes spending and budget status
 
-**Technical Notes:** Handlers return `Result<T>` to communicate success or failure to the endpoint. They use primary constructors for injected dependencies (`DbContext`, `IModuleClient`, `IModuleEventBus`). No explicit `private readonly` fields or constructor bodies. Handlers are auto-registered by Scrutor with scoped lifetime. Integration events must be published before `SaveChangesAsync` (the `OutboxInterceptor` captures them during save).
+**Technical Notes:** Handlers return `Result<T>` to communicate success or failure to the endpoint. They use primary constructors for injected dependencies (`AppDbContext`, `IEventBus`, and any other service). No explicit `private readonly` fields or constructor bodies. Handlers are auto-registered by Scrutor with scoped lifetime. Events are published via `eventBus.Publish()` before `SaveChangesAsync` -- the `ChannelEventBus` dispatches them asynchronously via `EventDispatcher`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.{X}/Features/{Op}/{Op}Handler.cs`
+- **Backend:** `src/Kakeibo.Api/Features/{Domain}/{Op}/{Op}Handler.cs`
 - **Frontend:** N/A
 - **Database:** N/A
 
@@ -1029,9 +1017,9 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** The web app uses HttpOnly cookies for refresh tokens. The API's `POST /api/auth/refresh` endpoint extracts the refresh token from: (1) HttpOnly cookie (web, checked first), (2) request body (reserved for future mobile client). The `Secure` flag ensures the cookie is only sent over HTTPS. `SameSite=Strict` prevents CSRF attacks.
 
 **Usage in Code:**
-- **Backend:** Cookie configuration in Identity module's auth endpoints
+- **Backend:** Cookie configuration in `src/Kakeibo.Api/Features/Identity/` auth endpoints
 - **Frontend:** Axios interceptor automatically retries failed requests by calling `/api/auth/refresh`
-- **Database:** Refresh tokens stored in the `identity` schema
+- **Database:** Refresh tokens stored in the `users` table (single `public` schema)
 
 ---
 
@@ -1041,7 +1029,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 **Module:** Kakeibo.Infrastructure (middleware)
 
-**Related Concepts:** **Transaction**, **Outbox**
+**Related Concepts:** **Transaction**, **ChannelEventBus**
 
 **Examples:**
 - Client sends `POST /api/transactions` with `Idempotency-Key: abc-123`; if the network fails and the client retries with the same key, the server returns the original response
@@ -1050,7 +1038,7 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 **Technical Notes:** Idempotency keys are typically UUIDv4 strings generated by the client. The server stores the key and response for a configurable TTL. Duplicate requests return the cached response with the same status code. This is particularly important for transaction recording and settlement operations.
 
 **Usage in Code:**
-- **Backend:** Idempotency middleware in `Kakeibo.Infrastructure`
+- **Backend:** Idempotency middleware in `src/Kakeibo.Api/Infrastructure/`
 - **Frontend:** Axios interceptor generates and attaches idempotency keys for mutating requests
 - **Database:** Idempotency key cache (Redis or PostgreSQL, depending on implementation)
 
@@ -1058,21 +1046,18 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 ### Module Client
 
-**Definition:** The synchronous inter-module communication dispatcher. When one module needs data from another module immediately (during the same HTTP request), it sends a request through `IModuleClient`, which resolves the appropriate `IModuleRequestHandler<,>` from DI and returns the response in-process. No network calls are involved.
+**Definition:** Replaced by **direct handler injection** in the Simple Monolith architecture. Because all domains live in the same assembly (`Kakeibo.Api`), cross-domain data queries are handled by injecting the target handler or service directly into the calling handler via DI -- no dispatcher or `IModuleClient` interface is needed.
 
-**Module:** Kakeibo.Infrastructure (implementation), Kakeibo.Common (interface)
-
-**Related Concepts:** **Module Event Bus**, **Integration Event**, **Module Request Handler**
+**Related Concepts:** **Handler**, **Feature Handler**, **AppDbContext**
 
 **Examples:**
-- Budgets module sends `GetTransactionsInPeriodRequest` to Transactions module to calculate spending
-- Goals module sends `GetWalletBalanceRequest` to Wallets module to update progress
-- Any module sends `ValidateInvitationRequest` to Wallets module to verify an invitation code
+- A Budgets handler that needs transaction data injects `GetTransactionsInPeriodHandler` directly
+- A Goals handler that needs wallet balance queries `AppDbContext.WalletBalances` directly
 
-**Technical Notes:** `IModuleClient` has one method: `Task<TResponse> SendAsync<TResponse>(IModuleRequest<TResponse>, CancellationToken)`. The `ModuleClient` implementation resolves `IModuleRequestHandler<TRequest, TResponse>` from DI via reflection and dispatches in-process. Use sync communication when the caller needs data immediately and failure should block the operation.
+**Technical Notes:** There are no cross-assembly boundaries in the Simple Monolith. All feature handlers are in the same `Kakeibo.Api` project and can be injected through normal ASP.NET Core DI. `IModuleClient`, `IModuleRequest`, and `IModuleRequestHandler` no longer exist.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Modules.IModuleClient`; `Kakeibo.Infrastructure.Messaging.ModuleClient`
+- **Backend:** Direct constructor injection in `src/Kakeibo.Api/Features/{Domain}/{Op}/{Op}Handler.cs`
 - **Frontend:** N/A
 - **Database:** N/A
 
@@ -1080,64 +1065,25 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 ### Module Event Bus
 
-**Definition:** The asynchronous inter-module communication publisher. `IModuleEventBus` buffers integration events in memory during a request scope. The buffered events are captured by the `OutboxInterceptor` during `SaveChangesAsync` and written to the outbox table within the same database transaction as the business data change.
+**Definition:** Replaced by **`IEventBus` / `ChannelEventBus`** in the Simple Monolith architecture. See the **ChannelEventBus** entry in this section. `IModuleEventBus`, `IIntegrationEvent`, and the outbox table no longer exist.
 
-**Module:** Kakeibo.Infrastructure (implementation), Kakeibo.Common (interface)
-
-**Related Concepts:** **Module Client**, **Integration Event**, **Outbox**, **Outbox Interceptor**
-
-**Examples:**
-- Handler publishes `TransactionRecordedEvent` via `eventBus.PublishAsync()` before `SaveChangesAsync`
-- Handler publishes `GoalMilestoneReachedEvent` when goal progress crosses a threshold
-- Events are buffered in memory until `SaveChangesAsync` persists them atomically
-
-**Technical Notes:** `IModuleEventBus` has one method: `Task PublishAsync(IIntegrationEvent, CancellationToken)`. The `ModuleEventBus` implementation has scoped lifetime and buffers events in a `List<IIntegrationEvent>`. Events must be published BEFORE `SaveChangesAsync` -- the interceptor reads them during save. Use async communication when the caller does not need a response and multiple modules may need to react.
-
-**Usage in Code:**
-- **Backend:** `Kakeibo.Common.Modules.IModuleEventBus`; `Kakeibo.Infrastructure.Messaging.ModuleEventBus`
-- **Frontend:** N/A
-- **Database:** Buffered events become `outbox_messages` rows during `SaveChangesAsync`
+**Related Concepts:** **ChannelEventBus**, **Event Handler**, **EventDispatcher**
 
 ---
 
 ### Outbox Interceptor
 
-**Definition:** An EF Core `SaveChangesInterceptor` that intercepts every `SaveChangesAsync` call to perform three critical operations atomically: (1) harvest domain events from entities in the change tracker, (2) dispatch them to domain event handlers (which publish integration events and stage audit entries), (3) capture the buffered integration events and write them as `OutboxMessage` rows within the same database transaction.
+**Definition:** Replaced by **`ChannelEventBus` + `EventDispatcher`** in the Simple Monolith architecture. There is no EF Core interceptor, no outbox table, and no `OutboxMessage` entity. Events are published via `IEventBus.Publish()` before `SaveChangesAsync` and dispatched asynchronously by the `EventDispatcher` BackgroundService. See **ChannelEventBus** and **EventDispatcher** entries.
 
-**Module:** Kakeibo.Infrastructure
-
-**Related Concepts:** **Outbox**, **Domain Event**, **Integration Event**, **Outbox Processor**
-
-**Examples:**
-- Transaction is created -> `SaveChangesAsync` fires -> interceptor harvests `TransactionRecordedDomainEvent` -> dispatches to handler -> handler publishes `TransactionRecordedEvent` integration event -> interceptor writes outbox message -> all committed atomically
-
-**Technical Notes:** The interceptor's sequence: (1) `ChangeTracker.Entries<Entity>()` to find entities with domain events, (2) `DomainEventDispatcher.DispatchAsync()` for each event, (3) `ModuleEventBus` (scoped) to read buffered integration events, (4) INSERT `OutboxMessage` rows. All within the same transaction. If any step fails, the entire transaction rolls back.
-
-**Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Outbox.OutboxInterceptor`
-- **Frontend:** N/A
-- **Database:** Writes to `outbox_messages` table in the module's schema
+**Related Concepts:** **ChannelEventBus**, **EventDispatcher**, **Event Handler**
 
 ---
 
 ### Outbox Processor
 
-**Definition:** A `BackgroundService` that continuously polls per-module outbox tables for unprocessed messages, deserializes them into integration events, and dispatches them to the appropriate `IEventConsumer<T>` handlers. Includes Polly retry with 3x exponential backoff (1s, 5s, 15s) for transient failures.
+**Definition:** Replaced by **`EventDispatcher`** in the Simple Monolith architecture. `EventDispatcher` is a `BackgroundService` that reads from an in-memory `Channel<IEvent>` and dispatches events to `IEventHandler<T>` implementations. There is no database polling, no `outbox_messages` table, and no Polly retry. See the **EventDispatcher** entry (under **ChannelEventBus**) and **Event Handler**.
 
-**Module:** Kakeibo.Infrastructure
-
-**Related Concepts:** **Outbox**, **Integration Event**, **Event Consumer**, **Outbox Interceptor**
-
-**Examples:**
-- Outbox processor picks up `TransactionRecordedEvent` -> dispatches to `TransactionRecordedConsumer` in Budgets, Goals, and Wallets modules
-- If dispatch fails, retries 3 times with exponential backoff; marks as failed after exhausting retries
-
-**Technical Notes:** The processor uses `IOutboxSource` implementations to locate each module's outbox table. Messages are marked as processed after successful dispatch. Failed messages include error details for debugging. Polling interval is configurable (10s dev, 5s production). Each module's outbox is polled independently.
-
-**Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Outbox.OutboxProcessor`
-- **Frontend:** N/A
-- **Database:** Reads from and updates `outbox_messages` tables; uses filtered index on `processed_at IS NULL`
+**Related Concepts:** **ChannelEventBus**, **Event Handler**, **EventDispatcher**
 
 ---
 
@@ -1145,20 +1091,20 @@ Only consolidated transactions (`is_forecast = false`) affect the current balanc
 
 **Definition:** A C# 12 language feature that allows constructor parameters to be declared directly on the class declaration, eliminating the need for explicit `private readonly` fields and constructor bodies. In Kakeibo, primary constructors are mandatory for all classes in `src/` (enforced by `.editorconfig` with `IDE0290:warning` and `TreatWarningsAsErrors`).
 
-**Module:** All modules (coding convention)
+**Module:** All domains (coding convention)
 
 **Related Concepts:** **Handler**, **Endpoint**, **Validator**
 
 **Examples:**
 ```csharp
 // Good: primary constructor
-public sealed class CreateWalletHandler(WalletsDbContext db, IModuleEventBus eventBus)
+public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
 
 // Bad: traditional constructor (prohibited)
 public sealed class CreateWalletHandler
 {
-    private readonly WalletsDbContext _db;
-    public CreateWalletHandler(WalletsDbContext db) { _db = db; }
+    private readonly AppDbContext _db;
+    public CreateWalletHandler(AppDbContext db) { _db = db; }
 }
 ```
 
@@ -1175,7 +1121,7 @@ public sealed class CreateWalletHandler
 
 **Definition:** A discriminated union type that represents the outcome of an operation as either a success (with a value of type `T`) or a failure (with an `Error` record). Handlers return `Result<T>` instead of throwing exceptions for expected failure cases, enabling the endpoint to map different error types to appropriate HTTP status codes.
 
-**Module:** Kakeibo.Common
+**Module:** `Kakeibo.Api.Common.Abstractions`
 
 **Related Concepts:** **Error**, **Handler**, **Endpoint**
 
@@ -1196,7 +1142,7 @@ return result.IsSuccess
 **Technical Notes:** `Result<T>` uses `[MemberNotNullWhen]` attributes so the compiler enforces null safety through flow analysis -- no `!` operator needed when checking `IsSuccess`/`IsFailure` (see KB-002). Implicit conversion operators allow returning `T` or `Error` directly. The `Error` record has factory methods: `NotFound()`, `Validation()`, `Conflict()`, `Unauthorized()`, `Forbidden()`, `Internal()`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Abstractions.Result<T>`, `Kakeibo.Common.Abstractions.Error`
+- **Backend:** `Kakeibo.Api.Common.Abstractions.Result<T>`, `Kakeibo.Api.Common.Abstractions.Error`
 - **Frontend:** N/A (backend concept; frontend receives HTTP status codes)
 - **Database:** N/A
 
@@ -1204,26 +1150,33 @@ return result.IsSuccess
 
 ### Scrutor
 
-**Definition:** A .NET library that provides assembly scanning for automatic dependency injection registration. In Kakeibo, Scrutor auto-registers handlers (by `*Handler` name convention), module request handlers (by `IModuleRequestHandler<,>` interface), event consumers (by `IEventConsumer<>` interface), and domain event handlers (by `IDomainEventHandler<>` interface) with scoped lifetime.
+**Definition:** A .NET library that provides assembly scanning for automatic dependency injection registration. In Kakeibo, Scrutor auto-registers feature handlers (by `*Handler` name convention) and event handlers (by `IEventHandler<>` interface) in `Program.cs` with scoped lifetime.
 
-**Module:** All modules (DI registration)
+**Module:** `Kakeibo.Api` (DI registration in `Program.cs`)
 
-**Related Concepts:** **Handler**, **Event Consumer**, **Domain Event Handler**, **DI Registration**
+**Related Concepts:** **Handler**, **Event Handler**, **Feature Handler**, **DI Registration**
 
 **Examples:**
 ```csharp
 // Auto-register all classes ending in "Handler" as themselves
 builder.Services.Scan(scan => scan
-    .FromAssemblyOf<WalletsModuleRegistration>()
+    .FromAssemblyOf<Program>()
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Handler")))
     .AsSelf()
     .WithScopedLifetime());
+
+// Auto-register all IEventHandler<T> implementations
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.AssignableTo(typeof(IEventHandler<>)))
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
 ```
 
-**Technical Notes:** Each module's `{Module}ModuleRegistration.cs` uses Scrutor's `Scan()` method in its `Add{Module}Module()` extension method. Four scan patterns are used per module: (1) feature handlers by name, (2) module request handlers by interface, (3) event consumers by interface, (4) domain event handlers by interface (`publicOnly: false` since they are internal).
+**Technical Notes:** There are no per-module registration classes. All scanning is done once in `Program.cs` scanning the single `Kakeibo.Api` assembly. Two scan patterns: (1) feature handlers by `*Handler` name convention, (2) event handlers by `IEventHandler<>` interface. `IModuleRequestHandler`, `IEventConsumer`, and `IDomainEventHandler` no longer exist.
 
 **Usage in Code:**
-- **Backend:** NuGet package `Scrutor`; used in `Kakeibo.Modules.{X}/{X}ModuleRegistration.cs`
+- **Backend:** NuGet package `Scrutor`; used in `src/Kakeibo.Api/Program.cs`
 - **Frontend:** N/A
 - **Database:** N/A
 
@@ -1245,7 +1198,7 @@ builder.Services.Scan(scan => scan
 **Technical Notes:** `.WithReuse(true)` is PROHIBITED (mandatory.md Rule 4) because it causes Docker validation at class load time, breaking CI. Tests must use `Assert.Skip()` in a `try-catch` around container startup to handle environments without Docker. The `Lazy<Task>` pattern ensures containers start at most once per test class. EF Core InMemory and SQLite in-memory are prohibited alternatives.
 
 **Usage in Code:**
-- **Backend:** NuGet package `Testcontainers.PostgreSql`; used in `tests/Kakeibo.Modules.{X}.Tests/`
+- **Backend:** NuGet package `Testcontainers.PostgreSql`; used in `tests/Kakeibo.Tests/`
 - **Frontend:** N/A
 - **Database:** Ephemeral PostgreSQL containers created and destroyed per test run
 
@@ -1272,10 +1225,10 @@ public sealed class CreateWalletValidator
 }
 ```
 
-**Technical Notes:** Validators extend `AbstractValidator<TRequest>` where `TRequest` is the endpoint's nested request record. They are applied via `.WithValidation<TRequest>()` on the endpoint. If validation fails, the endpoint returns a 400 Bad Request with validation errors before the handler is invoked. Validators are registered per module assembly: `builder.Services.AddValidatorsFromAssemblyContaining<{Module}ModuleRegistration>()`.
+**Technical Notes:** Validators extend `AbstractValidator<TRequest>` where `TRequest` is the endpoint's nested request record. They are applied via `.WithValidation<TRequest>()` on the endpoint. If validation fails, the endpoint returns a 400 Bad Request with validation errors before the handler is invoked. Validators are registered via `builder.Services.AddValidatorsFromAssemblyContaining<Program>()` in `Program.cs`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Modules.{X}/Features/{Op}/{Op}Validator.cs`; `Kakeibo.Common.Endpoints.ValidationFilter<T>`
+- **Backend:** `src/Kakeibo.Api/Features/{Domain}/{Op}/{Op}Validator.cs`; `Kakeibo.Api.Common.Endpoints.ValidationFilter<T>`
 - **Frontend:** VeeValidate + Zod for client-side validation (mirrors backend rules)
 - **Database:** N/A (validation occurs before database access)
 
@@ -1299,8 +1252,8 @@ public sealed class CreateWalletValidator
 **Technical Notes:** ClickHouse runs as a Docker container with custom configuration files in `.docker/clickhouse/` for log levels, IPv4-only mode, and low-resource development settings. Port 8123 (HTTP interface) is used for queries. In production, ClickHouse is internal only -- accessible through SSH tunnels. Health check integration via `ClickHouseHealthCheck`.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Audit.ClickHouseAuditService`, `ClickHouseOptions`
-- **Frontend:** N/A (audit data consumed via API endpoints in the Auditing module)
+- **Backend:** `Kakeibo.Api.Infrastructure.Audit.ClickHouseAuditService`, `ClickHouseOptions`
+- **Frontend:** N/A (audit data consumed via API endpoints in the Auditing feature)
 - **Database:** Separate ClickHouse instance; `audit_events` table
 
 ---
@@ -1333,7 +1286,7 @@ public sealed class CreateWalletValidator
 
 **Module:** Kakeibo.Common
 
-**Related Concepts:** **Entity**, **Aggregate Root**
+**Related Concepts:** **Entity**
 
 **Examples:**
 ```csharp
@@ -1347,7 +1300,7 @@ var id = Guid.CreateVersion7();
 **Technical Notes:** UUIDv7 is time-ordered, meaning new IDs sort after older IDs in PostgreSQL B-tree indexes. This provides near-sequential insert performance. The `Guid7` wrapper delegates to `Uuid7.NewUuid7()` from the `Medo.Uuid7` NuGet package. The `Entity` base class initializes `Id` with `Guid7.NewGuid().ToGuid()`. Regular `Guid` is allowed for non-entity purposes (e.g., correlation IDs, idempotency keys).
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Common.Utils.Guid7`; `Medo.Uuid7` NuGet package
+- **Backend:** `Kakeibo.Api.Common.Utils.Guid7`; `Medo.Uuid7` NuGet package
 - **Frontend:** IDs are received as strings from the API
 - **Database:** `UUID` column type in PostgreSQL; stored with big-endian byte order for correct B-tree sorting
 
@@ -1357,16 +1310,16 @@ var id = Guid.CreateVersion7();
 
 **Definition:** A background job processing library with PostgreSQL storage for scheduled and recurring jobs. In Kakeibo, Hangfire runs the daily recurring transaction generation job, invitation expiration cleanup, soft-deleted transaction purging (30-day retention), and other scheduled operations.
 
-**Module:** Kakeibo.Infrastructure, Kakeibo.Modules.Recurring
+**Module:** `Kakeibo.Api.Infrastructure`, `Kakeibo.Api.Features.Recurring`
 
-**Related Concepts:** **Recurring Pattern**, **Forecast**, **Outbox Processor**
+**Related Concepts:** **Recurring Pattern**, **Forecast**, **EventDispatcher**
 
 **Examples:**
 - Daily job: scan active recurring patterns and generate forecasted transactions up to 90 days ahead
 - Daily job: mark expired invitations (`status = 'expired'` after 7 days)
 - Daily job: permanently purge soft-deleted transactions older than 30 days
 
-**Technical Notes:** Hangfire uses `Hangfire.PostgreSql` for job storage (same PostgreSQL instance as the application). The outbox pattern handles event reliability (not Hangfire) -- Hangfire is specifically for scheduled/recurring background work. Quartz.NET is a prohibited alternative.
+**Technical Notes:** Hangfire uses `Hangfire.PostgreSql` for job storage (same PostgreSQL instance as the application). `ChannelEventBus` handles async event dispatch (not Hangfire) -- Hangfire is specifically for scheduled/recurring background work. Quartz.NET is a prohibited alternative.
 
 **Usage in Code:**
 - **Backend:** NuGet packages `Hangfire`, `Hangfire.PostgreSql`; job registration in `Program.cs`
@@ -1379,7 +1332,7 @@ var id = Guid.CreateVersion7();
 
 **Definition:** A date and time library for .NET that replaces the error-prone BCL `DateTime`/`DateTimeOffset` types with explicit, unambiguous types. In Kakeibo, NodaTime is mandatory -- BCL date/time types are PROHIBITED (TD-004). All timestamps are stored as `Instant` (UTC point in time), and date-only values use `LocalDate`.
 
-**Module:** Kakeibo.Common, all modules
+**Module:** `Kakeibo.Api.Common`, all domains
 
 **Related Concepts:** **Entity**, **PostgreSQL**
 
@@ -1426,30 +1379,27 @@ var today = DateOnly.FromDateTime(DateTime.Now);
 
 ### PostgreSQL Schema
 
-**Definition:** A logical namespace within a PostgreSQL database that groups related tables. In Kakeibo, each module owns its own schema (e.g., `identity`, `wallets`, `transactions`, `budgets`), providing logical separation while sharing the same physical database and connection string.
+**Definition:** A logical namespace within a PostgreSQL database. In the Simple Monolith, Kakeibo uses a **single `public` schema** for all tables. All entities from all domains share the same schema and are managed by the single `AppDbContext`. There are no per-domain schemas, no schema-scoped migrations, and no `outbox_messages` table.
 
-**Module:** All modules (one schema per module)
+**Module:** `Kakeibo.Api.Persistence` (single `AppDbContext`)
 
-**Related Concepts:** **DbContext**, **Modular Monolith**
+**Related Concepts:** **AppDbContext**, **Simple Monolith**
 
 **Examples:**
 ```sql
-CREATE SCHEMA IF NOT EXISTS identity;
-CREATE SCHEMA IF NOT EXISTS wallets;      -- includes collaboration tables
-CREATE SCHEMA IF NOT EXISTS transactions; -- includes category tables
-CREATE SCHEMA IF NOT EXISTS budgets;
-CREATE SCHEMA IF NOT EXISTS goals;
-CREATE SCHEMA IF NOT EXISTS recurring;
-CREATE SCHEMA IF NOT EXISTS notifications;
-CREATE SCHEMA IF NOT EXISTS auditing;
+-- All tables in the single public schema
+CREATE TABLE users (...);
+CREATE TABLE wallets (...);
+CREATE TABLE transactions (...);
+CREATE TABLE budgets (...);
 ```
 
-**Technical Notes:** Each module's `DbContext` sets `modelBuilder.HasDefaultSchema(SchemaName)` in `OnModelCreating`. Migrations are schema-scoped: `npgsql.MigrationsHistoryTable("__ef_migrations_history", SchemaName)`. Each schema has its own `outbox_messages` table. No cross-schema foreign keys exist -- inter-module relationships go through integration events and module requests.
+**Technical Notes:** `AppDbContext.OnModelCreating` applies `UseSnakeCaseNamingConvention()` and `UseNodaTime()`. Configurations are loaded via `ApplyConfigurationsFromAssembly`. Migrations are stored in a single `__ef_migrations_history` table. There is one migration history, one DbContext, and one schema.
 
 **Usage in Code:**
-- **Backend:** `const string SchemaName = "wallets"` in each `DbContext`
+- **Backend:** `Kakeibo.Api.Persistence.AppDbContext`; migrations in `src/Kakeibo.Api/Persistence/Migrations/`
 - **Frontend:** N/A
-- **Database:** One PostgreSQL schema per module; all schemas in the same `kakeibo` database
+- **Database:** All tables in the `public` schema of the `kakeibo` database
 
 ---
 
@@ -1479,7 +1429,7 @@ CREATE SCHEMA IF NOT EXISTS auditing;
 
 **Definition:** An S3-compatible object storage server used for file storage (avatars, documents, receipts). RustFS is an open-source (Apache 2.0) alternative to MinIO, which is prohibited due to being archived with no security patches. The Minio NuGet SDK is still used as the S3 client library.
 
-**Module:** Kakeibo.Infrastructure (Storage)
+**Module:** `Kakeibo.Api.Infrastructure.Storage`
 
 **Related Concepts:** **IStorageService**
 
@@ -1490,7 +1440,7 @@ CREATE SCHEMA IF NOT EXISTS auditing;
 **Technical Notes:** RustFS alpha.83 has a known limitation: SSE (Server-Side Encryption) is broken -- data is stored in plaintext on disk (KB-009). This is accepted for the MVP but must be re-evaluated before handling sensitive documents. Ports: 9000 (API), 9001 (console). In production, only port 9000 may be exposed; console is internal only.
 
 **Usage in Code:**
-- **Backend:** `Kakeibo.Infrastructure.Storage.IStorageService`, `StorageService`, `StorageOptions`; Minio NuGet SDK
+- **Backend:** `Kakeibo.Api.Infrastructure.Storage.IStorageService`, `StorageService`, `StorageOptions`; Minio NuGet SDK
 - **Frontend:** File upload components that POST to storage endpoints
 - **Database:** N/A (files stored in RustFS, not PostgreSQL; metadata may be in PostgreSQL)
 
@@ -1640,8 +1590,8 @@ test(goals): add milestone notification integration test
 |---------|-----------|-------------|
 | **DDD** | Domain-Driven Design | Software design approach that models code around the business domain, using concepts like entities, value objects, aggregate roots, and domain events |
 | **DI** | Dependency Injection | Design pattern where dependencies are provided to a class rather than created internally; managed by the ASP.NET Core DI container and Scrutor |
-| **DTO** | Data Transfer Object | **PROHIBITED naming convention** -- use nested `{Op}Request`/`{Op}Response` records inside endpoint classes instead. The `Dto` suffix is only allowed in `Kakeibo.Contracts` for inter-module shared types |
-| **EF Core** | Entity Framework Core | The ORM (Object-Relational Mapper) used to interact with PostgreSQL; configured with snake_case naming, NodaTime, and per-module DbContexts |
+| **DTO** | Data Transfer Object | **PROHIBITED naming convention** -- use nested `{Op}Request`/`{Op}Response` records inside endpoint classes instead. The `Dto` suffix is prohibited everywhere in the codebase (TD-013) |
+| **EF Core** | Entity Framework Core | The ORM (Object-Relational Mapper) used to interact with PostgreSQL; configured with snake_case naming, NodaTime, and a single `AppDbContext` (public schema) |
 | **JWT** | JSON Web Token | Token format used for authentication; access tokens are short-lived (in-memory), refresh tokens are long-lived (HttpOnly cookies) |
 | **OTLP** | OpenTelemetry Protocol | The protocol used to export traces, metrics, and logs to the Aspire Dashboard (port 18889) for observability |
 | **PWA** | Progressive Web App | The web application (Kakeibo.App) is PWA-capable, installable on devices from the browser |
@@ -1667,7 +1617,7 @@ Terms that are explicitly banned from the codebase and documentation, along with
 | **Dto / DTO suffix** | Nested `{Op}Request` / `{Op}Response` | DTOs are prohibited for endpoint types (TD-013). Use nested records inside the endpoint class. The `Dto` suffix is only allowed in `Kakeibo.Contracts` for inter-module shared types |
 | **Guid.CreateVersion7()** | `Guid7.NewGuid()` | The .NET built-in method has broken little-endian byte order that breaks PostgreSQL B-tree sorting (TD-005) |
 | **MediatR** | Plain handler classes | MediatR is a prohibited technology. Use plain classes with `HandleAsync` methods, auto-registered by Scrutor |
-| **Repository Pattern** | `DbContext` directly | No repository abstraction layer. Handlers inject the module's `DbContext` and query `DbSet<T>` directly |
+| **Repository Pattern** | `AppDbContext` directly | No repository abstraction layer. Handlers inject `AppDbContext` and query `DbSet<T>` directly |
 | **Settings / Config suffix** | `Options` suffix | Configuration binding classes must use `{Name}Options` naming (TD-009). `*Settings` and `*Config` suffixes are prohibited |
 | **npx** | `bunx` (or `bunx --bun`) | The project uses Bun as the package manager. `npx` may resolve the wrong registry (mandatory.md Rule 9) |
 | **dotnet format** (Claude execution) | User runs manually | Claude must never execute `dotnet format` in any form. The user always runs formatting manually (mandatory.md Rule 7) |

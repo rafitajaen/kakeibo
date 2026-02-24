@@ -8,7 +8,7 @@ Full reference for all .NET API test levels. See `SKILL.md` for the quick decisi
 
 **Purpose:** Verify pure domain logic: entities, value objects, validators, middleware.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Entities/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/`
 
 **Dependencies:** `FakeClock` only. No database. NSubstitute for middleware tests (mocked `HttpContext`).
 
@@ -64,20 +64,20 @@ public sealed class BudgetTests
     }
 
     [Fact]
-    public void AddDomainEvent_WhenWalletCreated_EventIsQueued()
+    public void Create_WalletWithValidData_SetsPropertiesCorrectly()
     {
         var wallet = new Wallet { Name = "Checking Account", Type = WalletType.Personal };
         wallet.Create("Checking Account", WalletType.Personal, 1000.00m, "USD");
 
-        Assert.Single(wallet.DomainEvents);
-        Assert.IsType<WalletCreatedDomainEvent>(wallet.DomainEvents[0]);
+        Assert.Equal("Checking Account", wallet.Name);
+        Assert.Equal(WalletType.Personal, wallet.Type);
     }
 }
 ```
 
 ### ValueObject Tests
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Entities/` (or `ValueObjects/` subfolder)
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/` (or `ValueObjects/` subfolder)
 
 Cover the four equality contracts: `==`, `Equals`, `GetHashCode`, and component change → not equal.
 
@@ -131,7 +131,7 @@ public sealed class AddressTests
 
 ### Middleware Unit Tests
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Middleware/` (or `tests/Kakeibo.Infrastructure.Tests/Middleware/`)
+**Location:** `tests/Kakeibo.Tests/Features/` (or `tests/Kakeibo.Tests/Middleware/`)
 
 Test middleware in isolation with a mocked `HttpContext` and `RequestDelegate`. No database, no real HTTP server.
 
@@ -391,16 +391,16 @@ different expected behaviors).
 ## Level 2 — Feature Handler Unit
 
 **Purpose:** Verify handler business logic with a real PostgreSQL database.
-Covers feature handlers only. Consumers and request handlers have their own levels (2b and 2c).
+Covers feature handlers only. Cross-domain query handlers and event handlers have their own levels (2b and 2c).
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Features/{Operation}/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/{Operation}/`
 
 **Dependencies:** `TestDbContextFactory` (real PostgreSQL via Testcontainers), `FakeClock`.
-NSubstitute mocks for `IModuleEventBus`, `IAuditOutbox`, `INotificationService`.
+NSubstitute mocks for `IEventBus`, `INotificationService`.
 
 **Script:** `bun run api:test:unit`
 
-**Critical rule:** Never mock `DbContext` or `DbSet<T>`. They are internal module details.
+**Critical rule:** Never mock `DbContext` or `DbSet<T>`. They are internal details.
 Use `TestDbContextFactory.CreateAsync()` for a real isolated DB per test.
 
 ```csharp
@@ -414,7 +414,7 @@ public sealed class CreateWalletHandlerTests
         // Arrange
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var eventBus = Substitute.For<IModuleEventBus>();
+        var eventBus = Substitute.For<IEventBus>();
         var handler = new CreateWalletHandler(db, eventBus, _clock);
 
         var request = new CreateWalletEndpoint.CreateWalletRequest(
@@ -453,7 +453,7 @@ public sealed class CreateWalletHandlerTests
         });
         await db.SaveChangesAsync(ct);
 
-        var handler = new CreateWalletHandler(db, Substitute.For<IModuleEventBus>(), _clock);
+        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), _clock);
         var request = new CreateWalletEndpoint.CreateWalletRequest(
             "Checking Account", WalletType.Personal, 100m, "USD");
 
@@ -476,7 +476,7 @@ public async Task HandleAsync_WithValidRequest_CreatesWalletAndReturnsResponse()
 {
     await using var db = await TestDbContextFactory.CreateAsync();
     var ct = TestContext.Current.CancellationToken;
-    var handler = new CreateWalletHandler(db, Substitute.For<IModuleEventBus>(), _clock);
+    var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), _clock);
 
     var result = await handler.HandleAsync(
         new CreateWalletEndpoint.CreateWalletRequest("Checking Account", WalletType.Personal, 1000.00m, "USD"), ct);
@@ -513,7 +513,7 @@ public sealed class CreateWalletHandlerTests(ITestOutputHelper output)
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var handler = new CreateWalletHandler(db, Substitute.For<IModuleEventBus>(), _clock);
+        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), _clock);
 
         var result = await handler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Checking Account", WalletType.Personal, 1000.00m, "USD"), ct);
@@ -545,21 +545,19 @@ await eventBus.Received(1).PublishAsync(
     Arg.Any<CancellationToken>());
 ```
 
-**Flow B — Handler uses `entity.AddDomainEvent()`:** The event bus is called later by
-`OutboxInterceptor` → `DomainEventHandler`. **Do NOT verify `eventBus` at Level 2.**
-Instead, verify that the domain event was queued on the entity before `SaveChangesAsync`:
+**Flow B — Handler publishes via `IEventBus` (fire-and-forget):** The handler calls
+`eventBus.Publish(new WalletCreatedEvent { ... })` before `SaveChangesAsync`. The `ChannelEventBus`
+dispatches the event asynchronously via `EventDispatcher`. **Verify `eventBus.Publish` was called at
+Level 2.** The `IEventBus` is a system boundary — mock it with NSubstitute.
 
 ```csharp
-// ✅ Verify at Level 2: domain event was added to the entity
-var inDb = await db.Wallets.FindAsync([result.Value.Id], ct);
-Assert.Single(inDb!.DomainEvents);
-Assert.IsType<MemberCreatedDomainEvent>(inDb.DomainEvents[0]);
-
-// ✅ Verify eventBus at Level 3 (DomainEventHandler tests) — not here
+// ✅ Verify at Level 2: handler called eventBus.Publish with correct event
+eventBus.Received(1).Publish(
+    Arg.Is<WalletCreatedEvent>(e => e.WalletId == result.Value.Id));
 ```
 
-The full verification of what the domain event handler publishes belongs in Level 3
-(`DomainEventHandlerTests`), not in the feature handler test.
+The full verification of what the `IEventHandler<T>` implementation does belongs in Level 2c
+(`EventHandlerTests`), not in the feature handler test.
 
 ### Result & Error Handling
 
@@ -576,178 +574,175 @@ Assert.Equal("Member.NotFound", result.Error.Code);
 
 ---
 
-## Level 2b — Request Handler Unit (`IModuleRequestHandler`)
+## Level 2b — Cross-Domain Query Handler Unit
 
-**Purpose:** Verify that `IModuleRequestHandler<TRequest, TResponse>` implementations return the
-correct data from the database. These handlers are the synchronous inter-module API surface.
+**Purpose:** Verify that plain handler classes used for synchronous cross-domain data queries
+return the correct data from the database. In the Simple Monolith, these are injected directly
+via DI — no `IModuleRequestHandler` interface needed.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/RequestHandlers/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/`
 
-**File name:** `{Request}RequestHandlerTests.cs`
+**File name:** `{Query}HandlerTests.cs`
 
-**Dependencies:** `TestDbContextFactory` (real PostgreSQL). No `IModuleEventBus` — request handlers
+**Dependencies:** `TestDbContextFactory` (real PostgreSQL). No `IEventBus` — query handlers
 do not publish events.
 
 **Script:** `bun run api:test:unit`
 
 ```csharp
-public sealed class GetWalletByUserIdRequestHandlerTests
+public sealed class GetWalletByUserIdHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ExistingActiveUser_ReturnsMemberSummary()
+    public async Task HandleAsync_ExistingWallet_ReturnsWalletSummary()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
 
-        var userId = Guid.NewGuid();
-        db.Wallets.Add(new Member
+        var walletId = Guid7.NewGuid();
+        db.Wallets.Add(new Wallet
         {
-            UserId = userId,
-            FirstName = "Ana",
-            LastName = "García",
-            Email = "ana@test.com",
-            PlanId = "standard",
-            Status = MemberStatusCodes.Active,
+            Id = walletId,
+            Name = "Checking Account",
+            Type = WalletType.Personal,
+            Balance = 1000m,
             CreatedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
         });
         await db.SaveChangesAsync(ct);
 
-        var handler = new GetWalletByUserIdRequestHandler(db);
-        var result = await handler.HandleAsync(new GetWalletByUserIdRequest(userId), ct);
+        var handler = new GetWalletByIdHandler(db);
+        var result = await handler.HandleAsync(walletId, ct);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(userId, result.Value.UserId);
-        Assert.Equal("Ana García", result.Value.FullName);
-        Assert.Equal("standard", result.Value.PlanId);
-        Assert.True(result.Value.IsActive);
+        Assert.Equal(walletId, result.Value.Id);
+        Assert.Equal("Checking Account", result.Value.Name);
+        Assert.Equal(1000m, result.Value.Balance);
     }
 
     [Fact]
-    public async Task HandleAsync_NonExistentUser_ReturnsNotFoundError()
+    public async Task HandleAsync_NonExistentWallet_ReturnsNotFoundError()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
 
-        var handler = new GetWalletByUserIdRequestHandler(db);
-        var result = await handler.HandleAsync(new GetWalletByUserIdRequest(Guid.NewGuid()), ct);
+        var handler = new GetWalletByIdHandler(db);
+        var result = await handler.HandleAsync(Guid7.NewGuid(), ct);
 
         Assert.True(result.IsFailure);
-        Assert.Equal("Member.NotFound", result.Error.Code);
+        Assert.Equal("Wallet.NotFound", result.Error.Code);
     }
 
     [Fact]
-    public async Task HandleAsync_DeletedMember_ReturnsNotFoundError()
+    public async Task HandleAsync_DeletedWallet_ReturnsNotFoundError()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
 
-        var userId = Guid.NewGuid();
-        db.Wallets.Add(new Member
+        var walletId = Guid7.NewGuid();
+        db.Wallets.Add(new Wallet
         {
-            UserId = userId,
-            Email = "deleted@test.com",
-            Status = MemberStatusCodes.Active,
-            IsDeleted = true,
+            Id = walletId,
+            Name = "Deleted Wallet",
             DeletedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
             CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0),
         });
         await db.SaveChangesAsync(ct);
 
-        var handler = new GetWalletByUserIdRequestHandler(db);
-        var result = await handler.HandleAsync(new GetWalletByUserIdRequest(userId), ct);
+        var handler = new GetWalletByIdHandler(db);
+        var result = await handler.HandleAsync(walletId, ct);
 
-        // Soft-deleted members must not be returned via cross-module requests
+        // Soft-deleted wallets must not be returned via cross-domain queries
         Assert.True(result.IsFailure);
-        Assert.Equal("Member.NotFound", result.Error.Code);
+        Assert.Equal("Wallet.NotFound", result.Error.Code);
     }
 }
 ```
 
-**What to cover per request handler:**
-- Happy path: entity exists → correct DTO mapping (all fields)
+**What to cover per query handler:**
+- Happy path: entity exists → correct response mapping (all fields)
 - Not found: non-existent ID → `Error.NotFound`
 - Soft-deleted entity: treated as not found (query filter active)
-- If handler applies additional authorization/filtering: verify each condition
+- If handler applies additional filtering: verify each condition
 
 ---
 
-## Level 2c — Consumer Unit (`IEventConsumer<T>`)
+## Level 2c — Event Handler Unit (`IEventHandler<T>`)
 
-**Purpose:** Verify that `IEventConsumer<T>` implementations correctly react to integration events:
+**Purpose:** Verify that `IEventHandler<T>` implementations correctly react to in-process events:
 persisting side effects, handling already-processed events idempotently, and delegating to
 external services.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Consumers/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/`
 
-**File name:** `{EventName}ConsumerTests.cs`
+**File name:** `{EventName}EventHandlerTests.cs`
 
 **Dependencies:** `TestDbContextFactory` (real PostgreSQL). NSubstitute for `INotificationService`
-or other external services the consumer may call.
+or other external services the handler may call.
 
 **Script:** `bun run api:test:unit`
 
-**Critical rule — Idempotency:** Every consumer that creates or modifies state MUST have a test
-that calls `ConsumeAsync` with the same event twice and verifies no duplicate data is created.
-The Outbox guarantees at-least-once delivery — duplicate processing will happen.
+**Critical rule — Idempotency:** Every event handler that creates or modifies state MUST have a test
+that calls `HandleAsync` with the same event twice and verifies no duplicate data is created.
+`ChannelEventBus` is fire-and-forget but `EventDispatcher` may retry failed handlers — design for
+idempotency.
 
 ```csharp
-public sealed class UserRegisteredConsumerTests
+public sealed class UserRegisteredEventHandlerTests
 {
     [Fact]
-    public async Task ConsumeAsync_NewUser_CreatesMemberProfile()
+    public async Task HandleAsync_NewUser_CreatesNotificationPreferences()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var consumer = new UserRegisteredConsumer(db);
+        var handler = new UserRegisteredEventHandler(db);
 
         var @event = new UserRegisteredEvent
         {
             Id = Guid.NewGuid(),
             OccurredAt = Instant.FromUtc(2026, 1, 1, 0, 0),
-            UserId = Guid.NewGuid(),
+            UserId = Guid7.NewGuid(),
             Email = "new@test.com",
-            Version = 1,
         };
 
-        await consumer.ConsumeAsync(@event, ct);
+        await handler.HandleAsync(@event, ct);
 
-        var profile = await db.MemberProfiles
+        var prefs = await db.NotificationPreferences
             .FirstOrDefaultAsync(p => p.UserId == @event.UserId, ct);
-        Assert.NotNull(profile);
-        Assert.Equal(@event.Email, profile.Email);
+        Assert.NotNull(prefs);
+        Assert.Equal(@event.Email, prefs.Email);
     }
 
     [Fact]
-    public async Task ConsumeAsync_SameEventTwice_IsIdempotent()
+    public async Task HandleAsync_SameEventTwice_IsIdempotent()
     {
         // KB-005: Idempotency is a behavioral contract — encode it as a test, not just a comment.
-        // At-least-once delivery from OutboxProcessor makes duplicate consumption a certainty.
+        // EventDispatcher may dispatch the same event more than once if the handler throws
+        // and the channel message is retried.
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var consumer = new UserRegisteredConsumer(db);
+        var handler = new UserRegisteredEventHandler(db);
 
         var @event = new UserRegisteredEvent
         {
             Id = Guid.NewGuid(),
             OccurredAt = Instant.FromUtc(2026, 1, 1, 0, 0),
-            UserId = Guid.NewGuid(),
+            UserId = Guid7.NewGuid(),
             Email = "idempotent@test.com",
-            Version = 1,
         };
 
-        await consumer.ConsumeAsync(@event, ct);
-        await consumer.ConsumeAsync(@event, ct);  // second time — must not create a duplicate
+        await handler.HandleAsync(@event, ct);
+        await handler.HandleAsync(@event, ct);  // second time — must not create a duplicate
 
-        var count = await db.MemberProfiles
+        var count = await db.NotificationPreferences
             .CountAsync(p => p.UserId == @event.UserId, ct);
         Assert.Equal(1, count);  // exactly one — not zero, not two
     }
 
     [Fact]
-    public async Task ConsumeAsync_ExternalServiceFails_DoesNotThrow()
+    public async Task HandleAsync_ExternalServiceFails_DoesNotThrow()
     {
-        // Consumers must handle external service failures gracefully.
-        // A thrown exception causes the outbox processor to retry — which may loop forever.
+        // Event handlers must handle external service failures gracefully.
+        // A thrown exception from a handler is caught by EventDispatcher and logged — but
+        // the event is not re-queued, so the primary DB write must succeed first.
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
         var notifications = Substitute.For<INotificationService>();
@@ -755,111 +750,89 @@ public sealed class UserRegisteredConsumerTests
             .SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>())
             .Returns(NotificationResult.Failure("Service unavailable"));
 
-        var consumer = new UserRegisteredConsumer(db, notifications);
+        var handler = new UserRegisteredEventHandler(db, notifications);
 
         var @event = new UserRegisteredEvent
         {
             Id = Guid.NewGuid(),
             OccurredAt = Instant.FromUtc(2026, 1, 1, 0, 0),
-            UserId = Guid.NewGuid(),
+            UserId = Guid7.NewGuid(),
             Email = "fail@test.com",
-            Version = 1,
         };
 
         // Must not throw — failure is handled internally
-        await consumer.ConsumeAsync(@event, ct);
+        await handler.HandleAsync(@event, ct);
 
         // Primary side effect (DB write) must still happen even when notification fails
-        var profile = await db.MemberProfiles.FirstOrDefaultAsync(p => p.UserId == @event.UserId, ct);
-        Assert.NotNull(profile);
+        var prefs = await db.NotificationPreferences.FirstOrDefaultAsync(p => p.UserId == @event.UserId, ct);
+        Assert.NotNull(prefs);
     }
 }
 ```
 
-**What to cover per consumer:**
+**What to cover per event handler:**
 - Happy path: event arrives → correct DB state created/updated
 - Idempotency: same event twice → same final state (no duplicates)
-- External service failure: notification/email fails → consumer does not throw, primary state is persisted
-- Version mismatch (if consumer checks `event.Version`): unsupported version → logged and skipped, no throw
+- External service failure: notification/email fails → handler does not throw, primary state is persisted
 
 ---
 
-## Level 3 — Domain Event Handler
+## Level 3 — Event Handler Unit (no DB side effects)
 
-**Purpose:** Verify that `IDomainEventHandler<T>` publishes the correct integration events,
-stages audit entries, and handles external service failures without propagating exceptions.
+**Purpose:** Verify that `IEventHandler<T>` implementations that only call external services
+(notifications, email, audit logging) handle service failures gracefully without propagating
+exceptions. Use this level when the handler has no DB writes — only external service calls.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/DomainEventHandlers/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/`
 
-**Dependencies:** NSubstitute for `IModuleEventBus`, `IAuditOutbox`, `INotificationService`.
-No database — domain event handlers MUST NOT inject `DbContext`.
+**Dependencies:** NSubstitute for `INotificationService`, `IEmailService`, other external services.
+No database needed when the handler only calls external services.
 
 ```csharp
-public sealed class MemberCreatedDomainEventHandlerTests
+public sealed class WalletCreatedEventHandlerTests
 {
-    private readonly IModuleEventBus _eventBus = Substitute.For<IModuleEventBus>();
-    private readonly IAuditOutbox _auditOutbox = Substitute.For<IAuditOutbox>();
     private readonly INotificationService _notifications = Substitute.For<INotificationService>();
     private readonly FakeClock _clock = new(Instant.FromUtc(2026, 2, 17, 12, 0));
 
     [Fact]
-    public async Task HandleAsync_PublishesIntegrationEventWithCorrectPayload()
+    public async Task HandleAsync_SendsWelcomeNotification()
     {
-        var domainEvent = BuildEvent();
+        var @event = BuildEvent();
         _notifications.SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>())
             .Returns(NotificationResult.Ok());
 
-        var handler = new MemberCreatedDomainEventHandler(_eventBus, _auditOutbox, _notifications);
+        var handler = new WalletCreatedEventHandler(_notifications, _clock);
 
-        await handler.HandleAsync(domainEvent, CancellationToken.None);
+        await handler.HandleAsync(@event, CancellationToken.None);
 
-        await _eventBus.Received(1).PublishAsync(
-            Arg.Is<MemberCreatedEvent>(e =>
-                e.MemberId == domainEvent.MemberId &&
-                e.Email == domainEvent.Email),
+        await _notifications.Received(1).SendAsync(
+            Arg.Is<NotificationRequest>(r =>
+                r.UserId == @event.UserId &&
+                r.Type == NotificationTypes.WalletCreated),
             Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task HandleAsync_StagesAuditEntry()
-    {
-        var domainEvent = BuildEvent();
-        _notifications.SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>())
-            .Returns(NotificationResult.Ok());
-
-        var handler = new MemberCreatedDomainEventHandler(_eventBus, _auditOutbox, _notifications);
-
-        await handler.HandleAsync(domainEvent, CancellationToken.None);
-
-        _auditOutbox.Received(1).Stage(Arg.Is<AuditEventEnvelope>(e =>
-            e.Action == AuditAction.Members.Created &&
-            e.EntityId == domainEvent.MemberId.ToString()));
     }
 
     [Fact]
     public async Task HandleAsync_WhenNotificationFails_DoesNotThrow()
     {
-        var domainEvent = BuildEvent();
+        var @event = BuildEvent();
         _notifications.SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>())
             .Returns(NotificationResult.Failure("SMTP unavailable"));
 
-        var handler = new MemberCreatedDomainEventHandler(_eventBus, _auditOutbox, _notifications);
+        var handler = new WalletCreatedEventHandler(_notifications, _clock);
 
         // Must not throw — notification failure is non-critical
-        await handler.HandleAsync(domainEvent, CancellationToken.None);
-
-        // Integration event and audit MUST still execute
-        await _eventBus.Received(1).PublishAsync(Arg.Any<MemberCreatedEvent>(), Arg.Any<CancellationToken>());
-        _auditOutbox.Received(1).Stage(Arg.Any<AuditEventEnvelope>());
+        // EventDispatcher catches exceptions from handlers; a throw would suppress further handling
+        await handler.HandleAsync(@event, CancellationToken.None);
     }
 
-    private MemberCreatedDomainEvent BuildEvent() => new(
-        Id: Guid.NewGuid(),
-        OccurredAt: _clock.GetCurrentInstant(),
-        MemberId: Guid.NewGuid(),
-        UserId: Guid.NewGuid(),
-        Email: "test@test.com",
-        MemberNumber: "CW000001");
+    private WalletCreatedEvent BuildEvent() => new()
+    {
+        Id = Guid.NewGuid(),
+        OccurredAt = _clock.GetCurrentInstant(),
+        WalletId = Guid7.NewGuid(),
+        UserId = Guid7.NewGuid(),
+    };
 }
 ```
 
@@ -869,7 +842,7 @@ public sealed class MemberCreatedDomainEventHandlerTests
 
 **Purpose:** Verify Hangfire job logic by seeding the DB, running the job, and asserting state changes.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/BackgroundJobs/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/`
 
 **Dependencies:** `TestDbContextFactory` (real PostgreSQL), `FakeClock`,
 `NullLogger<T>.Instance`, NSubstitute for external services.
@@ -959,9 +932,9 @@ public sealed class CheckExpiringSubscriptionsJobTests
 **Purpose:** Verify the full HTTP pipeline: routing, authentication, validation,
 handler, and persistence via a real `HttpClient` against `WebApplicationFactory<Program>`.
 
-**Location:** `tests/Kakeibo.Api.IntegrationTests/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/` (Level 5 integration tests live in the same test project)
 
-**Script:** `bun run api:test:integration`
+**Script:** `bun run api:test`
 
 **Class fixture pattern** (one factory per test class, each with its own isolated database):
 
@@ -1033,9 +1006,9 @@ await Verify(response).UseParameters(planCode);
 See [snapshot-testing.md](snapshot-testing.md) for full setup, scrubbing NodaTime/GUIDs,
 email template snapshots, and the acceptance workflow.
 
-**Note:** Outbox pattern testing (OutboxInterceptor atomicity, OutboxProcessor polling, retry)
+**Note:** Event infrastructure testing (ChannelEventBus throughput, EventDispatcher dispatch)
 is covered in [infrastructure-tests.md](infrastructure-tests.md). Level 5 focuses on the HTTP
-pipeline, not the persistence infrastructure.
+pipeline, not the in-process event infrastructure.
 
 ---
 
@@ -1043,24 +1016,20 @@ pipeline, not the persistence infrastructure.
 
 **Purpose:** Enforce naming conventions and module boundary rules at the type level.
 
-**Location:** `tests/Kakeibo.ArchitectureTests/`
+**Location:** `tests/Kakeibo.Tests/Architecture/`
 
-**Script:** `bun run api:test:arch`
+**Script:** `bun run api:test`
 
 ```csharp
+// All source code lives in a single assembly: Kakeibo.Api
 public sealed class NamingConventionTests
 {
-    private static readonly Assembly[] SourceAssemblies =
-    [
-        typeof(IEndpoint).Assembly,
-        typeof(MembersModuleRegistration).Assembly,
-        // ... all module assemblies
-    ];
+    private static readonly Assembly SourceAssembly = typeof(Program).Assembly;
 
     [Fact]
     public void EndpointImplementations_ShouldEndWithEndpoint()
     {
-        var result = Types.InAssemblies(SourceAssemblies)
+        var result = Types.InAssembly(SourceAssembly)
             .That().ImplementInterface(typeof(IEndpoint)).And().AreNotAbstract()
             .Should().HaveNameEndingWith("Endpoint")
             .GetResult();
@@ -1070,15 +1039,14 @@ public sealed class NamingConventionTests
     }
 
     [Fact]
-    public void Consumers_ShouldEndWithConsumer()
+    public void EventHandlers_ShouldEndWithHandler()
     {
-        var consumerInterface = typeof(IEventConsumer<>);
-        var offending = SourceAssemblies
-            .SelectMany(a => a.GetTypes())
+        var handlerInterface = typeof(IEventHandler<>);
+        var offending = SourceAssembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface
                 && t.GetInterfaces().Any(i => i.IsGenericType
-                    && i.GetGenericTypeDefinition() == consumerInterface)
-                && !t.Name.EndsWith("Consumer"))
+                    && i.GetGenericTypeDefinition() == handlerInterface)
+                && !t.Name.EndsWith("Handler"))
             .Select(t => t.FullName)
             .ToList();
 
@@ -1086,12 +1054,23 @@ public sealed class NamingConventionTests
     }
 
     [Fact]
+    public void ValidatorImplementations_ShouldEndWithValidator()
+    {
+        var result = Types.InAssembly(SourceAssembly)
+            .That().Inherit(typeof(AbstractValidator<>)).And().AreNotAbstract()
+            .Should().HaveNameEndingWith("Validator")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful,
+            $"AbstractValidator<T> implementations must end with 'Validator'. Offending: {Format(result)}");
+    }
+
+    [Fact]
     public void EndpointNestedTypes_ShouldHaveOperationPrefix()
     {
         // Nested records named just "Request" or "Response" violate TD-013
         var endpointInterface = typeof(IEndpoint);
-        var offending = SourceAssemblies
-            .SelectMany(a => a.GetTypes())
+        var offending = SourceAssembly.GetTypes()
             .Where(t => !t.IsAbstract && endpointInterface.IsAssignableFrom(t))
             .SelectMany(t => t.GetNestedTypes())
             .Where(n => n.Name is "Request" or "Response")
@@ -1099,38 +1078,6 @@ public sealed class NamingConventionTests
             .ToList();
 
         Assert.Empty(offending);
-    }
-}
-
-public sealed class DependencyDirectionTests
-{
-    [Fact]
-    public void Modules_ShouldNotReferenceOtherModules()
-    {
-        var moduleNamespaces = new[] { "Kakeibo.Modules.Identity", "Kakeibo.Modules.Members" };
-
-        foreach (var moduleAssembly in ModuleAssemblies)
-        {
-            foreach (var otherModule in moduleNamespaces.Where(n => n != moduleAssembly.GetName().Name))
-            {
-                var result = Types.InAssembly(moduleAssembly)
-                    .ShouldNot().HaveDependencyOn(otherModule)
-                    .GetResult();
-
-                Assert.True(result.IsSuccessful,
-                    $"{moduleAssembly.GetName().Name} must not reference {otherModule}");
-            }
-        }
-    }
-
-    [Fact]
-    public void Common_ShouldNotDependOn_Infrastructure()
-    {
-        var result = Types.InAssembly(CommonAssembly)
-            .ShouldNot().HaveDependencyOn("Kakeibo.Infrastructure")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful, $"Kakeibo.Common must not reference Kakeibo.Infrastructure");
     }
 }
 ```

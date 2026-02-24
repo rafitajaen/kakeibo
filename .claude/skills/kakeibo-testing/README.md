@@ -39,7 +39,7 @@ handles the TDD workflow loop explicitly.
 │   ├── frontend-pyramid.md         ← Vitest + Playwright (locators, page.route, debugger, CI caching) + Email
 │   ├── test-doubles.md             ← Mock vs stub vs fake vs spy, decision matrix
 │   ├── infrastructure.md           ← TestDbContextFactory, FakeClock vs TimeProvider, xUnit parallelism, WebApplicationFactory
-│   ├── infrastructure-tests.md     ← OutboxInterceptor, OutboxProcessor, ClickHouseAuditService
+│   ├── infrastructure-tests.md     ← ChannelEventBus, EventDispatcher, ClickHouseAuditService
 │   ├── smoke-tests.md              ← 7 critical system flows end-to-end
 │   ├── edge-cases.md               ← Complete edge case catalog + snapshot regression
 │   ├── gap-detection.md            ← P1/P2/P3 priorities, CRAP score, flaky test management, missing arch tests, Stryker, Coverlet
@@ -55,13 +55,13 @@ handles the TDD workflow loop explicitly.
 ### `references/api-pyramid.md`
 All 6 test levels for the .NET API:
 - Level 1: Domain Unit — entities, value objects, validators
-- Level 2: Handler Unit — feature handlers, consumers, request handlers with real PostgreSQL
-- Level 3: Domain Event Handler — `IDomainEventHandler<T>` with NSubstitute mocks
+- Level 2: Handler Unit — feature handlers, event handlers, cross-domain query handlers with real PostgreSQL
+- Level 3: Event Handler Unit — `IEventHandler<T>` with NSubstitute mocks (no DB side effects)
 - Level 4: Background Job — Hangfire jobs with real PostgreSQL and FakeClock
 - Level 5: API Integration — full HTTP pipeline via `WebApplicationFactory`
-- Level 6: Architecture — naming conventions and module boundaries via NetArchTest
+- Level 6: Architecture — naming conventions via NetArchTest
 
-Also covers: outbox pattern testing, authorization testing, Result/Error handling.
+Also covers: event handler testing, authorization testing, Result/Error handling.
 
 ### `references/frontend-pyramid.md`
 Vitest tests for:
@@ -95,7 +95,7 @@ Canonical implementations:
 Complete catalog organized by category:
 - Auth & Security (JWT, concurrent login, role-based access)
 - Database & Persistence (soft delete, concurrency, NodaTime)
-- Outbox & Idempotence (at-least-once delivery, atomic writes, retry exhaustion)
+- Events & Idempotence (fire-and-forget delivery, ChannelEventBus, EventDispatcher, handler isolation)
 - Validation & Types (exact limits, whitespace, enum values)
 - External Services (notification failure, SMTP failure, RustFS unavailable)
 - Pagination & Lists (empty result, out-of-range page, large dataset)
@@ -113,7 +113,7 @@ Tools and strategies to find untested code:
 - Per-handler checklist (happy path, conflict, not-found, validation, auth, idempotency)
 - Error code coverage: grep-based commands to find uncovered `Error.Code` values
 - Architecture test drift detection
-- Consumer coverage checklist, Permission coverage checklist
+- Event handler coverage checklist, Permission coverage checklist
 - i18n gap detection via Vitest `missing` handler
 - Visual regression with Playwright screenshots
 - Test quality indicators and red flags

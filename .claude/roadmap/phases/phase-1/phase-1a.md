@@ -29,7 +29,7 @@
 - Pre-commit hooks: lefthook.yml (commitlint, oxlint, oxfmt)
 - Development scripts: `bun run setup`, `bun run dev:infra`, `bun run dev:all`
 - Common abstractions: `Entity`, `Result<T>`, `Error`, `ValueObject`, `IEndpoint`, `ValidationFilter`, `EndpointExtensions`
-- Event system interfaces: `IEvent`, `IEventBus`, `IEventHandler<T>` (implementation deferred to Phase 1c)
+- Event system: `IEvent`, `IEventBus`, `IEventHandler<T>` interfaces + `ChannelEventBus` (singleton) + `EventDispatcher` (BackgroundService)
 - Single `AppDbContext` with `UseSnakeCaseNamingConvention()` and `UseNodaTime()`
 - Program.cs: Functional with /health endpoint and Scalar configured
 - appsettings.json: Structure with all configuration sections (empty values)
@@ -61,7 +61,7 @@
 - `Common/Abstractions/` — `Entity.cs`, `Result.cs`, `Error.cs`, `ValueObject.cs`
 - `Common/Endpoints/` — `IEndpoint.cs`, `ValidationFilter.cs`, `EndpointExtensions.cs`
 - `Common/Utils/` — `Guid7.cs`, `PasswordHasher.cs`, `DefaultSerializer.cs`, `CharSets.cs`, `RandomString.cs`
-- `Infrastructure/Events/` — `IEvent.cs`, `IEventBus.cs`, `IEventHandler.cs` (interfaces only; ChannelEventBus in Phase 1c)
+- `Infrastructure/Events/` — `IEvent.cs`, `IEventBus.cs`, `IEventHandler.cs`, `ChannelEventBus.cs`, `EventDispatcher.cs`
 - `Infrastructure/Email/` — `IEmailService.cs`, `EmailService.cs`, `SmtpOptions.cs`
 - `Infrastructure/Caching/` — `ICacheService.cs`, `FusionCacheService.cs`, `CachingOptions.cs`
 - `Infrastructure/Storage/` — `IStorageService.cs`, `StorageService.cs`, `StorageOptions.cs`
@@ -101,7 +101,7 @@
 - [ ] Pre-commit hooks are configured (commitlint + oxlint + oxfmt)
 - [ ] `bun run setup` completes successfully (idempotent)
 - [ ] Common abstractions exist: `Entity`, `Result<T>`, `Error`, `IEndpoint`
-- [ ] Event interfaces exist: `IEvent`, `IEventBus`, `IEventHandler<T>`
+- [ ] Event system operational: `IEvent`, `IEventBus`, `IEventHandler<T>`, `ChannelEventBus`, `EventDispatcher`
 - [ ] `AppDbContext` exists and is registered in DI
 - [ ] appsettings.json has all sections structured
 - [ ] Architecture tests project exists with base NetArchTest naming rules
@@ -120,3 +120,7 @@
 ---
 
 **Next Sub-Phase:** [Phase 1b: Identity Backend](./phase-1b.md)
+
+---
+
+*Note: The Events System (ChannelEventBus + EventDispatcher) was completed as part of Phase 1a. Phase 1c previously referred to "Events System" but has been renumbered to "Audit Logging" since the events implementation is included here.*

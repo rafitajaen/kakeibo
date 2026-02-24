@@ -41,7 +41,7 @@ internal static class TestDbContextFactory
     }
 
     // Creates an isolated DB per test. Always use `await using`.
-    public static async Task<MyModuleDbContext> CreateAsync()
+    public static async Task<AppDbContext> CreateAsync()
     {
         await EnsureContainerStartedAsync();
 
@@ -51,12 +51,12 @@ internal static class TestDbContextFactory
             Database = databaseName
         };
 
-        var options = new DbContextOptionsBuilder<MyModuleDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(builder.ConnectionString, npgsql => npgsql.UseNodaTime())
             .UseSnakeCaseNamingConvention()
             .Options;
 
-        var context = new MyModuleDbContext(options);
+        var context = new AppDbContext(options);
         await context.Database.EnsureCreatedAsync();
         return context;
     }
@@ -160,7 +160,7 @@ public sealed class WebApplicationFactory : WebApplicationFactory<Program>, IAsy
             // FusionCache → memory-only (no distributed layer in tests)
             ConfigureFusionCacheMemoryOnly(services);
 
-            // Remove all IHostedService (OutboxProcessor, Hangfire scheduler)
+            // Remove all IHostedService (EventDispatcher, Hangfire scheduler)
             DisableBackgroundServices(services);
 
             // External HTTP clients stubbed (email renderer, ClickHouse, RustFS)
@@ -219,17 +219,17 @@ public sealed class MemberRegistrationTests(WebApplicationFactory factory)
 
 > **Smoke tests are the exception:** `Kakeibo.SmokeTests` keeps `ICollectionFixture<WebApplicationFactory>`
 > because its 7 flows are sequential and some depend on state created in earlier flows
-> (e.g., the audit flow requires member records created by the domain event flow to already exist).
+> (e.g., the audit flow requires records created by the in-process event flow to already exist).
 > See [smoke-tests.md](smoke-tests.md) for details.
 
 ---
 
 ## Base Test Classes
 
-### BaseIntegrationTest (Level 5 — `Kakeibo.Api.IntegrationTests`)
+### BaseIntegrationTest (Level 5 — `Kakeibo.Tests`)
 
 Abstract base class that centralizes the skip guard and DI resolution for all integration test classes.
-Place in `tests/Kakeibo.Api.IntegrationTests/BaseIntegrationTest.cs`.
+Place in `tests/Kakeibo.Tests/BaseIntegrationTest.cs`.
 
 ```csharp
 // Each concrete test class inherits this and receives the factory via IClassFixture<>.
@@ -278,32 +278,37 @@ public sealed class MemberRegistrationTests(WebApplicationFactory factory)
 
 ### Architecture test assembly references
 
-`Kakeibo.ArchitectureTests` does not use a base class — each test class declares its own assembly references directly
-via `typeof(XxxModuleRegistration).Assembly`. This avoids a static initializer that could fail if an assembly
-is missing or renamed.
+Architecture tests in `Kakeibo.Tests` work with a **single assembly** — `Kakeibo.Api`. There are
+no cross-assembly boundary checks (no `Kakeibo.Common`, `Kakeibo.Contracts`, or per-module assemblies).
+Each architecture test class declares the one source assembly directly:
 
 ```csharp
-public sealed class DependencyDirectionTests
+public sealed class NamingConventionTests
 {
-    // Each test class declares exactly the assemblies it needs — no shared base.
-    private static readonly Assembly CommonAssembly =
-        typeof(IEndpoint).Assembly;                              // Kakeibo.Common
+    // Single source assembly — all domain code lives in Kakeibo.Api
+    private static readonly Assembly SourceAssembly = typeof(Program).Assembly;
 
-    private static readonly Assembly ContractsAssembly =
-        typeof(MemberCreatedEvent).Assembly;                     // Kakeibo.Contracts
+    [Fact]
+    public void EndpointImplementations_ShouldEndWithEndpoint()
+    {
+        var result = Types.InAssembly(SourceAssembly)
+            .That().ImplementInterface(typeof(IEndpoint))
+            .Should().HaveNameEndingWith("Endpoint")
+            .GetResult();
 
-    private static readonly Assembly InfrastructureAssembly =
-        typeof(OutboxProcessor).Assembly;                        // Kakeibo.Infrastructure
+        Assert.True(result.IsSuccessful, string.Join("\n", result.FailingTypeNames ?? []));
+    }
 
-    private static readonly Assembly[] ModuleAssemblies =
-    [
-        typeof(IdentityModuleRegistration).Assembly,
-        typeof(MembersModuleRegistration).Assembly,
-        typeof(NotificationsModuleRegistration).Assembly,
-        // ... all modules
-    ];
+    [Fact]
+    public void EventHandlers_ShouldEndWithHandler()
+    {
+        var result = Types.InAssembly(SourceAssembly)
+            .That().ImplementInterface(typeof(IEventHandler<>))
+            .Should().HaveNameEndingWith("Handler")
+            .GetResult();
 
-    // Tests use these assembly references directly — no base class needed.
+        Assert.True(result.IsSuccessful, string.Join("\n", result.FailingTypeNames ?? []));
+    }
 }
 ```
 
@@ -372,21 +377,21 @@ that are out of scope for the test being written.
 public sealed class TestDataBuilder(IServiceProvider services)
 {
     // Creates a verified user with the given role (bypasses email verification flow)
-    public async Task<Guid> CreateVerifiedUserAsync(string email, string password, string roleName = "Employee")
+    public async Task<Guid> CreateVerifiedUserAsync(string email, string password, string roleName = "User")
     {
         using var scope = services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        var role = await db.Roles.FirstAsync(r => r.Name == roleName);
 
         var user = new User
         {
+            Id = Guid7.NewGuid(),
             Email = email,
-            Username = email.Split('@')[0],
             PasswordHash = hasher.Hash(password),
             EmailVerifiedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
-            RoleId = role.Id,
+            RoleName = roleName,
+            CreatedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
         };
 
         db.Users.Add(user);
@@ -394,15 +399,21 @@ public sealed class TestDataBuilder(IServiceProvider services)
         return user.Id;
     }
 
-    public async Task<Guid> CreateSuperAdminAsync(string email, string password) =>
-        await CreateVerifiedUserAsync(email, password, "Admin");
+    public async Task<Guid> CreateAdminAsync(string email, string password) =>
+        await CreateVerifiedUserAsync(email, password, RoleNames.Admin);
 
     public async Task<(Guid UserId, string VerifyToken)> CreateUnverifiedUserAsync(string email, string password)
     {
         using var scope = services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var user = new User { Email = email };
+        var user = new User
+        {
+            Id = Guid7.NewGuid(),
+            Email = email,
+            RoleName = "User",
+            CreatedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
+        };
         var token = "test-verify-token";
         // ... seed unverified user with token
         db.Users.Add(user);
@@ -413,9 +424,10 @@ public sealed class TestDataBuilder(IServiceProvider services)
     public async Task LockUserAsync(Guid userId, int lockoutMinutes = 60)
     {
         using var scope = services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var user = await db.Users.FindAsync(userId);
-        user!.LockoutEnd = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(lockoutMinutes));
+        // Advance lockout end time past the requested duration
+        user!.LockoutEnd = Instant.FromUtc(2026, 1, 1, 0, 0).Plus(Duration.FromMinutes(lockoutMinutes));
         await db.SaveChangesAsync();
     }
 }
@@ -594,7 +606,7 @@ Configure parallelism in `xunit.runner.json` (place in the test project root):
 - Level 2 (Handler Unit): parallel by default — each test has its own DB via `TestDbContextFactory.CreateAsync()`
 - Level 5 (Integration): parallel across classes — each class has its own factory + isolated DB via `IClassFixture`;
   tests within one class run sequentially (xUnit default for a single class)
-- Level 3 (Domain Event Handler): parallel — no DB, pure NSubstitute mocks
+- Level 3 (Event Handler Unit, no DB): parallel — no DB, pure NSubstitute mocks
 - Level 4 (Background Job): parallel — each test has its own DB via `TestDbContextFactory.CreateAsync()`
 
 ```csharp

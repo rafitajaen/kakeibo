@@ -22,8 +22,8 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Budgets/Features/**:
-- CreateBudget, ListBudgets, UpdateBudget, DeleteBudget
+**`src/Kakeibo.Api/Features/Budgets/`**:
+- CreateBudget/, ListBudgets/, UpdateBudget/, DeleteBudget/
 
 **Endpoints**:
 - `POST /api/budgets`

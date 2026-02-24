@@ -64,7 +64,7 @@ These documents prevent the most common failure modes in autonomous code generat
 - NEVER log passwords, tokens, credit card numbers, or SSNs
 - NEVER return password hashes in API responses
 - NEVER expose internal IDs in error messages (use correlation IDs)
-- Database: Use separate schema per module (already enforced)
+- Database: Use a single `public` schema; all DbSets in `AppDbContext` (already enforced)
 
 ### Rate Limiting
 - Authentication endpoints: 5 requests/minute per IP (brute force protection)
@@ -198,8 +198,7 @@ NO:
 | Validator classes | `CreateWalletValidator` | `CreateWalletRequestValidator` |
 | Request records | `CreateWalletRequest` (nested in Endpoint) | `CreateWalletCommand`, `CreateWalletDto` |
 | Response records | `CreateWalletResponse` (nested in Endpoint) | `CreateWalletResult`, `WalletDto` |
-| Module registration | `{Module}ModuleRegistration` | `{Module}Module`, `{Module}Startup` |
-| DbContext | `{Module}DbContext` | `{Module}Database`, `{Module}Db` |
+| DbContext | `AppDbContext` (single, shared) | `{Domain}DbContext`, `{Domain}Database` |
 | Entity configurations | `{Entity}Configuration` | `{Entity}Map`, `{Entity}EntityConfig` |
 
 ### Primary Constructors (Mandatory)
@@ -207,8 +206,8 @@ NO:
 ```csharp
 // ✅ GOOD — C# 12 primary constructor
 public sealed class CreateWalletHandler(
-    WalletsDbContext db,
-    IModuleEventBus eventBus,
+    AppDbContext db,
+    IEventBus eventBus,
     ILogger<CreateWalletHandler> logger)
 {
     public async Task<Result<CreateWalletResponse>> HandleAsync(
@@ -221,10 +220,10 @@ public sealed class CreateWalletHandler(
 // ❌ BAD — Traditional constructor
 public sealed class CreateWalletHandler
 {
-    private readonly WalletsDbContext _db;
-    private readonly IModuleEventBus _eventBus;
+    private readonly AppDbContext _db;
+    private readonly IEventBus _eventBus;
 
-    public CreateWalletHandler(WalletsDbContext db, IModuleEventBus eventBus)
+    public CreateWalletHandler(AppDbContext db, IEventBus eventBus)
     {
         _db = db;
         _eventBus = eventBus;
@@ -265,62 +264,46 @@ if (exists)
     throw new ConflictException($"Wallet '{request.Name}' already exists");
 ```
 
-### Domain Events Pattern
+### In-Process Event Pattern
 
 ```csharp
-// ✅ GOOD — Entity raises domain event, handler publishes integration event
-public class Wallet : AggregateRoot
+// ✅ GOOD — Handler publishes event via IEventBus (fire-and-forget)
+// Entity is a plain class inheriting Entity — no domain events list, no AddDomainEvent
+public class Wallet : Entity
 {
-    public static Wallet Create(string name, WalletType type, Guid userId)
-    {
-        var wallet = new Wallet { Name = name, Type = type, UserId = userId };
-        wallet.AddDomainEvent(new WalletCreatedDomainEvent(wallet.Id, userId, name, type));
-        return wallet;
-    }
+    public string Name { get; set; } = default!;
+    public WalletType Type { get; set; }
+    public Guid UserId { get; set; }
 }
 
-// DomainEventHandler (auto-registered, internal)
-internal sealed class WalletCreatedDomainEventHandler(
-    IModuleEventBus eventBus,
-    IAuditOutbox auditOutbox) : IDomainEventHandler<WalletCreatedDomainEvent>
+// Feature handler — publishes event before SaveChangesAsync
+public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
 {
-    public async Task HandleAsync(WalletCreatedDomainEvent @event, CancellationToken ct)
+    public async Task<Result<CreateWalletResponse>> HandleAsync(
+        CreateWalletRequest request, CancellationToken ct)
     {
-        // Publish integration event
-        await eventBus.PublishAsync(new WalletCreatedEvent
-        {
-            Id = Guid7.NewGuid().Value,
-            OccurredAt = SystemClock.Instance.GetCurrentInstant(),
-            WalletId = @event.WalletId,
-            UserId = @event.UserId,
-            Name = @event.Name,
-            Type = @event.Type,
-        }, ct);
-
-        // Stage audit entry
-        await auditOutbox.StageAsync(new AuditEntry
-        {
-            UserId = @event.UserId,
-            Action = "wallet.created",
-            EntityType = "Wallet",
-            EntityId = @event.WalletId,
-        }, ct);
-    }
-}
-
-// ❌ BAD — Handler directly publishes integration event
-public sealed class CreateWalletHandler(WalletsDbContext db, IModuleEventBus eventBus)
-{
-    public async Task<Result<CreateWalletResponse>> HandleAsync(...)
-    {
-        var wallet = new Wallet { ... };
+        var wallet = new Wallet { Name = request.Name, Type = request.Type, UserId = request.UserId };
         db.Wallets.Add(wallet);
 
-        // ❌ Too much responsibility in handler
-        await eventBus.PublishAsync(new WalletCreatedEvent { ... }, ct);
-        await auditOutbox.StageAsync(new AuditEntry { ... }, ct);
+        // ✅ Fire-and-forget via ChannelEventBus — does not block SaveChangesAsync
+        eventBus.Publish(new WalletCreatedEvent
+        {
+            Id = Guid.NewGuid(),
+            OccurredAt = SystemClock.Instance.GetCurrentInstant(),
+            WalletId = wallet.Id,
+        });
 
         await db.SaveChangesAsync(ct);
+        return new CreateWalletResponse(wallet.Id, wallet.Name);
+    }
+}
+
+// Event handler (auto-registered via Scrutor — IEventHandler<T>)
+internal sealed class WalletCreatedEventHandler : IEventHandler<WalletCreatedEvent>
+{
+    public async Task HandleAsync(WalletCreatedEvent @event, CancellationToken ct)
+    {
+        // Downstream side-effects: notifications, auditing, etc.
     }
 }
 ```
@@ -348,9 +331,9 @@ public class WalletService
 }
 
 // GOOD — Business logic in entity
-public class Wallet : AggregateRoot
+public class Wallet : Entity
 {
-    public string Name { get; private set; }
+    public string Name { get; private set; } = default!;
     public decimal Balance { get; private set; }
 
     public Result Debit(decimal amount)
@@ -359,7 +342,7 @@ public class Wallet : AggregateRoot
         if (Balance < amount) return Error.Validation("Insufficient balance");
 
         Balance -= amount;
-        AddDomainEvent(new WalletDebitedDomainEvent(Id, amount));
+        // Event published by the handler via IEventBus.Publish()
         return Result.Success();
     }
 }
@@ -386,15 +369,14 @@ Features/InviteMember/InviteMemberHandler.cs
 ...
 ```
 
-### ❌ Circular Dependencies Between Modules
+### ❌ Circular Handler Dependencies
 ```csharp
-// BAD — Wallets references Transactions, Transactions references Wallets
-Kakeibo.Modules.Wallets → Kakeibo.Modules.Transactions
-Kakeibo.Modules.Transactions → Kakeibo.Modules.Wallets
+// BAD — CreateWalletHandler depends on a handler that depends back on Wallets
+// This creates a circular dependency graph.
 
-// GOOD — Both reference Contracts only
-Kakeibo.Modules.Wallets → Kakeibo.Contracts
-Kakeibo.Modules.Transactions → Kakeibo.Contracts
+// GOOD — Use IEventBus.Publish() for decoupled cross-domain communication.
+// Domain A publishes an event → Domain B's IEventHandler<T> reacts independently.
+// Direct handler injection is allowed for synchronous queries (read-only calls).
 ```
 
 ## Utility Patterns
@@ -456,7 +438,7 @@ using Konscious.Security.Cryptography; // PROHIBITED (Argon2id)
 - **Domain Unit Tests**: Pure logic, no dependencies, fast (~1ms each)
 - **Handler Unit Tests**: Mocked DbContext, verify business logic
 - **Integration Tests**: Real PostgreSQL (Testcontainers), verify end-to-end flow
-- **Architecture Tests**: Enforce module boundaries, naming conventions
+- **Architecture Tests**: Enforce naming conventions (handlers, endpoints, validators, configurations)
 
 ## Coverage Requirements
 
@@ -536,43 +518,26 @@ public class WalletTests
         Assert.Equal("validation", result.Error.Code);
     }
 
-    [Fact]
-    public void Debit_ValidAmount_RaisesDomainEvent()
-    {
-        // Arrange
-        var wallet = Wallet.Create("Test", WalletType.Personal, Guid.NewGuid());
-        wallet.Credit(100m);
-        wallet.ClearDomainEvents(); // Clear creation event
-
-        // Act
-        wallet.Debit(30m);
-
-        // Assert
-        var domainEvents = wallet.GetDomainEvents();
-        Assert.Single(domainEvents);
-        Assert.IsType<WalletDebitedDomainEvent>(domainEvents[0]);
-    }
+    // Note: Entity does not have a DomainEvents list in the Simple Monolith.
+    // Test event publication by mocking IEventBus in handler tests instead.
 }
 ```
 
 ## Handler Unit Tests Pattern
 
 ```csharp
+// Use Testcontainers with real PostgreSQL — EF Core InMemory is prohibited
 public class CreateWalletHandlerTests
 {
     [Fact]
     public async Task HandleAsync_ValidRequest_CreatesWalletAndReturnsResponse()
     {
-        // Arrange
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        var db = new WalletsDbContext(options);
-
-        var eventBus = Substitute.For<IModuleEventBus>();
+        // Arrange — real PostgreSQL via Testcontainers factory
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var eventBus = Substitute.For<IEventBus>();
         var handler = new CreateWalletHandler(db, eventBus);
 
-        var request = new CreateWalletRequest("Checking", WalletType.Personal, 1000m);
+        var request = new CreateWalletEndpoint.CreateWalletRequest("Checking", WalletType.Personal, 1000m);
 
         // Act
         var result = await handler.HandleAsync(request, CancellationToken.None);
@@ -580,7 +545,6 @@ public class CreateWalletHandlerTests
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal("Checking", result.Value.Name);
-        Assert.Equal(WalletType.Personal, result.Value.Type);
         Assert.Equal(1000m, result.Value.Balance);
 
         // Verify wallet persisted
@@ -588,30 +552,23 @@ public class CreateWalletHandlerTests
         Assert.NotNull(wallet);
         Assert.Equal("Checking", wallet.Name);
 
-        // Verify integration event published
-        await eventBus.Received(1).PublishAsync(
-            Arg.Is<WalletCreatedEvent>(e => e.WalletId == wallet.Id),
-            Arg.Any<CancellationToken>()
-        );
+        // Verify event published (IEventBus.Publish is fire-and-forget, not async)
+        eventBus.Received(1).Publish(
+            Arg.Is<WalletCreatedEvent>(e => e.WalletId == wallet.Id));
     }
 
     [Fact]
     public async Task HandleAsync_DuplicateName_ReturnsConflictError()
     {
         // Arrange
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        var db = new WalletsDbContext(options);
-
-        // Add existing wallet
+        await using var db = await TestDbContextFactory.CreateAsync();
         db.Wallets.Add(new Wallet { Name = "Checking", Type = WalletType.Personal });
         await db.SaveChangesAsync();
 
-        var eventBus = Substitute.For<IModuleEventBus>();
+        var eventBus = Substitute.For<IEventBus>();
         var handler = new CreateWalletHandler(db, eventBus);
 
-        var request = new CreateWalletRequest("Checking", WalletType.Personal, 1000m);
+        var request = new CreateWalletEndpoint.CreateWalletRequest("Checking", WalletType.Personal, 1000m);
 
         // Act
         var result = await handler.HandleAsync(request, CancellationToken.None);
@@ -622,10 +579,7 @@ public class CreateWalletHandlerTests
         Assert.Contains("already exists", result.Error.Message);
 
         // Verify no event published
-        await eventBus.DidNotReceive().PublishAsync(
-            Arg.Any<IIntegrationEvent>(),
-            Arg.Any<CancellationToken>()
-        );
+        eventBus.DidNotReceive().Publish(Arg.Any<IEvent>());
     }
 }
 ```
@@ -633,46 +587,17 @@ public class CreateWalletHandlerTests
 ## Integration Tests Pattern (Testcontainers)
 
 ```csharp
-public class WalletsIntegrationTests : IAsyncLifetime
+// Preferred: use TestDbContextFactory (static shared container, fresh DB per test)
+public class WalletsIntegrationTests
 {
-    private static readonly PostgreSqlContainer PostgresContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .WithUsername("postgres")
-        .WithPassword("postgres")
-        .Build();
-
-    private static readonly Lazy<Task> ContainerStartTask = new(() => PostgresContainer.StartAsync());
-
-    private WalletsDbContext _db = null!;
-
-    public async ValueTask InitializeAsync()
-    {
-        // Skip guard pattern (KB-008)
-        try
-        {
-            await ContainerStartTask.Value;
-        }
-        catch
-        {
-            Assert.Skip("Docker is not available. This test requires Testcontainers (PostgreSQL).");
-        }
-
-        var connectionString = PostgresContainer.GetConnectionString();
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
-            .UseNpgsql(connectionString)
-            .Options;
-
-        _db = new WalletsDbContext(options);
-        await _db.Database.MigrateAsync();
-    }
-
     [Fact]
     public async Task CreateWallet_EndToEnd_PersistsToDatabase()
     {
-        // Arrange
-        var eventBus = Substitute.For<IModuleEventBus>();
-        var handler = new CreateWalletHandler(_db, eventBus);
-        var request = new CreateWalletRequest("Savings", WalletType.Personal, 5000m);
+        // Arrange — fresh AppDbContext with real PostgreSQL
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var eventBus = Substitute.For<IEventBus>();
+        var handler = new CreateWalletHandler(db, eventBus);
+        var request = new CreateWalletEndpoint.CreateWalletRequest("Savings", WalletType.Personal, 5000m);
 
         // Act
         var result = await handler.HandleAsync(request, CancellationToken.None);
@@ -681,7 +606,7 @@ public class WalletsIntegrationTests : IAsyncLifetime
         Assert.True(result.IsSuccess);
 
         // Verify persisted (fresh query)
-        var wallet = await _db.Wallets
+        var wallet = await db.Wallets
             .AsNoTracking()
             .FirstOrDefaultAsync(w => w.Id == result.Value.Id);
 
@@ -689,42 +614,49 @@ public class WalletsIntegrationTests : IAsyncLifetime
         Assert.Equal("Savings", wallet.Name);
         Assert.Equal(5000m, wallet.Balance);
     }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _db.DisposeAsync();
-        // Container reused across tests (static)
-    }
 }
 ```
 
 ## Architecture Tests Pattern
 
 ```csharp
-public class ModuleBoundaryTests
+// Single assembly — all code lives in Kakeibo.Api
+public class NamingConventionTests
 {
-    private static readonly Assembly WalletsAssembly = typeof(WalletsModuleRegistration).Assembly;
-    private static readonly Assembly TransactionsAssembly = typeof(TransactionsModuleRegistration).Assembly;
-
-    [Fact]
-    public void Wallets_ShouldNotReference_Transactions()
-    {
-        var result = Types.InAssembly(WalletsAssembly)
-            .Should()
-            .NotHaveDependencyOn(TransactionsAssembly.GetName().Name)
-            .GetResult();
-
-        Assert.True(result.IsSuccessful,
-            $"Wallets module MUST NOT reference Transactions module directly. Violations:\n{string.Join("\n", result.FailingTypes)}");
-    }
+    private static readonly Assembly ApiAssembly =
+        typeof(Kakeibo.Api.Persistence.AppDbContext).Assembly;
 
     [Fact]
     public void Endpoints_ShouldEndWith_EndpointSuffix()
     {
-        var result = Types.InAssembly(WalletsAssembly)
+        var result = Types.InAssembly(ApiAssembly)
             .That().ImplementInterface(typeof(IEndpoint))
             .Should()
             .HaveNameEndingWith("Endpoint")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful);
+    }
+
+    [Fact]
+    public void EventHandlers_ShouldEndWith_Handler()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ImplementInterface(typeof(IEventHandler<>))
+            .Should()
+            .HaveNameEndingWith("Handler")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful);
+    }
+
+    [Fact]
+    public void EntityConfigurations_ShouldEndWith_Configuration()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ImplementInterface(typeof(IEntityTypeConfiguration<>))
+            .Should()
+            .HaveNameEndingWith("Configuration")
             .GetResult();
 
         Assert.True(result.IsSuccessful);
@@ -1749,26 +1681,29 @@ Beyond technical docs, Claude benefits from:
 
 ### 1. Decision Log (ADRs)
 
-`adr/001-why-modular-monolith.md`:
+`adr/001-why-simple-monolith.md`:
 ```markdown
-# ADR 001: Modular Monolith over Microservices
+# ADR 001: Simple Monolith over Modular Monolith or Microservices
 
 **Status**: Accepted
 
 **Context**: Need to balance modularity with deployment simplicity for MVP.
 
-**Decision**: Use modular monolith with strict module boundaries enforced by architecture tests.
+**Decision**: Use a Simple Monolith (2 projects: Kakeibo.Api + Kakeibo.Tests) with vertical slices
+and screaming architecture. Domain separation is enforced by folder structure and naming conventions,
+not by assembly boundaries.
 
 **Consequences**:
 - ✅ Single deployment artifact (simpler ops)
 - ✅ In-process communication (lower latency)
-- ✅ Shared database (ACID transactions)
-- ❌ Cannot scale modules independently
-- ❌ Cannot use different tech stacks per module
+- ✅ Single `AppDbContext` (full ACID transactions across all domains)
+- ✅ Maximum developer velocity for a single-developer MVP
+- ❌ Cannot scale domains independently (acceptable at MVP stage)
 
 **Alternatives Considered**:
 - Microservices: Rejected (over-engineering for MVP)
-- Monolith: Rejected (poor separation of concerns)
+- Modular Monolith (12 projects): Rejected at ~5% implementation — added complexity with no
+  tangible benefit at current scale. Migrated to Simple Monolith (see KB-010).
 ```
 
 ### 2. Glossary (Ubiquitous Language)
@@ -1784,7 +1719,7 @@ Beyond technical docs, Claude benefits from:
 | Split | Mechanism dividing shared expense among members | Wallets | Equal, Percentage, Custom |
 | Debt | Calculated amount owed between users based on transaction history | Wallets | Settlement, Balance |
 | Settlement | Record of external payment to settle debt (does not affect wallet balance) | Wallets | Debt |
-| Outbox | Transactional outbox pattern for reliable event publishing | Infrastructure | Integration Event, Outbox Processor |
+| IEventBus | In-process fire-and-forget event bus backed by System.Threading.Channels | Infrastructure | IEvent, IEventHandler, EventDispatcher |
 ```
 
 ### 3. Migration Guides

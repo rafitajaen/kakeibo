@@ -1,7 +1,7 @@
-# Phase 1c: Events System
+# Phase 1c: Audit Logging
 
-**Status**: ✅ Complete
-**Objective**: Implement the in-memory async event bus for fire-and-forget event delivery
+**Status**: Not Started
+**Objective**: Implement audit trail for all user actions using ClickHouse
 
 ---
 
@@ -9,12 +9,9 @@
 
 | Item | Status |
 |------|--------|
-| Infrastructure Base | ✅ Phase 1a |
+| ClickHouse running | ✅ Phase 1a |
 | Identity Backend | ✅ Phase 1b |
-| `IEvent`, `IEventBus`, `IEventHandler<T>` interfaces | ✅ Phase 1a |
-| `AppDbContext` registered | ✅ Phase 1a |
-
-**Rationale**: The event system needs Identity implemented first to have real events (`UserRegisteredEvent`, `UserLoggedInEvent`) for meaningful end-to-end testing.
+| Events System (ChannelEventBus + EventDispatcher) | ✅ Phase 1a |
 
 ---
 
@@ -22,18 +19,19 @@
 
 ### ✅ Included
 
-- `ChannelEventBus` — singleton `IEventBus` implementation using `System.Threading.Channels`
-- `EventDispatcher` — `BackgroundService` that reads from the channel and dispatches to handlers
-- DI registration: `ChannelEventBus` as singleton `IEventBus`, `EventDispatcher` as hosted service
-- Scrutor scan: auto-registers all `IEventHandler<T>` implementations from the assembly
-- Architecture test: types under `Infrastructure/Events/` follow naming conventions
+- ClickHouse `audit_events` table
+- `IAuditService` + `ClickHouseAuditService` implementation
+- `IEventHandler<T>` implementations in `Features/Auditing/` for Identity events
+- Health check for ClickHouse
+- Audit event types: Authentication (login, logout, register), CRUD (future phases add handlers)
+- Integration tests for persistence and querying
 
 ### ❌ Excluded
 
-- Persistent event store
-- Event replay / backfill
-- Distributed message brokers
-- Guaranteed delivery across process restarts
+- Audit UI (viewing logs) — Phase 7b
+- Audit search/filtering — Phase 7b
+- Audit retention policies — indefinite for MVP
+- Audit event versioning — all v1
 
 ---
 
@@ -41,70 +39,94 @@
 
 ### New Files
 
-**`Kakeibo.Api/Infrastructure/Events/`**:
+**`src/Kakeibo.Api/Infrastructure/Audit/`**:
 ```
-ChannelEventBus.cs     — Singleton: writes to Channel<IEvent> in Publish()
-EventDispatcher.cs     — BackgroundService: reads Channel<IEvent>, resolves IEventHandler<T> via DI
+IAuditService.cs
+ClickHouseAuditService.cs
+ClickHouseOptions.cs
 ```
 
-### Modified Files
+**`src/Kakeibo.Api/Features/Auditing/`**:
+```
+Events/
+  UserRegisteredAuditHandler.cs   — IEventHandler<UserRegisteredEvent>
+  UserLoggedInAuditHandler.cs     — IEventHandler<UserLoggedInEvent>
+  UserLoggedOutAuditHandler.cs    — IEventHandler<UserLoggedOutEvent>
+```
 
-**`Program.cs`**:
-- Register `ChannelEventBus` as singleton `IEventBus`
-- Register `EventDispatcher` as hosted service
-- Scrutor scan registers all `IEventHandler<T>` implementations with scoped lifetime
+**`src/Kakeibo.Api/Infrastructure/HealthChecks/`**:
+```
+ClickHouseHealthCheck.cs
+```
+
+### Database
+
+```sql
+CREATE TABLE audit.audit_events (
+  id UUID,
+  user_id UUID NOT NULL,
+  action VARCHAR(100) NOT NULL,
+  entity_type VARCHAR(100),
+  entity_id UUID,
+  occurred_at DateTime64(3) NOT NULL,
+  ip_address VARCHAR(45),
+  user_agent VARCHAR(500),
+  changes String,
+  INDEX idx_user (user_id),
+  INDEX idx_action (action),
+  INDEX idx_occurred (occurred_at)
+) ENGINE = MergeTree()
+ORDER BY (user_id, occurred_at);
+```
 
 ---
 
-## Technical Detail
+## Event Handler Pattern
 
-### Event Flow
+Each audit handler receives events dispatched by `EventDispatcher` (BackgroundService) via `ChannelEventBus`.
+No outbox or intermediary staging buffer — events flow directly from the feature handler through
+the in-memory channel to the audit handler.
 
+```csharp
+namespace Kakeibo.Api.Features.Auditing.Events;
+
+// Records a user registration event in the ClickHouse audit trail.
+public sealed class UserRegisteredAuditHandler(IAuditService auditService)
+    : IEventHandler<UserRegisteredEvent>
+{
+    public async Task HandleAsync(UserRegisteredEvent @event, CancellationToken ct)
+    {
+        await auditService.RecordAsync(new AuditEntry
+        {
+            UserId = @event.UserId,
+            Action = AuditActions.UserRegistered,
+            OccurredAt = @event.OccurredAt
+        }, ct);
+    }
+}
 ```
-Feature handler
-  → eventBus.Publish(new SomeEvent {...})       [non-blocking, returns void]
-  → ChannelEventBus writes to Channel<IEvent>
-
-EventDispatcher (background)
-  → reads IEvent from channel
-  → creates DI scope
-  → resolves all IEventHandler<SomeEvent> from scope
-  → invokes each handler sequentially
-  → if no handler registered: event discarded silently
-```
-
-### Key Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| `void Publish()` (fire-and-forget) | Caller never blocks. Handler failures don't affect the originating HTTP request. |
-| `System.Threading.Channels` | Lightweight, built-in, no external broker dependency. |
-| `BackgroundService` dispatcher | Handlers run outside the HTTP request lifecycle. |
-| No persistent store | MVP does not need guaranteed delivery across restarts. |
-| Scrutor scan for handlers | Auto-registers all `IEventHandler<T>` without explicit registration. |
-| No registered handler → discard | Handlers for Notifications and Auditing are added in later phases and pick up events automatically once registered. |
 
 ---
 
 ## Acceptance Criteria
 
-- [x] `ChannelEventBus` (singleton) writes events to `Channel<IEvent>` in `Publish()`
-- [x] `EventDispatcher` (BackgroundService) reads channel and dispatches to handlers
-- [x] All `IEventHandler<T>` implementations auto-registered via Scrutor with scoped lifetime
-- [x] Publishing an event with no registered handler discards it silently (no exception)
-- [x] `EventDispatcher` creates a new DI scope per event to support scoped services in handlers
-- [x] Architecture tests: types under `Infrastructure/Events/` follow naming conventions
-- [x] DI wired correctly in Program.cs
+- [ ] ClickHouse `audit_events` table created
+- [ ] `ClickHouseAuditService` writes audit entries
+- [ ] `IEventHandler<UserRegisteredEvent>` handler registered and functional
+- [ ] `IEventHandler<UserLoggedInEvent>` handler registered and functional
+- [ ] `IEventHandler<UserLoggedOutEvent>` handler registered and functional
+- [ ] ClickHouse health check passes
+- [ ] Integration test: publish event → EventDispatcher dispatches → audit entry persisted → query confirms
 
 ---
 
 ## Definition of "Phase 1c Completed"
 
-1. All interfaces and implementations exist
+1. All audit infrastructure functional
 2. All acceptance criteria checked (7 items)
-3. `EventDispatcher` runs as background service without errors
-4. Phase 1d can begin (Audit handlers register as `IEventHandler<T>`)
+3. Integration tests pass
+4. Phase 1d (Identity Frontend) can begin
 
 ---
 
-**Next Sub-Phase:** [Phase 1d: Audit Logging](./phase-1d.md)
+**Next Sub-Phase:** [Phase 1d: Identity Frontend](./phase-1d.md)

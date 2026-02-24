@@ -24,10 +24,10 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Identity/Features/**:
-- UpdateProfile, ChangePassword, DeleteAccount, ListSessions, RevokeSession
+**`src/Kakeibo.Api/Features/Identity/`**:
+- UpdateProfile/, ChangePassword/, DeleteAccount/, ListSessions/, RevokeSession/
 
-**Kakeibo.Modules.Identity/Jobs/**:
+**`src/Kakeibo.Api/Features/Identity/Jobs/`**:
 - `AccountDeletionJob.cs` — Hangfire daily job that permanently deletes users where
   `DeletionRequestedAt < now() - 30 days` (GDPR 30-day grace period enforcement)
 

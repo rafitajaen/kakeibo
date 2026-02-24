@@ -131,11 +131,11 @@ Before writing the first red test, design the public interface with testability 
 // ❌ Hard to test — DbContext created internally
 public class CreateMemberHandler
 {
-    private readonly MembersDbContext _db = new();
+    private readonly AppDbContext _db = new();
 }
 
 // ✅ Testable — all dependencies injected via constructor
-public class CreateMemberHandler(MembersDbContext db, IModuleEventBus eventBus, IClock clock) { }
+public class CreateMemberHandler(AppDbContext db, IEventBus eventBus, IClock clock) { }
 ```
 
 ### 2. Return results, don't rely on output parameters
@@ -164,7 +164,7 @@ public class CreateMemberHandler
 }
 
 // ✅ One HandleAsync — internal complexity encapsulated
-public class CreateMemberHandler(MembersDbContext db, IModuleEventBus eventBus, IClock clock)
+public class CreateMemberHandler(AppDbContext db, IEventBus eventBus, IClock clock)
 {
     public async Task<Result<CreateMemberResponse>> HandleAsync(CreateMemberRequest request, CancellationToken ct)
     {

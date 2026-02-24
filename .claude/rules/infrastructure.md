@@ -312,10 +312,6 @@ Only contains values that are safe to commit and differ between development and 
 | Setting | Dev | Production |
 |---------|-----|-----------|
 | Serilog minimum level | Information | Warning |
-| Outbox polling interval | 10s | 5s |
-| Outbox batch size | 100 | 200 |
-| AuditOutbox polling interval | 15s | 10s |
-| AuditOutbox batch size | 500 | 1000 |
 
 ### launchSettings.json — IDE only
 

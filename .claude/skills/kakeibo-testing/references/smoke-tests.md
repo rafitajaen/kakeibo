@@ -3,11 +3,11 @@
 **Purpose:** Validate that the 7 critical end-to-end flows of the Kakeibo platform work correctly as
 integrated units. Unlike Level 5 API integration tests (which cover error paths, auth, and edge
 cases per endpoint), smoke tests cover **happy paths only** and verify that all architectural
-seams (outbox, domain event handlers, inter-module calls, auth middleware) connect properly.
+seams (in-process events, event handlers, cross-domain calls, auth middleware) connect properly.
 
 **Project:** `tests/Kakeibo.SmokeTests/`
 
-**Difference from `Kakeibo.Api.IntegrationTests`:**
+**Difference from `Kakeibo.Tests` (API integration tests):**
 
 | | API Integration Tests | Smoke Tests |
 |-|-----------------------|-------------|
@@ -21,7 +21,7 @@ seams (outbox, domain event handlers, inter-module calls, auth middleware) conne
 
 ## Project Structure
 
-> **Isolation note:** `Kakeibo.SmokeTests` is a **separate project** from `Kakeibo.Api.IntegrationTests`.
+> **Isolation note:** `Kakeibo.SmokeTests` is a **separate project** from `Kakeibo.Tests`.
 > It constructs its own `WebApplicationFactory`, starts its own static PostgreSQL container,
 > and uses a completely independent database. There is no shared state between the two projects.
 >
@@ -29,15 +29,14 @@ seams (outbox, domain event handlers, inter-module calls, auth middleware) conne
 > share a single factory instance and a single database. This is deliberate: some flows depend
 > on state created by earlier flows (e.g., Flow 4 — Audit — requires member records that Flow 1
 > created). The sequential, stateful nature of these tests is the reason smoke tests are
-> structurally different from `Kakeibo.Api.IntegrationTests` (which uses `IClassFixture` for
-> per-class isolation).
+> structurally different from `Kakeibo.Tests` (which uses `IClassFixture` for per-class isolation).
 
 ```
 tests/Kakeibo.SmokeTests/
 ├── Flows/
-│   ├── DomainEventFlowTests.cs
-│   ├── EntityLessEventFlowTests.cs
-│   ├── SyncInterModuleFlowTests.cs
+│   ├── InProcessEventFlowTests.cs
+│   ├── DirectEventFlowTests.cs
+│   ├── SyncCrossDomainFlowTests.cs
 │   ├── AuditFlowTests.cs
 │   ├── EmailFlowTests.cs
 │   ├── AuthorizationFlowTests.cs
@@ -56,21 +55,21 @@ public class SmokeCollection : ICollectionFixture<WebApplicationFactory>;
 
 ---
 
-## Flow 1 — HTTP → DomainEvent → IntegrationEvent → Consumer
+## Flow 1 — HTTP → Handler → IEventBus → IEventHandler
 
-**Verifies:** Handler → `entity.AddDomainEvent()` → `SaveChangesAsync` → `OutboxInterceptor`
-persists outbox row → `OutboxProcessor.ProcessBatchAsync` → consumer side effect in DB.
+**Verifies:** Feature handler → `eventBus.Publish(event)` → `SaveChangesAsync` → `ChannelEventBus`
+enqueues event → `EventDispatcher` dispatches to `IEventHandler<T>` → side effect in DB.
 
-**File:** `Flows/DomainEventFlowTests.cs`
+**File:** `Flows/InProcessEventFlowTests.cs`
 
 ```csharp
 [Collection("Smoke")]
-public sealed class DomainEventFlowTests(WebApplicationFactory factory)
+public sealed class InProcessEventFlowTests(WebApplicationFactory factory)
 {
     private const string SkipReason = "Docker is not available. Smoke tests require Testcontainers.";
 
     [Fact]
-    public async Task WalletCreation_DomainEventFlow_ConsumerExecuted()
+    public async Task WalletCreation_InProcessEventFlow_EventHandlerExecuted()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
@@ -82,7 +81,7 @@ public sealed class DomainEventFlowTests(WebApplicationFactory factory)
         await data.CreateVerifiedUserAsync("user@smoke.com", "Test#12345Abc", "User");
         await client.LoginAsync("user@smoke.com", "Test#12345Abc");
 
-        // Step 2: Call the endpoint that raises a domain event (WalletCreated)
+        // Step 2: Call the endpoint — handler publishes WalletCreatedEvent via IEventBus
         var walletName = $"wallet-{Guid.NewGuid():N}";
         var createResponse = await client.PostAsync("/api/wallets", new
         {
@@ -94,13 +93,13 @@ public sealed class DomainEventFlowTests(WebApplicationFactory factory)
 
         createResponse.AssertStatusCode(HttpStatusCode.Created);
 
-        // Step 3: Manually trigger the outbox processor (disabled as background service in tests)
-        await factory.TriggerOutboxProcessorAsync(ct);
+        // Step 3: EventDispatcher is a BackgroundService — give it time to process the channel
+        // In tests, EventDispatcher runs at full speed; a short delay is sufficient.
+        await Task.Delay(200, ct);
 
-        // Step 4: Verify consumer side effect — Wallet created in the DB
-        // (created by handler, audit entry created by consumer reacting to the domain event)
+        // Step 4: Verify event handler side effect — e.g. notification preference created
         await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<WalletsDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var wallet = await db.Wallets.FirstOrDefaultAsync(w => w.Name == walletName, ct);
 
         Assert.NotNull(wallet);
@@ -110,21 +109,22 @@ public sealed class DomainEventFlowTests(WebApplicationFactory factory)
 
 ---
 
-## Flow 2 — Entity-less Integration Event (Budget Exceeded)
+## Flow 2 — Direct Event Publish (Budget Exceeded)
 
-**Verifies:** Handler calls `eventBus.PublishAsync()` + `auditOutbox.PublishAsync()` directly
-(no entity, no domain event) → `OutboxInterceptor` persists the outbox row → consumer executed.
+**Verifies:** Handler calls `eventBus.Publish(new BudgetExceededEvent {...})` directly (no entity
+involved in the event dispatch) → `ChannelEventBus` enqueues it → `EventDispatcher` dispatches
+to `IEventHandler<BudgetExceededEvent>` → notification sent.
 
-**File:** `Flows/EntityLessEventFlowTests.cs`
+**File:** `Flows/DirectEventFlowTests.cs`
 
 ```csharp
 [Collection("Smoke")]
-public sealed class EntityLessEventFlowTests(WebApplicationFactory factory)
+public sealed class DirectEventFlowTests(WebApplicationFactory factory)
 {
     private const string SkipReason = "Docker is not available. Smoke tests require Testcontainers.";
 
     [Fact]
-    public async Task BudgetExceeded_EntityLessEventFlow_OutboxRowCreated()
+    public async Task BudgetExceeded_DirectEventFlow_NotificationHandlerExecuted()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
@@ -140,7 +140,8 @@ public sealed class EntityLessEventFlowTests(WebApplicationFactory factory)
 
         await client.LoginAsync("user@smoke.com", "Test#12345Abc");
 
-        // Step 1: Record transaction that exceeds budget — handler publishes event directly (no entity)
+        // Step 1: Record transaction that exceeds budget
+        // The handler publishes BudgetExceededEvent via IEventBus (fire-and-forget)
         var transactionResponse = await client.PostAsync("/api/transactions", new
         {
             amount = 120m,
@@ -151,37 +152,40 @@ public sealed class EntityLessEventFlowTests(WebApplicationFactory factory)
 
         transactionResponse.AssertStatusCode(HttpStatusCode.Created);
 
-        // Step 2: Verify outbox row was persisted for BudgetExceededEvent
+        // Step 2: Give EventDispatcher time to dispatch the event to its handlers
+        await Task.Delay(200, ct);
+
+        // Step 3: Verify event handler side effect — e.g. notification record created
         await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<BudgetsDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var outboxRow = await db.OutboxMessages
-            .OrderByDescending(m => m.CreatedAt)
-            .FirstOrDefaultAsync(m => m.Type == nameof(BudgetExceededEvent), ct);
+        var notification = await db.Notifications
+            .OrderByDescending(n => n.CreatedAt)
+            .FirstOrDefaultAsync(n => n.Type == NotificationTypes.BudgetExceeded, ct);
 
-        Assert.NotNull(outboxRow);
-        Assert.Null(outboxRow.ProcessedAt);  // not yet dispatched in this test
+        Assert.NotNull(notification);
     }
 }
 ```
 
 ---
 
-## Flow 3 — Sync Inter-Module Communication (`IModuleClient`)
+## Flow 3 — Sync Cross-Domain Communication (Direct Handler Injection)
 
-**Verifies:** Module A calls `moduleClient.SendAsync(new {Request})` → `ModuleClient` resolves
-handler from Module B → correct response returned synchronously in the same HTTP request.
+**Verifies:** Feature A's handler receives a cross-domain query handler via DI injection →
+calls it directly (no `IModuleClient`, no HTTP) → correct response returned synchronously
+in the same HTTP request.
 
-**File:** `Flows/SyncInterModuleFlowTests.cs`
+**File:** `Flows/SyncCrossDomainFlowTests.cs`
 
 ```csharp
 [Collection("Smoke")]
-public sealed class SyncInterModuleFlowTests(WebApplicationFactory factory)
+public sealed class SyncCrossDomainFlowTests(WebApplicationFactory factory)
 {
     private const string SkipReason = "Docker is not available. Smoke tests require Testcontainers.";
 
     [Fact]
-    public async Task PadelBooking_RequiresMembership_SyncCallToMembersModule()
+    public async Task CreateBudget_ValidatesWallet_CrossDomainHandlerCalled()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
@@ -189,24 +193,38 @@ public sealed class SyncInterModuleFlowTests(WebApplicationFactory factory)
         var data = factory.CreateTestDataBuilder();
         var client = factory.CreateAuthClient();
 
-        // Step 1: Create a user with an active membership
-        var userId = await data.CreateVerifiedUserAsync("padel-user@smoke.com", "Test#12345Abc", "User");
-        await data.CreateActiveMembershipAsync(userId, planId: "standard");
-        await client.LoginAsync("padel-user@smoke.com", "Test#12345Abc");
+        // Step 1: Create a user with a wallet
+        await data.CreateVerifiedUserAsync("budget-user@smoke.com", "Test#12345Abc", "User");
+        await client.LoginAsync("budget-user@smoke.com", "Test#12345Abc");
 
-        // Step 2: Book a padel court — internally calls IModuleClient to validate membership
-        var bookingResponse = await client.PostAsync("/api/padel/courts/1/bookings", new
+        var walletResponse = await client.PostAsync("/api/wallets", new
         {
-            startAt = "2026-07-01T10:00:00Z",
+            name = "My Wallet",
+            type = "Personal",
+            initialBalance = 500m,
+            currency = "USD",
+        });
+        walletResponse.AssertStatusCode(HttpStatusCode.Created);
+        var walletId = (await walletResponse.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("id").GetGuid();
+
+        // Step 2: Create a budget linked to the wallet
+        // Internally, CreateBudgetHandler injects GetWalletByIdHandler from Wallets domain
+        // and calls it synchronously via DI (no IModuleClient needed in Simple Monolith)
+        var budgetResponse = await client.PostAsync("/api/budgets", new
+        {
+            walletId,
+            categoryId = "food-dining",
+            limit = 200m,
+            period = "Monthly",
         });
 
-        // The Padel module called Members module synchronously via IModuleClient
-        // If the sync call fails, this returns 400/422 — the test would catch it
-        bookingResponse.AssertStatusCode(HttpStatusCode.Created);
+        // If the cross-domain call fails, this returns 400/422 — the test would catch it
+        budgetResponse.AssertStatusCode(HttpStatusCode.Created);
     }
 
     [Fact]
-    public async Task PadelBooking_NoMembership_SyncCallReturnsError()
+    public async Task CreateBudget_NonExistentWallet_ReturnsBadRequest()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
@@ -214,17 +232,19 @@ public sealed class SyncInterModuleFlowTests(WebApplicationFactory factory)
         var data = factory.CreateTestDataBuilder();
         var client = factory.CreateAuthClient();
 
-        // User without membership
-        await data.CreateVerifiedUserAsync("no-member@smoke.com", "Test#12345Abc", "User");
-        await client.LoginAsync("no-member@smoke.com", "Test#12345Abc");
+        await data.CreateVerifiedUserAsync("no-wallet@smoke.com", "Test#12345Abc", "User");
+        await client.LoginAsync("no-wallet@smoke.com", "Test#12345Abc");
 
-        var bookingResponse = await client.PostAsync("/api/padel/courts/1/bookings", new
+        var budgetResponse = await client.PostAsync("/api/budgets", new
         {
-            startAt = "2026-07-01T10:00:00Z",
+            walletId = Guid.NewGuid(),  // non-existent wallet
+            categoryId = "food-dining",
+            limit = 200m,
+            period = "Monthly",
         });
 
-        // IModuleClient returned NotFound → Padel module returned 422 Unprocessable
-        bookingResponse.AssertStatusCode(HttpStatusCode.UnprocessableEntity);
+        // GetWalletByIdHandler returned NotFound → CreateBudgetHandler returned 422
+        budgetResponse.AssertStatusCode(HttpStatusCode.UnprocessableEntity);
     }
 }
 ```
@@ -233,8 +253,8 @@ public sealed class SyncInterModuleFlowTests(WebApplicationFactory factory)
 
 ## Flow 4 — Audit Flow
 
-**Verifies:** `DomainEventHandler.Stage()` → outbox row with `Type == "AuditEventEnvelope"` →
-`AuditOutboxProcessor` picks it up → dispatches to ClickHouse stub (captured in test).
+**Verifies:** Feature handler publishes `AuditEvent` via `IEventBus` → `EventDispatcher`
+dispatches to `AuditEventHandler` → handler calls ClickHouse stub (captured in test).
 
 **File:** `Flows/AuditFlowTests.cs`
 
@@ -245,52 +265,30 @@ public sealed class AuditFlowTests(WebApplicationFactory factory)
     private const string SkipReason = "Docker is not available. Smoke tests require Testcontainers.";
 
     [Fact]
-    public async Task MemberCreation_AuditFlow_AuditEnvelopeStagedInOutbox()
+    public async Task UserRegistration_AuditFlow_AuditEventDispatchedToClickHouseStub()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
         var ct = TestContext.Current.CancellationToken;
-        var data = factory.CreateTestDataBuilder();
         var client = factory.CreateAuthClient();
 
-        await data.CreateVerifiedUserAsync("admin@smoke.com", "Test#12345Abc", "Admin");
-        await client.LoginAsync("admin@smoke.com", "Test#12345Abc");
+        var userEmail = $"audit-{Guid.NewGuid():N}@smoke.com";
 
-        var memberEmail = $"audit-{Guid.NewGuid():N}@smoke.com";
-        var createResponse = await client.PostAsync("/api/members", new
-        {
-            firstName = "Audit",
-            lastName = "Test",
-            email = memberEmail,
-            planId = "standard",
-        });
+        // Step 1: Register — triggers UserRegisteredEvent published via IEventBus
+        var registerResponse = await client.RegisterAsync(userEmail, "AuditUser", "Test#12345Abc");
+        registerResponse.AssertStatusCode(HttpStatusCode.Created);
 
-        createResponse.AssertStatusCode(HttpStatusCode.Created);
+        // Step 2: EventDispatcher dispatches UserRegisteredEvent to AuditEventHandler
+        // AuditEventHandler calls IClickHouseSink (stubbed in WebApplicationFactory)
+        await Task.Delay(200, ct);
 
-        // Verify audit envelope was written to the outbox (staged by DomainEventHandler)
-        await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MembersDbContext>();
-
-        var auditRow = await db.OutboxMessages
-            .OrderByDescending(m => m.CreatedAt)
-            .FirstOrDefaultAsync(m => m.Type == "AuditEventEnvelope", ct);
-
-        Assert.NotNull(auditRow);
-
-        // Verify the envelope has the correct action
-        var envelope = JsonSerializer.Deserialize<AuditEventEnvelope>(auditRow.Payload, DefaultSerializer.Options);
-        Assert.Equal(AuditAction.Members.Created, envelope!.Action);
-        Assert.Equal("Members", envelope.Module);
-
-        // Step 2: Trigger AuditOutboxProcessor — verify ClickHouse stub receives the row
+        // Step 3: Verify ClickHouse stub captured the audit row
         var clickHouseSink = factory.Services.GetRequiredService<IClickHouseSink>();
-        await factory.TriggerAuditOutboxProcessorAsync(ct);
 
-        // ClickHouseSink is stubbed in WebApplicationFactory — captures rows instead of writing
         var capturedRows = clickHouseSink.GetCapturedRows();
         Assert.Contains(capturedRows, r =>
-            r.Action == AuditAction.Members.Created &&
-            r.Module == "Members");
+            r.Action == AuditAction.Identity.UserRegistered &&
+            r.Module == "Identity");
     }
 }
 ```
@@ -447,32 +445,32 @@ public sealed class StartupFlowTests(WebApplicationFactory factory)
         var ct = TestContext.Current.CancellationToken;
 
         await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // IOnboardingSeeder must have created the SuperAdmin role during startup
-        var superAdminRole = await db.Roles
-            .FirstOrDefaultAsync(r => r.Name == RoleNames.SuperAdmin, ct);
+        // IOnboardingSeeder must have created the Admin role during startup
+        var adminRole = await db.Roles
+            .FirstOrDefaultAsync(r => r.Name == RoleNames.Admin, ct);
 
-        Assert.NotNull(superAdminRole);
+        Assert.NotNull(adminRole);
     }
 
     [Fact]
-    public async Task Application_StartsUp_AllModuleSchemasExist()
+    public async Task Application_StartsUp_CoreTablesExist()
     {
         if (!factory.IsDockerAvailable) Assert.Skip(SkipReason);
 
         var ct = TestContext.Current.CancellationToken;
 
         await using var scope = factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Verify key schemas were created by EF Core migrations
-        var schemas = new[] { "identity", "members", "padel", "billing" };
-        foreach (var schema in schemas)
+        // Verify core tables were created by EF Core migrations (single public schema)
+        var tables = new[] { "users", "wallets", "transactions" };
+        foreach (var table in tables)
         {
             var exists = await db.Database.ExecuteSqlRawAsync(
-                $"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'", ct) > 0;
-            Assert.True(exists, $"Schema '{schema}' was not created during startup");
+                $"SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '{table}'", ct) > 0;
+            Assert.True(exists, $"Table 'public.{table}' was not created during startup");
         }
     }
 
@@ -499,29 +497,16 @@ The base `WebApplicationFactory` requires two additional helpers for smoke test 
 ```csharp
 public sealed partial class WebApplicationFactory
 {
-    // Manually triggers OutboxProcessor for one batch — simulates a polling tick.
-    // OutboxProcessor is removed as a background service in tests (see ConfigureServices).
-    public async Task TriggerOutboxProcessorAsync(CancellationToken ct = default)
-    {
-        await using var scope = Services.CreateAsyncScope();
-        var processor = scope.ServiceProvider.GetRequiredService<OutboxProcessor>();
-        await processor.ProcessBatchAsync(ct);
-    }
-
-    // Triggers AuditOutboxProcessor for one batch — used in Flow 4.
-    public async Task TriggerAuditOutboxProcessorAsync(CancellationToken ct = default)
-    {
-        await using var scope = Services.CreateAsyncScope();
-        var processor = scope.ServiceProvider.GetRequiredService<AuditOutboxProcessor>();
-        await processor.ProcessBatchAsync(ct);
-    }
-
     // Adds a JTI to the Redis deny-list — used in Flow 6 to simulate token revocation.
     public async Task RevokeTokenAsync(string jti)
     {
         var redis = Services.GetRequiredService<IConnectionMultiplexer>();
         await redis.GetDatabase().StringSetAsync($"revoked:{jti}", "1", TimeSpan.FromHours(1));
     }
+
+    // Note: EventDispatcher runs as a BackgroundService in tests.
+    // No manual trigger is needed — just await Task.Delay(200) after the HTTP call
+    // to give the dispatcher enough time to dequeue and dispatch the channel events.
 }
 ```
 
@@ -549,7 +534,7 @@ public sealed partial class WebApplicationFactory
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kakeibo.Api\Kakeibo.Api.csproj" />
-    <!-- Include all module projects so test data helpers can access DbContexts directly -->
+    <!-- All domains are in Kakeibo.Api — single project reference is sufficient -->
   </ItemGroup>
 </Project>
 ```
@@ -560,10 +545,10 @@ public sealed partial class WebApplicationFactory
 
 | Flow | Class | What it verifies |
 |------|-------|-----------------|
-| 1. HTTP→DomainEvent→Consumer | `DomainEventFlowTests` | Domain event → outbox → consumer side effect in DB |
-| 2. Entity-less event | `EntityLessEventFlowTests` | Direct `eventBus.PublishAsync` → outbox row without domain event |
-| 3. Sync inter-module | `SyncInterModuleFlowTests` | Module A → `IModuleClient` → Module B handler → response |
-| 4. Audit | `AuditFlowTests` | `auditOutbox.Stage()` → outbox → `AuditOutboxProcessor` → ClickHouse stub |
+| 1. HTTP → IEventBus → IEventHandler | `InProcessEventFlowTests` | Handler publishes event → EventDispatcher → handler side effect in DB |
+| 2. Direct event publish | `DirectEventFlowTests` | Direct `eventBus.Publish` → EventDispatcher → notification handler |
+| 3. Sync cross-domain | `SyncCrossDomainFlowTests` | Feature A handler → DI-injected query handler from domain B → response |
+| 4. Audit | `AuditFlowTests` | Handler publishes AuditEvent → EventDispatcher → AuditEventHandler → ClickHouse stub |
 | 5. Email | `EmailFlowTests` | `emailService.SendAsync` → EmailRenderer stub → SMTP sink capture |
 | 6. Authorization | `AuthorizationFlowTests` | JWT → `JwtRevocationMiddleware` → `PermissionService` → 200/403/401 |
 | 7. Startup | `StartupFlowTests` | Migrations + seeders + health probes all pass |

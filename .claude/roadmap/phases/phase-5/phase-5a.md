@@ -22,8 +22,8 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Goals/Features/**:
-- CreateGoal, ListGoals, UpdateGoal, DeleteGoal
+**`src/Kakeibo.Api/Features/Goals/`**:
+- CreateGoal/, ListGoals/, UpdateGoal/, DeleteGoal/
 
 **Endpoints**:
 - `POST /api/goals`

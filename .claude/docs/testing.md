@@ -36,7 +36,7 @@ Exhaustive testing guide for the Kakeibo platform. Covers backend (.NET 10, xUni
 
 ## 1. Testing Philosophy
 
-Kakeibo follows a test strategy aligned with the modular monolith architecture. Each module is tested in isolation, and cross-module interactions are verified through contracts and architecture tests.
+Kakeibo follows a test strategy aligned with the Simple Monolith architecture. All tests reside in a single test project (`Kakeibo.Tests`), organized by domain and operation within `tests/Kakeibo.Tests/`.
 
 **Guiding principles:**
 
@@ -53,68 +53,32 @@ Kakeibo follows a test strategy aligned with the modular monolith architecture. 
 
 ```
 tests/
-├── Kakeibo.Modules.Identity.Tests/
-│   ├── Entities/                        — Domain unit tests
-│   │   ├── UserTests.cs
-│   │   └── SessionTests.cs
-│   ├── ValueObjects/                    — Value object tests
-│   │   └── EmailAddressTests.cs
-│   ├── Features/                        — Handler unit tests
-│   │   ├── RegisterUser/
-│   │   │   └── RegisterUserHandlerTests.cs
-│   │   └── LoginUser/
-│   │       └── LoginUserHandlerTests.cs
-│   ├── Integration/                     — Integration tests (Testcontainers)
-│   │   └── UserRegistrationIntegrationTests.cs
-│   ├── Consumers/                       — Event consumer tests
-│   ├── Builders/                        — Test data builders
-│   │   └── UserBuilder.cs
-│   └── Kakeibo.Modules.Identity.Tests.csproj
-│
-├── Kakeibo.Modules.Wallets.Tests/
-│   ├── Entities/
-│   │   ├── WalletTests.cs
-│   │   ├── InvitationTests.cs
-│   │   └── DebtTests.cs
-│   ├── ValueObjects/
-│   │   ├── WalletTypeTests.cs
-│   │   └── SplitTypeTests.cs
-│   ├── Features/
-│   │   ├── CreateWallet/
-│   │   │   └── CreateWalletHandlerTests.cs
-│   │   ├── ArchiveWallet/
-│   │   ├── InviteToWallet/
-│   │   ├── GetWalletBalance/
-│   │   └── RecordSettlement/
-│   ├── Integration/
-│   │   └── WalletLifecycleIntegrationTests.cs
-│   ├── Services/
-│   │   └── DebtCalculationServiceTests.cs
-│   ├── Builders/
-│   │   ├── WalletBuilder.cs
-│   │   └── TransactionBuilder.cs
-│   └── Kakeibo.Modules.Wallets.Tests.csproj
-│
-├── Kakeibo.Modules.Transactions.Tests/
-├── Kakeibo.Modules.Budgets.Tests/
-├── Kakeibo.Modules.Goals.Tests/
-├── Kakeibo.Modules.Recurring.Tests/
-├── Kakeibo.Modules.Notifications.Tests/
-├── Kakeibo.Modules.Auditing.Tests/
-│
-├── Kakeibo.FunctionalTests/            — API-level tests (WebApplicationFactory)
-│   ├── Wallets/
-│   │   └── WalletEndpointTests.cs
-│   ├── Transactions/
-│   ├── Infrastructure/
-│   │   └── KakeiboWebApplicationFactory.cs
-│   └── Kakeibo.FunctionalTests.csproj
-│
-└── Kakeibo.ArchitectureTests/          — Module boundary enforcement (NetArchTest)
-    ├── ModuleBoundaryTests.cs
-    ├── NamingConventionTests.cs
-    ├── DependencyDirectionTests.cs
-    └── Kakeibo.ArchitectureTests.csproj
+└── Kakeibo.Tests/                       — Single test project for all domains
+    ├── Architecture/                    — Naming convention tests (NetArchTest)
+    │   └── NamingConventionTests.cs
+    ├── Features/
+    │   ├── Identity/
+    │   │   ├── RegisterUser/
+    │   │   │   └── RegisterUserHandlerTests.cs
+    │   │   └── LoginUser/
+    │   │       └── LoginUserHandlerTests.cs
+    │   ├── Wallets/
+    │   │   ├── CreateWallet/
+    │   │   │   └── CreateWalletHandlerTests.cs
+    │   │   ├── ArchiveWallet/
+    │   │   ├── InviteToWallet/
+    │   │   └── RecordSettlement/
+    │   ├── Transactions/
+    │   ├── Budgets/
+    │   ├── Goals/
+    │   └── Recurring/
+    ├── Integration/                     — Integration tests (Testcontainers)
+    │   ├── TestDbContextFactory.cs
+    │   └── WalletLifecycleIntegrationTests.cs
+    ├── Builders/                        — Test data builders
+    │   ├── WalletBuilder.cs
+    │   └── TransactionBuilder.cs
+    └── Kakeibo.Tests.csproj
 ```
 
 ### Test project `.csproj` template
@@ -137,54 +101,17 @@ tests/
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="NetArchTest.Rules" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Wallets\Kakeibo.Modules.Wallets.csproj" />
+    <!-- Single project reference — the entire Kakeibo.Api is in scope -->
+    <ProjectReference Include="..\..\src\Kakeibo.Api\Kakeibo.Api.csproj" />
   </ItemGroup>
 
   <!-- Required for NSubstitute to mock internal types -->
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
-  </ItemGroup>
-
-</Project>
-```
-
-### Architecture test project `.csproj`
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="coverlet.collector" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="NetArchTest.Rules" />
-  </ItemGroup>
-
-  <!-- References all assemblies to inspect -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Kakeibo.Common\Kakeibo.Common.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Contracts\Kakeibo.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Infrastructure\Kakeibo.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Identity\Kakeibo.Modules.Identity.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Wallets\Kakeibo.Modules.Wallets.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Transactions\Kakeibo.Modules.Transactions.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Budgets\Kakeibo.Modules.Budgets.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Goals\Kakeibo.Modules.Goals.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Recurring\Kakeibo.Modules.Recurring.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Notifications\Kakeibo.Modules.Notifications.csproj" />
-    <ProjectReference Include="..\..\src\Kakeibo.Modules.Auditing\Kakeibo.Modules.Auditing.csproj" />
   </ItemGroup>
 
 </Project>
@@ -196,19 +123,18 @@ tests/
 
 ### 3.1 Domain Unit Tests
 
-Pure business logic with zero dependencies. Test entities, value objects, domain events, and invariants.
+Pure business logic with zero dependencies. Test entities, value objects, events, and invariants.
 
 **Naming convention:** `MethodName_Scenario_ExpectedBehavior`
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Entities/` and `tests/Kakeibo.Modules.{X}.Tests/ValueObjects/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/` (handler and entity tests co-located by domain)
 
 #### Example: Wallet entity tests
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Entities;
+namespace Kakeibo.Tests.Features.Wallets;
 
-using Kakeibo.Modules.Wallets.Entities;
-using Kakeibo.Modules.Wallets.ValueObjects;
+using Kakeibo.Api.Features.Wallets;
 
 public class WalletTests
 {
@@ -337,30 +263,15 @@ public class WalletTests
         Assert.Throws<InvalidOperationException>(() => wallet.Archive());
     }
 
-    [Fact]
-    public void Debit_RaisesBalanceChangedDomainEvent()
-    {
-        var wallet = new Wallet
-        {
-            Name = "Cash",
-            Type = WalletType.Personal,
-            Balance = 500m,
-            UserId = Guid.NewGuid(),
-        };
-
-        wallet.Debit(100m);
-
-        Assert.Single(wallet.DomainEvents);
-    }
 }
 ```
 
 #### Example: Value object tests
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.ValueObjects;
+namespace Kakeibo.Tests.Features.Wallets;
 
-using Kakeibo.Modules.Wallets.ValueObjects;
+using Kakeibo.Api.Features.Wallets;
 
 public class SplitTypeTests
 {
@@ -413,88 +324,16 @@ public class SplitTypeTests
 }
 ```
 
-#### Example: Domain event tests
+#### Example: Result<T> and event tests
 
-```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Entities;
-
-using Kakeibo.Common.Abstractions;
-using Kakeibo.Modules.Wallets.Entities;
-using Kakeibo.Modules.Wallets.Events;
-
-public class WalletDomainEventTests
-{
-    [Fact]
-    public void AddDomainEvent_StoresEventInList()
-    {
-        var wallet = new Wallet
-        {
-            Name = "Test",
-            Type = WalletType.Personal,
-            Balance = 0m,
-            UserId = Guid.NewGuid(),
-        };
-
-        wallet.AddDomainEvent(new WalletCreatedDomainEvent
-        {
-            Id = Guid.NewGuid(),
-            OccurredAt = NodaTime.SystemClock.Instance.GetCurrentInstant(),
-            WalletId = wallet.Id,
-        });
-
-        Assert.Single(wallet.DomainEvents);
-        Assert.IsType<WalletCreatedDomainEvent>(wallet.DomainEvents[0]);
-    }
-
-    [Fact]
-    public void ClearDomainEvents_RemovesAllEvents()
-    {
-        var wallet = new Wallet
-        {
-            Name = "Test",
-            Type = WalletType.Personal,
-            Balance = 0m,
-            UserId = Guid.NewGuid(),
-        };
-
-        wallet.AddDomainEvent(new WalletCreatedDomainEvent
-        {
-            Id = Guid.NewGuid(),
-            OccurredAt = NodaTime.SystemClock.Instance.GetCurrentInstant(),
-            WalletId = wallet.Id,
-        });
-
-        wallet.ClearDomainEvents();
-
-        Assert.Empty(wallet.DomainEvents);
-    }
-
-    // Behavioral contract: ClearDomainEvents is idempotent (KB-005)
-    [Fact]
-    public void ClearDomainEvents_CalledTwice_DoesNotThrow()
-    {
-        var wallet = new Wallet
-        {
-            Name = "Test",
-            Type = WalletType.Personal,
-            Balance = 0m,
-            UserId = Guid.NewGuid(),
-        };
-
-        wallet.ClearDomainEvents();
-        wallet.ClearDomainEvents();
-
-        Assert.Empty(wallet.DomainEvents);
-    }
-}
-```
+Note: In the Simple Monolith, `Entity` has no `DomainEvents` list. Events are published via `IEventBus.Publish()` in handlers. To test event publication, mock `IEventBus` (see Handler Unit Tests below).
 
 #### Example: Result<T> tests
 
 ```csharp
-namespace Kakeibo.Common.Tests.Abstractions;
+namespace Kakeibo.Tests.Common.Abstractions;
 
-using Kakeibo.Common.Abstractions;
+using Kakeibo.Api.Common.Abstractions;
 
 public class ResultTests
 {
@@ -562,34 +401,33 @@ public class ResultTests
 
 Test business logic with mocked dependencies. Handlers are plain classes with `HandleAsync` methods, injected via primary constructors.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Features/{Op}/`
+**Location:** `tests/Kakeibo.Tests/Features/{Domain}/{Op}/`
 
 **Dependencies:**
-- NSubstitute for `IModuleClient`, `IModuleEventBus`, and other external interfaces
+- NSubstitute for `IEventBus` and other external interfaces
 - Real EF Core DbContext with in-memory provider is **prohibited** (tech-stack.md). For handler unit tests, mock the DbContext or use a lightweight substitute pattern. For anything that touches the database meaningfully, use integration tests with Testcontainers.
 
 #### Example: CreateWalletHandler tests
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Features.CreateWallet;
+namespace Kakeibo.Tests.Features.Wallets.CreateWallet;
 
-using Kakeibo.Common.Abstractions;
-using Kakeibo.Common.Modules;
-using Kakeibo.Modules.Wallets.Entities;
-using Kakeibo.Modules.Wallets.Features.CreateWallet;
-using Kakeibo.Modules.Wallets.Persistence;
+using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Infrastructure.Events;
+using Kakeibo.Api.Features.Wallets.CreateWallet;
+using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 
 public class CreateWalletHandlerTests
 {
-    private readonly IModuleEventBus _eventBus = Substitute.For<IModuleEventBus>();
+    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
 
     [Fact]
     public async Task HandleAsync_ValidRequest_ReturnsSuccessWithWalletData()
     {
         // Arrange
-        await using var db = await CreateInMemoryDbContextAsync();
+        await using var db = await CreateInMemoryDbContextAsync(); // AppDbContext
         var handler = new CreateWalletHandler(db, _eventBus);
 
         var request = new CreateWalletEndpoint.CreateWalletRequest(
@@ -612,7 +450,7 @@ public class CreateWalletHandlerTests
     public async Task HandleAsync_DuplicateName_ReturnsConflictError()
     {
         // Arrange
-        await using var db = await CreateInMemoryDbContextAsync();
+        await using var db = await CreateInMemoryDbContextAsync(); // AppDbContext
 
         // Seed existing wallet
         db.Wallets.Add(new Wallet
@@ -643,7 +481,7 @@ public class CreateWalletHandlerTests
     public async Task HandleAsync_ValidRequest_PublishesIntegrationEvent()
     {
         // Arrange
-        await using var db = await CreateInMemoryDbContextAsync();
+        await using var db = await CreateInMemoryDbContextAsync(); // AppDbContext
         var handler = new CreateWalletHandler(db, _eventBus);
 
         var request = new CreateWalletEndpoint.CreateWalletRequest(
@@ -654,17 +492,16 @@ public class CreateWalletHandlerTests
         // Act
         await handler.HandleAsync(request, CancellationToken.None);
 
-        // Assert — verify integration event was published
-        await _eventBus.Received(1).PublishAsync(
-            Arg.Any<Kakeibo.Contracts.Wallets.Events.WalletCreatedEvent>(),
-            Arg.Any<CancellationToken>());
+        // Assert — verify event was published to the event bus
+        _eventBus.Received(1).Publish(
+            Arg.Any<Kakeibo.Api.Features.Wallets.Events.WalletCreatedEvent>());
     }
 
     [Fact]
     public async Task HandleAsync_ValidRequest_PersistsWalletInDatabase()
     {
         // Arrange
-        await using var db = await CreateInMemoryDbContextAsync();
+        await using var db = await CreateInMemoryDbContextAsync(); // AppDbContext
         var handler = new CreateWalletHandler(db, _eventBus);
 
         var request = new CreateWalletEndpoint.CreateWalletRequest(
@@ -682,18 +519,18 @@ public class CreateWalletHandlerTests
         Assert.Equal(5000m, wallet.Balance);
     }
 
-    // Helper: creates a WalletsDbContext backed by a unique in-memory database.
+    // Helper: creates an AppDbContext backed by a unique in-memory database.
     // NOTE: This uses EF Core InMemory ONLY for handler unit tests where we need
     // a lightweight DbContext. Integration tests MUST use Testcontainers (real PostgreSQL).
     // The prohibited rule applies to integration tests, not handler unit tests that
     // specifically mock database behavior for isolated logic testing.
-    private static Task<WalletsDbContext> CreateInMemoryDbContextAsync()
+    private static Task<AppDbContext> CreateInMemoryDbContextAsync()
     {
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        var db = new WalletsDbContext(options);
+        var db = new AppDbContext(options);
         return Task.FromResult(db);
     }
 }
@@ -702,9 +539,9 @@ public class CreateWalletHandlerTests
 #### Example: Validator tests
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Features.CreateWallet;
+namespace Kakeibo.Tests.Features.Wallets.CreateWallet;
 
-using Kakeibo.Modules.Wallets.Features.CreateWallet;
+using Kakeibo.Api.Features.Wallets.CreateWallet;
 
 public class CreateWalletValidatorTests
 {
@@ -775,7 +612,7 @@ public class CreateWalletValidatorTests
 
 Full module tests with a real PostgreSQL container. Use `Lazy<Task>` for container startup and always include the Docker skip guard (KB-008).
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Integration/`
+**Location:** `tests/Kakeibo.Tests/Integration/`
 
 **Critical rules:**
 - Never use `.WithReuse(true)` (mandatory.md Rule 4, TD-020)
@@ -785,13 +622,13 @@ Full module tests with a real PostgreSQL container. Use `Lazy<Task>` for contain
 #### TestDbContextFactory (shared across tests in a module)
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Integration;
+namespace Kakeibo.Tests.Integration;
 
-using Kakeibo.Modules.Wallets.Persistence;
+using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
-// Shared PostgreSQL container factory for wallet integration tests.
+// Shared PostgreSQL container factory for integration tests.
 // Uses a single static container reused across all test classes in this project.
 internal static class TestDbContextFactory
 {
@@ -799,7 +636,7 @@ internal static class TestDbContextFactory
         new PostgreSqlBuilder("postgres:18-alpine")
             .WithUsername("postgres")
             .WithPassword("postgres")
-            .WithDatabase("kakeibo_wallets_test")
+            .WithDatabase("kakeibo_test")
             .WithCommand("-c", "max_connections=500")
             .Build();
 
@@ -820,16 +657,16 @@ internal static class TestDbContextFactory
         }
     }
 
-    // Creates a WalletsDbContext connected to the real PostgreSQL container.
+    // Creates an AppDbContext connected to the real PostgreSQL container.
     // Each call creates a unique database to ensure test isolation.
-    public static async Task<WalletsDbContext> CreateAsync()
+    public static async Task<AppDbContext> CreateAsync()
     {
         await EnsureContainerStartedAsync();
 
-        var databaseName = $"wallets_test_{Guid.NewGuid():N}";
+        var databaseName = $"kakeibo_test_{Guid.NewGuid():N}";
         var connectionString = await GetConnectionStringForAsync(databaseName);
 
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString, npgsql =>
             {
                 npgsql.UseNodaTime();
@@ -837,7 +674,7 @@ internal static class TestDbContextFactory
             .UseSnakeCaseNamingConvention()
             .Options;
 
-        var db = new WalletsDbContext(options);
+        var db = new AppDbContext(options);
 
         // Apply EF Core migrations to create schema
         await db.Database.EnsureCreatedAsync();
@@ -852,8 +689,8 @@ internal static class TestDbContextFactory
 
         // Create the database using the default connection
         var defaultConnectionString = PostgresContainer.GetConnectionString();
-        await using var adminDb = new WalletsDbContext(
-            new DbContextOptionsBuilder<WalletsDbContext>()
+        await using var adminDb = new AppDbContext(
+            new DbContextOptionsBuilder<AppDbContext>()
                 .UseNpgsql(defaultConnectionString)
                 .Options);
 
@@ -861,7 +698,7 @@ internal static class TestDbContextFactory
             $"CREATE DATABASE \"{databaseName}\"");
 
         return defaultConnectionString.Replace(
-            "Database=kakeibo_wallets_test",
+            "Database=kakeibo_test",
             $"Database={databaseName}");
     }
 }
@@ -870,17 +707,16 @@ internal static class TestDbContextFactory
 #### Example: End-to-end wallet creation integration test
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Integration;
+namespace Kakeibo.Tests.Integration;
 
-using Kakeibo.Common.Modules;
-using Kakeibo.Modules.Wallets.Entities;
-using Kakeibo.Modules.Wallets.Features.CreateWallet;
+using Kakeibo.Api.Infrastructure.Events;
+using Kakeibo.Api.Features.Wallets.CreateWallet;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 
 public class WalletLifecycleIntegrationTests
 {
-    private readonly IModuleEventBus _eventBus = Substitute.For<IModuleEventBus>();
+    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
 
     [Fact]
     public async Task CreateWallet_PersistsInRealPostgres_AndRetrievable()
@@ -972,12 +808,12 @@ public class WalletLifecycleIntegrationTests
         var connectionString = await TestDbContextFactory.GetConnectionStringForAsync(
             $"reconnect_test_{Guid.NewGuid():N}");
 
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString, npgsql => npgsql.UseNodaTime())
             .UseSnakeCaseNamingConvention()
             .Options;
 
-        await using (var db1 = new WalletsDbContext(options))
+        await using (var db1 = new AppDbContext(options))
         {
             await db1.Database.EnsureCreatedAsync();
 
@@ -995,7 +831,7 @@ public class WalletLifecycleIntegrationTests
         }
 
         // Act — read from a fresh DbContext instance (simulating reconnection)
-        await using var db2 = new WalletsDbContext(options);
+        await using var db2 = new AppDbContext(options);
         var loaded = await db2.Wallets.FindAsync(walletId);
 
         // Assert — data survives reconnection
@@ -1008,9 +844,9 @@ public class WalletLifecycleIntegrationTests
 #### IAsyncLifetime pattern (alternative setup/teardown)
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Integration;
+namespace Kakeibo.Tests.Integration;
 
-using Kakeibo.Modules.Wallets.Persistence;
+using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
@@ -1027,7 +863,7 @@ public class WalletBalanceIntegrationTests : IAsyncLifetime
     private static readonly Lazy<Task> ContainerStartTask =
         new(() => PostgresContainer.StartAsync());
 
-    private WalletsDbContext _db = null!;
+    private AppDbContext _db = null!;
 
     public async ValueTask InitializeAsync()
     {
@@ -1041,12 +877,12 @@ public class WalletBalanceIntegrationTests : IAsyncLifetime
                 "Docker is not available. This test requires Testcontainers (PostgreSQL).");
         }
 
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(PostgresContainer.GetConnectionString(), n => n.UseNodaTime())
             .UseSnakeCaseNamingConvention()
             .Options;
 
-        _db = new WalletsDbContext(options);
+        _db = new AppDbContext(options);
         await _db.Database.EnsureCreatedAsync();
     }
 
@@ -1086,12 +922,12 @@ public class WalletBalanceIntegrationTests : IAsyncLifetime
 
 Full HTTP pipeline tests using `WebApplicationFactory<Program>`. Tests the complete request lifecycle: routing, validation, authentication, handler execution, and response serialization.
 
-**Location:** `tests/Kakeibo.FunctionalTests/`
+**Location:** `tests/Kakeibo.Tests/Integration/` (use `WebApplicationFactory<Program>` from the same `Kakeibo.Tests` project)
 
 #### KakeiboWebApplicationFactory
 
 ```csharp
-namespace Kakeibo.FunctionalTests.Infrastructure;
+namespace Kakeibo.Tests.Integration;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -1147,11 +983,10 @@ public class KakeiboWebApplicationFactory : WebApplicationFactory<Program>, IAsy
 #### Example: Wallet endpoint functional test
 
 ```csharp
-namespace Kakeibo.FunctionalTests.Wallets;
+namespace Kakeibo.Tests.Integration.Wallets;
 
 using System.Net;
 using System.Net.Http.Json;
-using Kakeibo.FunctionalTests.Infrastructure;
 
 public class WalletEndpointTests(KakeiboWebApplicationFactory factory)
     : IClassFixture<KakeiboWebApplicationFactory>
@@ -1218,348 +1053,105 @@ public class WalletEndpointTests(KakeiboWebApplicationFactory factory)
 
 ### 3.5 Architecture Tests (NetArchTest)
 
-Enforce module boundaries, naming conventions, and dependency direction rules. These tests prevent architectural drift and ensure the modular monolith constraints hold.
+Enforce naming conventions in the `Kakeibo.Api` assembly. In the Simple Monolith, there are no cross-assembly boundaries to enforce — all code is in one project. Architecture tests focus on naming convention rules only.
 
-**Location:** `tests/Kakeibo.ArchitectureTests/`
-
-#### Module boundary enforcement
-
-```csharp
-namespace Kakeibo.ArchitectureTests;
-
-using NetArchTest.Rules;
-using System.Reflection;
-
-public class ModuleBoundaryTests
-{
-    // Assembly references for all modules
-    private static readonly Assembly CommonAssembly =
-        typeof(Kakeibo.Common.Abstractions.Entity).Assembly;
-
-    private static readonly Assembly ContractsAssembly =
-        typeof(Kakeibo.Contracts.Wallets.Events.WalletCreatedEvent).Assembly;
-
-    private static readonly Assembly InfrastructureAssembly =
-        typeof(Kakeibo.Infrastructure.Outbox.IOutboxSource).Assembly;
-
-    private static readonly Assembly WalletsAssembly =
-        typeof(Kakeibo.Modules.Wallets.WalletsModuleRegistration).Assembly;
-
-    private static readonly Assembly TransactionsAssembly =
-        typeof(Kakeibo.Modules.Transactions.TransactionsModuleRegistration).Assembly;
-
-    private static readonly Assembly BudgetsAssembly =
-        typeof(Kakeibo.Modules.Budgets.BudgetsModuleRegistration).Assembly;
-
-    // Critical rule: No cross-module references
-    [Fact]
-    public void WalletsModule_ShouldNotReference_TransactionsModule()
-    {
-        var result = Types.InAssembly(WalletsAssembly)
-            .ShouldNot()
-            .HaveDependencyOn("Kakeibo.Modules.Transactions")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful,
-            "Wallets module must not reference Transactions module directly. " +
-            "Use Kakeibo.Contracts for inter-module communication.");
-    }
-
-    [Fact]
-    public void TransactionsModule_ShouldNotReference_WalletsModule()
-    {
-        var result = Types.InAssembly(TransactionsAssembly)
-            .ShouldNot()
-            .HaveDependencyOn("Kakeibo.Modules.Wallets")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful);
-    }
-
-    [Fact]
-    public void BudgetsModule_ShouldNotReference_AnyOtherModule()
-    {
-        var result = Types.InAssembly(BudgetsAssembly)
-            .ShouldNot()
-            .HaveDependencyOnAny(
-                "Kakeibo.Modules.Wallets",
-                "Kakeibo.Modules.Transactions",
-                "Kakeibo.Modules.Goals",
-                "Kakeibo.Modules.Recurring",
-                "Kakeibo.Modules.Identity",
-                "Kakeibo.Modules.Notifications",
-                "Kakeibo.Modules.Auditing")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful,
-            "Budget module must only depend on Common, Contracts, and Infrastructure.");
-    }
-
-    // Kakeibo.Common cannot reference any module
-    [Fact]
-    public void Common_ShouldNotReference_AnyModule()
-    {
-        var result = Types.InAssembly(CommonAssembly)
-            .ShouldNot()
-            .HaveDependencyOnAny(
-                "Kakeibo.Modules",
-                "Kakeibo.Infrastructure",
-                "Kakeibo.Api")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful,
-            "Kakeibo.Common is the shared kernel and must have zero project references.");
-    }
-
-    // Kakeibo.Contracts cannot reference Infrastructure
-    [Fact]
-    public void Contracts_ShouldNotReference_Infrastructure()
-    {
-        var result = Types.InAssembly(ContractsAssembly)
-            .ShouldNot()
-            .HaveDependencyOn("Kakeibo.Infrastructure")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful);
-    }
-
-    // Kakeibo.Contracts cannot reference any module
-    [Fact]
-    public void Contracts_ShouldNotReference_AnyModule()
-    {
-        var result = Types.InAssembly(ContractsAssembly)
-            .ShouldNot()
-            .HaveDependencyOnAny(
-                "Kakeibo.Modules.Wallets",
-                "Kakeibo.Modules.Transactions",
-                "Kakeibo.Modules.Budgets",
-                "Kakeibo.Modules.Goals",
-                "Kakeibo.Modules.Recurring",
-                "Kakeibo.Modules.Identity",
-                "Kakeibo.Modules.Notifications",
-                "Kakeibo.Modules.Auditing",
-                "Kakeibo.Api")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful);
-    }
-}
-```
+**Location:** `tests/Kakeibo.Tests/Architecture/`
 
 #### Naming convention enforcement
 
 ```csharp
-namespace Kakeibo.ArchitectureTests;
+namespace Kakeibo.Tests.Architecture;
 
-using Kakeibo.Common.Endpoints;
-using Kakeibo.Common.Abstractions;
-using Kakeibo.Common.Modules;
+using Kakeibo.Api.Common.Endpoints;
+using Kakeibo.Api.Infrastructure.Events;
 using NetArchTest.Rules;
 using System.Reflection;
 
 public class NamingConventionTests
 {
-    private static readonly Assembly[] ModuleAssemblies =
-    [
-        typeof(Kakeibo.Modules.Wallets.WalletsModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Transactions.TransactionsModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Budgets.BudgetsModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Goals.GoalsModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Recurring.RecurringModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Identity.IdentityModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Notifications.NotificationsModuleRegistration).Assembly,
-        typeof(Kakeibo.Modules.Auditing.AuditingModuleRegistration).Assembly,
-    ];
+    // Single assembly — all code is in Kakeibo.Api
+    private static readonly Assembly ApiAssembly =
+        typeof(Kakeibo.Api.Persistence.AppDbContext).Assembly;
 
     // TD-011: Endpoint classes must end in "Endpoint"
     [Fact]
     public void EndpointClasses_MustEndWithEndpoint()
     {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .ImplementInterface(typeof(IEndpoint))
-                .Should()
-                .HaveNameEndingWith("Endpoint")
-                .GetResult();
+        var result = Types.InAssembly(ApiAssembly)
+            .That()
+            .ImplementInterface(typeof(IEndpoint))
+            .Should()
+            .HaveNameEndingWith("Endpoint")
+            .GetResult();
 
-            Assert.True(result.IsSuccessful,
-                $"All IEndpoint implementations must end with 'Endpoint'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
+        Assert.True(result.IsSuccessful,
+            $"All IEndpoint implementations must end with 'Endpoint'. " +
+            $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
-    // Consumers must end in "Consumer"
+    // Event handlers must end in "Handler"
     [Fact]
-    public void EventConsumers_MustEndWithConsumer()
+    public void EventHandlers_MustEndWithHandler()
     {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .ImplementInterface(typeof(IEventConsumer<>))
-                .Should()
-                .HaveNameEndingWith("Consumer")
-                .GetResult();
+        var result = Types.InAssembly(ApiAssembly)
+            .That()
+            .ImplementInterface(typeof(IEventHandler<>))
+            .Should()
+            .HaveNameEndingWith("Handler")
+            .GetResult();
 
-            Assert.True(result.IsSuccessful,
-                $"All IEventConsumer<T> implementations must end with 'Consumer'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
-    }
-
-    // Domain event handlers must end in "DomainEventHandler"
-    [Fact]
-    public void DomainEventHandlers_MustEndWithDomainEventHandler()
-    {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .ImplementInterface(typeof(IDomainEventHandler<>))
-                .Should()
-                .HaveNameEndingWith("DomainEventHandler")
-                .GetResult();
-
-            Assert.True(result.IsSuccessful,
-                $"All IDomainEventHandler<T> implementations must end with 'DomainEventHandler'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
+        Assert.True(result.IsSuccessful,
+            $"All IEventHandler<T> implementations must end with 'Handler'. " +
+            $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
     // TD-009: Configuration classes must end in "Options", never "Settings" or "Config"
     [Fact]
     public void ConfigurationClasses_MustNotEndWithSettings()
     {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .HaveNameEndingWith("Settings")
-                .Should()
-                .NotExist()
-                .GetResult();
+        var result = Types.InAssembly(ApiAssembly)
+            .That()
+            .HaveNameEndingWith("Settings")
+            .Should()
+            .NotExist()
+            .GetResult();
 
-            Assert.True(result.IsSuccessful,
-                $"Configuration classes must use 'Options' suffix, not 'Settings'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
+        Assert.True(result.IsSuccessful,
+            $"Configuration classes must use 'Options' suffix, not 'Settings'. " +
+            $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
     // TD-010: EF Core configurations must end in "Configuration"
     [Fact]
     public void EntityConfigurations_MustEndWithConfiguration()
     {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .ImplementInterface(
-                    typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>))
-                .Should()
-                .HaveNameEndingWith("Configuration")
-                .GetResult();
+        var result = Types.InAssembly(ApiAssembly)
+            .That()
+            .ImplementInterface(
+                typeof(Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<>))
+            .Should()
+            .HaveNameEndingWith("Configuration")
+            .GetResult();
 
-            Assert.True(result.IsSuccessful,
-                $"All IEntityTypeConfiguration<T> implementations must end with 'Configuration'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
+        Assert.True(result.IsSuccessful,
+            $"All IEntityTypeConfiguration<T> implementations must end with 'Configuration'. " +
+            $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 
     // Validators must end in "Validator"
     [Fact]
     public void Validators_MustEndWithValidator()
     {
-        foreach (var assembly in ModuleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .Inherit(typeof(FluentValidation.AbstractValidator<>))
-                .Should()
-                .HaveNameEndingWith("Validator")
-                .GetResult();
-
-            Assert.True(result.IsSuccessful,
-                $"All validators must end with 'Validator'. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
-    }
-}
-```
-
-#### Dependency direction tests
-
-```csharp
-namespace Kakeibo.ArchitectureTests;
-
-using NetArchTest.Rules;
-using System.Reflection;
-
-public class DependencyDirectionTests
-{
-    private static readonly Assembly InfrastructureAssembly =
-        typeof(Kakeibo.Infrastructure.Outbox.IOutboxSource).Assembly;
-
-    // Infrastructure cannot reference any module
-    [Fact]
-    public void Infrastructure_ShouldNotReference_AnyModule()
-    {
-        var result = Types.InAssembly(InfrastructureAssembly)
-            .ShouldNot()
-            .HaveDependencyOnAny(
-                "Kakeibo.Modules.Wallets",
-                "Kakeibo.Modules.Transactions",
-                "Kakeibo.Modules.Budgets",
-                "Kakeibo.Modules.Goals",
-                "Kakeibo.Modules.Recurring",
-                "Kakeibo.Modules.Identity",
-                "Kakeibo.Modules.Notifications",
-                "Kakeibo.Modules.Auditing",
-                "Kakeibo.Api")
+        var result = Types.InAssembly(ApiAssembly)
+            .That()
+            .Inherit(typeof(FluentValidation.AbstractValidator<>))
+            .Should()
+            .HaveNameEndingWith("Validator")
             .GetResult();
 
         Assert.True(result.IsSuccessful,
-            "Infrastructure must not reference any module or the Api project.");
-    }
-
-    // Infrastructure cannot reference the Api project
-    [Fact]
-    public void Infrastructure_ShouldNotReference_Api()
-    {
-        var result = Types.InAssembly(InfrastructureAssembly)
-            .ShouldNot()
-            .HaveDependencyOn("Kakeibo.Api")
-            .GetResult();
-
-        Assert.True(result.IsSuccessful);
-    }
-
-    // Types in DomainEventHandlers namespace must implement IDomainEventHandler<T>
-    [Fact]
-    public void DomainEventHandlerNamespace_AllTypesMustImplementInterface()
-    {
-        var moduleAssemblies = new Assembly[]
-        {
-            typeof(Kakeibo.Modules.Wallets.WalletsModuleRegistration).Assembly,
-            typeof(Kakeibo.Modules.Transactions.TransactionsModuleRegistration).Assembly,
-        };
-
-        foreach (var assembly in moduleAssemblies)
-        {
-            var result = Types.InAssembly(assembly)
-                .That()
-                .ResideInNamespaceContaining("DomainEventHandlers")
-                .And()
-                .AreClasses()
-                .Should()
-                .ImplementInterface(typeof(Kakeibo.Common.Abstractions.IDomainEventHandler<>))
-                .GetResult();
-
-            Assert.True(result.IsSuccessful,
-                $"All classes in DomainEventHandlers namespace must implement IDomainEventHandler<T>. " +
-                $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
-        }
+            $"All validators must end with 'Validator'. " +
+            $"Failing types: {string.Join(", ", result.FailingTypeNames ?? [])}");
     }
 }
 ```
@@ -1570,15 +1162,14 @@ public class DependencyDirectionTests
 
 Builder pattern for creating complex domain objects with sensible defaults. Reduces test noise by letting each test override only the properties relevant to the scenario.
 
-**Location:** `tests/Kakeibo.Modules.{X}.Tests/Builders/`
+**Location:** `tests/Kakeibo.Tests/Builders/`
 
 #### WalletBuilder
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Builders;
+namespace Kakeibo.Tests.Builders;
 
-using Kakeibo.Modules.Wallets.Entities;
-using Kakeibo.Modules.Wallets.ValueObjects;
+using Kakeibo.Api.Features.Wallets;
 
 // Fluent builder for creating Wallet entities in tests.
 // Defaults produce a valid personal wallet with $1,000 balance.
@@ -1655,10 +1246,9 @@ internal sealed class WalletBuilder
 #### TransactionBuilder
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Builders;
+namespace Kakeibo.Tests.Builders;
 
-using Kakeibo.Modules.Transactions.Entities;
-using Kakeibo.Modules.Transactions.ValueObjects;
+using Kakeibo.Api.Features.Transactions;
 using NodaTime;
 
 // Fluent builder for creating Transaction entities in tests.
@@ -1746,9 +1336,9 @@ internal sealed class TransactionBuilder
 #### Using builders in tests
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Tests.Features.ArchiveWallet;
+namespace Kakeibo.Tests.Features.Wallets.ArchiveWallet;
 
-using Kakeibo.Modules.Wallets.Tests.Builders;
+using Kakeibo.Tests.Builders;
 
 public class ArchiveWalletHandlerTests
 {
@@ -2518,12 +2108,12 @@ export async function cleanupTestData(baseUrl: string, userId: string): Promise<
 
 - Entity invariants (balance cannot go negative, amount must be positive)
 - Value object equality and validation rules
-- Domain event publication after state changes
+- Event publication via mocked `IEventBus` after handler state changes
 - Handler business logic (conflict detection, authorization checks)
 - Validator rules for every endpoint request
-- Integration event consumption side effects
-- Cross-module request handling
-- Module boundary enforcement (architecture tests)
+- Event handler side effects (IEventHandler<T> consumers)
+- Handler interactions (direct method calls via DI)
+- Naming convention enforcement (architecture tests)
 - Critical user flows end-to-end (registration, wallet creation, transaction recording)
 - Error paths (not found, conflict, validation failure, unauthorized)
 - Edge cases in split calculations (rounding, 3-way splits)
@@ -2563,27 +2153,25 @@ export async function cleanupTestData(baseUrl: string, userId: string): Promise<
 #### NSubstitute patterns (backend)
 
 ```csharp
-// Stub: provide canned data
-var moduleClient = Substitute.For<IModuleClient>();
-moduleClient
-    .SendAsync(Arg.Any<GetWalletBalanceRequest>(), Arg.Any<CancellationToken>())
+// Stub: provide canned data (direct handler injection via DI — no IModuleClient)
+var getWalletBalanceHandler = Substitute.For<GetWalletBalanceHandler>();
+getWalletBalanceHandler
+    .HandleAsync(Arg.Any<GetWalletBalanceRequest>(), Arg.Any<CancellationToken>())
     .Returns(2500m);
 
-// Mock: verify interaction happened
-var eventBus = Substitute.For<IModuleEventBus>();
+// Mock: verify IEventBus.Publish was called (fire-and-forget, not async)
+var eventBus = Substitute.For<IEventBus>();
 // ... execute handler ...
-await eventBus.Received(1).PublishAsync(
-    Arg.Is<WalletCreatedEvent>(e => e.WalletId == expectedId),
-    Arg.Any<CancellationToken>());
+eventBus.Received(1).Publish(
+    Arg.Is<WalletCreatedEvent>(e => e.WalletId == expectedId));
 
-// Verify no unexpected calls
-await eventBus.DidNotReceive().PublishAsync(
-    Arg.Any<IIntegrationEvent>(),
-    Arg.Any<CancellationToken>());
+// Verify no unexpected events published
+eventBus.DidNotReceive().Publish(Arg.Any<IEvent>());
 
-// Argument matching
-moduleClient
-    .SendAsync(
+// Argument matching for direct handler calls
+var getTransactionsHandler = Substitute.For<GetTransactionsInPeriodHandler>();
+getTransactionsHandler
+    .HandleAsync(
         Arg.Is<GetTransactionsInPeriodRequest>(r =>
             r.WalletId == walletId && r.CategoryId == categoryId),
         Arg.Any<CancellationToken>())
@@ -2870,17 +2458,17 @@ internal static class TestDbContextFactory
         }
     }
 
-    public static async Task<WalletsDbContext> CreateAsync()
+    public static async Task<AppDbContext> CreateAsync()
     {
         await EnsureContainerStartedAsync();
 
         // Each test gets a unique database for isolation
-        var options = new DbContextOptionsBuilder<WalletsDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(PostgresContainer.GetConnectionString(), n => n.UseNodaTime())
             .UseSnakeCaseNamingConvention()
             .Options;
 
-        var db = new WalletsDbContext(options);
+        var db = new AppDbContext(options);
         await db.Database.EnsureCreatedAsync();
         return db;
     }
@@ -2941,8 +2529,8 @@ await db.Database.MigrateAsync();
 // Seed data using the same seeders as production
 internal static class TestSeeder
 {
-    // Seeds the 12 system categories required by the Transactions module.
-    public static async Task SeedSystemCategoriesAsync(TransactionsDbContext db)
+    // Seeds the 12 system categories required by the Transactions domain.
+    public static async Task SeedSystemCategoriesAsync(AppDbContext db)
     {
         var categories = new[]
         {
@@ -2965,7 +2553,7 @@ internal static class TestSeeder
     }
 
     // Seeds a test user for integration tests that need a valid user context.
-    public static async Task<Guid> SeedTestUserAsync(IdentityDbContext db)
+    public static async Task<Guid> SeedTestUserAsync(AppDbContext db)
     {
         var user = new User
         {
@@ -3014,7 +2602,7 @@ public async Task Test_B()
 ```csharp
 public class SharedDatabaseTests : IAsyncLifetime
 {
-    private WalletsDbContext _db = null!;
+    private AppDbContext _db = null!;
     private IDbContextTransaction _transaction = null!;
 
     public async ValueTask InitializeAsync()
@@ -3049,10 +2637,9 @@ public class SharedDatabaseTests : IAsyncLifetime
 
 ```csharp
 // Use when you need to clean specific data between tests in the same database
-private static async Task CleanupWalletsAsync(WalletsDbContext db)
+private static async Task CleanupWalletsAsync(AppDbContext db)
 {
     await db.Wallets.ExecuteDeleteAsync();
-    await db.OutboxMessages.ExecuteDeleteAsync();
 }
 ```
 
@@ -3062,94 +2649,89 @@ private static async Task CleanupWalletsAsync(WalletsDbContext db)
 
 ### Quality gate configuration
 
-The CI pipeline runs quality gates in the `.gitlab-ci.yml` file. Backend tests are part of the `quality:api` job.
+The CI pipeline runs quality gates in `.github/workflows/quality.yml`. Backend tests are part of the `quality-api` job.
 
 ```yaml
-quality:api:
-  stage: quality
-  image: mcr.microsoft.com/dotnet/sdk:10.0
-  tags: [local]
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  cache:
-    key: dotnet-${CI_COMMIT_REF_SLUG}
-    fallback_keys:
-      - dotnet-main
-    paths:
-      - $CI_PROJECT_DIR/.nuget/packages/
-  variables:
-    NUGET_PACKAGES: $CI_PROJECT_DIR/.nuget/packages/
-  script:
-    - dotnet restore Kakeibo.slnx
-    - dotnet format Kakeibo.slnx --verify-no-changes
-    - dotnet build Kakeibo.slnx --no-restore --configuration Release
-    # Unit and architecture tests (no Docker needed)
-    - dotnet test tests/Kakeibo.Modules.Identity.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.Modules.Wallets.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.Modules.Transactions.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.Modules.Budgets.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.Modules.Goals.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.Modules.Recurring.Tests/ --no-build --configuration Release
-    - dotnet test tests/Kakeibo.ArchitectureTests/ --no-build --configuration Release
+quality-api:
+  name: Quality - API
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    - uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Restore
+      run: dotnet restore Kakeibo.slnx
+    - name: Format check
+      run: dotnet format Kakeibo.slnx --verify-no-changes
+    - name: Build
+      run: dotnet build Kakeibo.slnx --no-restore --configuration Release
+    # Single test project — all tests in Kakeibo.Tests
+    - name: Run tests
+      run: dotnet test tests/Kakeibo.Tests/ --no-build --configuration Release
 ```
 
 ### Test result reporting
 
 ```bash
 # Generate JUnit XML report for CI consumption
-dotnet test Kakeibo.slnx --logger "junit;LogFilePath=test-results/{assembly}-results.xml"
+dotnet test tests/Kakeibo.Tests/ --logger "junit;LogFilePath=test-results/kakeibo-results.xml"
 ```
 
 ```yaml
-# GitLab CI artifact for test results
-artifacts:
-  when: always
-  reports:
-    junit:
-      - test-results/*-results.xml
-  expire_in: 30 days
+# GitHub Actions — upload test results
+- name: Upload test results
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: test-results
+    path: test-results/*.xml
+    retention-days: 30
 ```
 
 ### Coverage reporting
 
 ```bash
-# Generate Cobertura XML for GitLab coverage visualization
-dotnet test Kakeibo.slnx \
+# Generate Cobertura XML for coverage visualization
+dotnet test tests/Kakeibo.Tests/ \
   --collect:"XPlat Code Coverage" \
   --results-directory coverage-results \
   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 ```
 
 ```yaml
-# GitLab CI coverage artifact
-artifacts:
-  reports:
-    coverage_report:
-      coverage_format: cobertura
-      path: coverage-results/**/coverage.cobertura.xml
+# GitHub Actions — upload coverage artifact
+- name: Upload coverage
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: coverage-report
+    path: coverage-results/**/coverage.cobertura.xml
 ```
 
 ### Frontend quality gate
 
 ```yaml
-quality:app:
-  stage: quality
-  image: oven/bun:1.3.8
-  tags: [local]
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  cache:
-    key: bun-app-${CI_COMMIT_REF_SLUG}
-    fallback_keys:
-      - bun-app-main
-    paths:
-      - node_modules/
-      - sites/Kakeibo.App/node_modules/
-  script:
-    - bun install --frozen-lockfile
-    - bun run app:lint:check
-    - bun run app:test:unit
-    - bun run app:build
+quality-app:
+  name: Quality - App
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+    - name: Lint
+      run: bun run app:lint:check
+    - name: Unit tests
+      run: bun run app:test:unit
+    - name: Build
+      run: bun run app:build
 ```
 
 ### Failed test handling
@@ -3162,4 +2744,4 @@ quality:app:
 
 ---
 
-*Testing is a first-class concern in Kakeibo. Every module boundary, every business invariant, and every critical user flow is backed by automated tests that run on every merge request.*
+*Testing is a first-class concern in Kakeibo. Every naming convention, every business invariant, and every critical user flow is backed by automated tests that run on every pull request.*

@@ -22,9 +22,9 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Recurring/**:
-- Jobs/GenerateRecurringTransactions.cs
-- Features/GetForecast
+**`src/Kakeibo.Api/Features/Recurring/`**:
+- Jobs/GenerateRecurringTransactions.cs — Hangfire daily job
+- GetForecast/
 
 **Endpoints**:
 - `GET /api/recurring-patterns/forecast?days=30`

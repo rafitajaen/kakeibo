@@ -33,8 +33,8 @@
 
 ## Module Architecture
 
-**Module**: `Kakeibo.Modules.Budgets`
-**Schema**: `budgets`
+**Location**: `src/Kakeibo.Api/Features/Budgets/`
+**Schema**: `public` (single schema, shared with all domains)
 
 **Endpoints**:
 - `GET/POST/PUT/DELETE /api/budgets`

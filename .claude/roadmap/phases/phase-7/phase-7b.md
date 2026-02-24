@@ -22,9 +22,9 @@
 ## Deliverables
 
 ### Backend
-**Uses existing Auditing module** (ClickHouse audit events)
-**Kakeibo.Modules.Auditing/Features:**:
-- GetActivityFeed
+**Uses existing Auditing infrastructure** (ClickHouse audit events from Phase 1c)
+**`src/Kakeibo.Api/Features/Auditing/`**:
+- GetActivityFeed/
 
 **Endpoints**:
 - `GET /api/activity?start=...&end=...&type=...`

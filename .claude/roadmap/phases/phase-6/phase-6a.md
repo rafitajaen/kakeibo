@@ -21,8 +21,8 @@
 ## Deliverables
 
 ### Backend
-**Kakeibo.Modules.Recurring/Features/**:
-- CreatePattern, ListPatterns, UpdatePattern, DeletePattern
+**`src/Kakeibo.Api/Features/Recurring/`**:
+- CreatePattern/, ListPatterns/, UpdatePattern/, DeletePattern/
 
 **Endpoints**:
 - `POST /api/recurring-patterns`

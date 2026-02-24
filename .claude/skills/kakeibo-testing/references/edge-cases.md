@@ -48,106 +48,56 @@ when implementing a new feature or reviewing test coverage.
 
 ## Infrastructure
 
-### OutboxInterceptor Atomicity
+### ChannelEventBus
 
-- Entity save + outbox insert happen in the same DB transaction (atomic)
-- If commit fails → neither entity nor outbox row exists (no orphaned messages)
-- Domain events list on entity is empty after `SaveChangesAsync` (prevents re-dispatch)
-- Multiple events buffered before `SaveChangesAsync` → all are persisted in a single batch
+- `Publish` is fire-and-forget — must return immediately without awaiting any handler
+- Multiple events published in a loop → all are eventually dequeued by `EventDispatcher`
+- Events are not dropped when the channel is at capacity (channel is unbounded by default)
+- `Publish` called from a scoped request context → event dispatched in a fresh DI scope
 
-### OutboxProcessor
+### EventDispatcher
 
-- Unprocessed message → consumer called + `ProcessedAt` set after successful dispatch
-- Already-processed message → consumer NOT called (idempotent polling)
-- Consumer throws → message remains unprocessed (`ProcessedAt` null), will be retried on next poll
-- Same message dispatched twice (simulated retry) → consumer called once (second poll skips it)
-- Empty outbox → no consumer calls, no errors
+- Handler throws exception → `EventDispatcher` catches it, logs it, continues with next event
+- Multiple handlers for the same event type → all are dispatched (one throw does not skip others)
+- Handler completes successfully → no exception propagated to `EventDispatcher`
+- Concurrent events → `EventDispatcher` processes them in-order from the channel
 
-**How to verify "consumer throws → message stays unprocessed"** (Level 2c / infrastructure test):
+**How to verify "handler throws → EventDispatcher continues"** (infrastructure test):
 
 ```csharp
 [Fact]
-public async Task ConsumeAsync_Throws_MessageRemainsUnprocessed()
+public async Task EventDispatcher_WhenHandlerThrows_ContinuesProcessingNextEvent()
 {
-    // Arrange: seed an outbox message directly
-    await using var db = await TestDbContextFactory.CreateAsync();
     var ct = TestContext.Current.CancellationToken;
+    var successfulEvents = new ConcurrentBag<IEvent>();
 
-    var message = new OutboxMessage
-    {
-        Id = Guid.NewGuid(),
-        Type = nameof(UserRegisteredEvent),
-        Payload = JsonSerializer.Serialize(BuildEvent(), DefaultSerializer.Options),
-        CreatedAt = Instant.FromUtc(2026, 1, 1, 0, 0),
-        ProcessedAt = null,  // unprocessed
-    };
-    db.OutboxMessages.Add(message);
-    await db.SaveChangesAsync(ct);
+    // Build a minimal DI container with a throwing handler and a capturing handler
+    var services = new ServiceCollection();
+    services.AddSingleton<ChannelEventBus>();
+    services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<ChannelEventBus>());
+    services.AddHostedService<EventDispatcher>();
+    services.AddScoped<IEventHandler<WalletCreatedEvent>, ThrowingEventHandler>();
+    services.AddScoped<IEventHandler<TransactionRecordedEvent>>(
+        _ => new CapturingEventHandler<TransactionRecordedEvent>(successfulEvents));
+    services.AddLogging();
 
-    // Consumer that always throws
-    var consumer = Substitute.For<IEventConsumer<UserRegisteredEvent>>();
-    consumer
-        .ConsumeAsync(Arg.Any<UserRegisteredEvent>(), Arg.Any<CancellationToken>())
-        .ThrowsAsync(new InvalidOperationException("simulated failure"));
+    await using var host = services.BuildServiceProvider();
+    foreach (var svc in host.GetServices<IHostedService>())
+        await svc.StartAsync(ct);
 
-    var processor = new OutboxProcessor(db, consumer, NullLogger<OutboxProcessor>.Instance);
+    var bus = host.GetRequiredService<IEventBus>();
+    bus.Publish(new WalletCreatedEvent { Id = Guid.NewGuid(), OccurredAt = Instant.FromUtc(2026, 1, 1, 0, 0), WalletId = Guid7.NewGuid() });
+    bus.Publish(new TransactionRecordedEvent { Id = Guid.NewGuid(), OccurredAt = Instant.FromUtc(2026, 1, 1, 0, 0), TransactionId = Guid7.NewGuid() });
 
-    // Act: process one batch — the consumer throws, processor catches it
-    await processor.ProcessBatchAsync(ct);
+    await Task.Delay(500, ct);
 
-    // Assert: message NOT marked as processed (available for retry)
-    var inDb = await db.OutboxMessages.FindAsync([message.Id], ct);
-    Assert.NotNull(inDb);
-    Assert.Null(inDb.ProcessedAt);  // still null — not yet successfully dispatched
+    // TransactionRecordedEvent must still have been dispatched
+    Assert.Single(successfulEvents);
+
+    foreach (var svc in host.GetServices<IHostedService>())
+        await svc.StopAsync(ct);
 }
 ```
-
-### AuditOutboxProcessor
-
-- `Type == "AuditEventEnvelope"` messages → mapped to `AuditRow` and written to ClickHouse
-- Non-audit messages (regular integration events) → skipped by the audit processor
-- `Action`, `Module`, `EntityType`, `EntityId`, `ActorId` fields mapped correctly to `AuditRow`
-- Multiple envelopes → all batched in a single `WriteBulkAsync` call + all marked processed
-
-### DomainEventHandlers — No DbContext injection
-
-Domain event handlers (`IDomainEventHandler<T>`) are dispatched by `OutboxInterceptor` during
-`SaveChangesAsync` — they run inside the same DB transaction. Injecting a `DbContext` into a
-domain event handler creates a re-entrancy risk and breaks the handler's single responsibility
-(publish events + stage audit). This architectural constraint must be enforced by an architecture test.
-
-**Architecture test:**
-
-```csharp
-[Fact]
-public void DomainEventHandlers_ShouldNotInjectDbContext()
-{
-    var handlerInterface = typeof(IDomainEventHandler<>);
-
-    // Find all concrete IDomainEventHandler<T> implementations
-    var handlerTypes = SourceAssemblies
-        .SelectMany(a => a.GetTypes())
-        .Where(t => !t.IsAbstract && !t.IsInterface
-            && t.GetInterfaces().Any(i =>
-                i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterface))
-        .ToList();
-
-    // Check every constructor for DbContext parameters
-    var offending = handlerTypes
-        .Where(t => t.GetConstructors()
-            .SelectMany(c => c.GetParameters())
-            .Any(p => typeof(DbContext).IsAssignableFrom(p.ParameterType)))
-        .Select(t => t.FullName)
-        .ToList();
-
-    Assert.Empty(offending);
-    // If this fails: move DbContext usage to the feature handler or consumer,
-    // not in the domain event handler.
-}
-```
-
-**How to spot the violation in code review:** any constructor parameter of a type that ends in
-`DbContext` inside a class ending in `DomainEventHandler` is a violation.
 
 ### PermissionService
 
@@ -197,15 +147,14 @@ public void DomainEventHandlers_ShouldNotInjectDbContext()
 
 ---
 
-## Outbox & Idempotence
+## Events & Idempotence
 
-- At-least-once delivery: consumer receives the same event twice → result is idempotent (no duplicate data)
-- `OutboxInterceptor`: entity save + outbox insert are atomic (if the commit fails, no orphaned outbox messages)
-- Consumer throws exception: message remains unprocessed (not marked as processed, will be retried)
-- Consumer succeeds: message marked as processed
-- Retry exhaustion: after 3 retries with exponential backoff (1s, 5s, 15s), message marked as failed
-- OutboxProcessor disabled in tests: background service removed from `WebApplicationFactory`
-- Manual outbox processing: for integration tests that need to verify consumer behavior, trigger `OutboxProcessor` explicitly
+- Fire-and-forget delivery: handler receives the same event twice (if EventDispatcher retries) → result is idempotent
+- `IEventBus.Publish`: fire-and-forget — the feature handler never awaits handler completion
+- Event handler throws exception: `EventDispatcher` catches it, logs it; event is NOT re-queued
+- Event handler succeeds: no exception propagated back to the publisher
+- `EventDispatcher` runs as `BackgroundService`: let it process events with a short `Task.Delay` in integration tests
+- Idempotency in handlers: handlers that write to DB must handle duplicate event calls gracefully
 
 ---
 

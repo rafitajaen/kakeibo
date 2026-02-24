@@ -17,7 +17,7 @@ Definitions, decision matrix, and Kakeibo-specific patterns for all test double 
 ### Practical summary for Kakeibo
 
 - **Use a stub** when you need to return a specific value from a dependency (e.g., `INotificationService` returning `NotificationResult.Ok()`).
-- **Use a mock** when the test must verify that a specific method was called with specific arguments (e.g., asserting that `IAuditOutbox.Stage()` was called).
+- **Use a mock** when the test must verify that a specific method was called with specific arguments (e.g., asserting that `IEventBus.Publish()` was called with a specific event or that `INotificationService.SendAsync()` was called).
 - **Use a fake** when you need working behavior but can't use the real thing in tests (e.g., `FakeClock` instead of `SystemClock`, `TestDbContextFactory` with real PostgreSQL instead of mocked `DbContext`).
 - **Use a spy** when you need both — a working implementation plus call verification.
 - **Use a dummy** only when a parameter is required but will never be used in that test path.
@@ -50,8 +50,7 @@ Is it a system boundary (external service, network, clock, filesystem)?
 
 | Dependency | Double Type | Tool | Reason |
 |------------|-------------|------|--------|
-| `IModuleEventBus` | Mock | NSubstitute | Cross-module boundary — must verify publish calls |
-| `IAuditOutbox` | Mock | NSubstitute | ClickHouse write — must verify audit staging |
+| `IEventBus` | Mock | NSubstitute | In-process event bus — verify Publish calls; fire-and-forget |
 | `INotificationService` | Mock / Stub | NSubstitute | External channel — verify calls + control failure |
 | `IClock` | Fake | `NodaTime.Testing.FakeClock` | Time must be deterministic |
 | `IEmailService` | Mock / Stub | NSubstitute | External SMTP |
@@ -71,7 +70,7 @@ Is it a system boundary (external service, network, clock, filesystem)?
 ### Creating a substitute
 
 ```csharp
-var eventBus = Substitute.For<IModuleEventBus>();
+var eventBus = Substitute.For<IEventBus>();
 var notifications = Substitute.For<INotificationService>();
 ```
 
@@ -97,21 +96,20 @@ notifications.SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToke
 ### Mock: verify calls (Received)
 
 ```csharp
-// Verify called exactly once with any argument
-await eventBus.Received(1).PublishAsync(Arg.Any<MemberCreatedEvent>(), Arg.Any<CancellationToken>());
+// IEventBus.Publish is void (fire-and-forget) — no await needed
+eventBus.Received(1).Publish(Arg.Any<WalletCreatedEvent>());
 
 // Verify called with specific argument values
-await eventBus.Received(1).PublishAsync(
-    Arg.Is<MemberCreatedEvent>(e =>
-        e.MemberId == domainEvent.MemberId &&
-        e.Email == domainEvent.Email),
-    Arg.Any<CancellationToken>());
+eventBus.Received(1).Publish(
+    Arg.Is<WalletCreatedEvent>(e =>
+        e.WalletId == expectedWalletId));
 
 // Verify never called
-await eventBus.DidNotReceive().PublishAsync(Arg.Any<MemberCreatedEvent>(), Arg.Any<CancellationToken>());
+eventBus.DidNotReceive().Publish(Arg.Any<WalletCreatedEvent>());
 
-// Verify on synchronous method (no await)
-_auditOutbox.Received(1).Stage(Arg.Any<AuditEventEnvelope>());
+// Verify on async external service method
+await notifications.Received(1).SendAsync(
+    Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>());
 ```
 
 ### Arg matchers
@@ -128,8 +126,8 @@ Arg.Is("exact-string")          // exact value match
 // Verify order within a single substitute
 Received.InOrder(() =>
 {
-    _auditOutbox.Stage(Arg.Any<AuditEventEnvelope>());
-    eventBus.PublishAsync(Arg.Any<IIntegrationEvent>(), Arg.Any<CancellationToken>());
+    eventBus.Publish(Arg.Any<WalletCreatedEvent>());
+    notifications.SendAsync(Arg.Any<NotificationRequest>(), Arg.Any<CancellationToken>());
 });
 ```
 
@@ -257,7 +255,7 @@ System boundaries that should be doubled:
 - External services (SMTP, RustFS, WhatsApp, ClickHouse)
 - Time (`IClock` → `FakeClock`)
 - Native device APIs (Capacitor plugins)
-- Cross-module integration event bus (`IModuleEventBus`)
+- In-process event bus (`IEventBus`) when verifying that events are published
 
 Internal details that should use real implementations:
 - `DbContext` and all EF Core queries — use `TestDbContextFactory`
@@ -265,7 +263,7 @@ Internal details that should use real implementations:
 - Validators — instantiate and call `.Validate()`
 - Pinia stores under test — use `createPinia()`
 - Vue components — use `mount()`
-- Handlers and consumers — instantiate with real dependencies + mocked boundaries
+- Handlers and event handlers — instantiate with real dependencies + mocked boundaries
 
 > The rule of thumb: if you're mocking something to avoid a side effect (network, disk, clock),
 > that's a legitimate boundary to mock. If you're mocking something to avoid understanding how

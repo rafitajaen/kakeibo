@@ -1,6 +1,6 @@
 # Kakeibo Platform
 
-> Technology-agnostic business domain reference for the Kakeibo platform. This document describes the modular architecture, module responsibilities, and inter-module communication patterns.
+> Technology-agnostic business domain reference for the Kakeibo platform. This document describes the simple monolith architecture, domain responsibilities, and in-process communication patterns.
 
 ---
 
@@ -12,7 +12,7 @@
 4. [Core Modules](#4-core-modules)
 5. [Business Modules](#5-business-modules)
 6. [Module Dependency Matrix](#6-module-dependency-matrix)
-7. [Inter-Module Communication](#7-inter-module-communication)
+7. [In-Process Communication](#7-in-process-communication)
 8. [Key Flows](#8-key-flows)
 9. [Service Dependency Diagram](#9-service-dependency-diagram)
 
@@ -128,7 +128,7 @@ Key architectural decisions made during platform design:
 
 **Storage**: RustFS alpha.83 (S3-compatible). Known limitation: SSE broken (see tech-stack.md). Risk accepted for MVP.
 
-**Background Processing**: Outbox Pattern (event reliability) + Hangfire (scheduled jobs). Both maintained for different use cases.
+**Background Processing**: Hangfire (scheduled jobs) + ChannelEventBus (in-process events via System.Threading.Channels).
 
 **Households**: Deferred to post-MVP. Shared wallets sufficient for MVP.
 
@@ -159,9 +159,9 @@ Key architectural decisions made during platform design:
 
 **Technology**: .NET
 **Purpose**: Backend for web and mobile apps
-**Architecture**: Modular monolith with vertical slices
+**Architecture**: Simple monolith with vertical slices + screaming architecture
 
-The API is organized into modules that correspond 1:1 with the business modules described in this document. Each module is self-contained with its own database schema, domain entities, and endpoints. Modules communicate through integration events and module requests, not direct references.
+The API is organized as a single project (`Kakeibo.Api`) with domain folders under `Features/`. Each domain is self-contained with its own vertical slices (endpoint, handler, validator). All domains share a single `AppDbContext` and `public` schema. Communication between features uses in-process events (`IEventBus` + `ChannelEventBus`) and direct handler calls via DI.
 
 ### 3.3 Email Service
 
@@ -457,16 +457,18 @@ Auditing (all modules log)
 
 ---
 
-## 7. Inter-Module Communication
+## 7. In-Process Communication
+
+All domains live in one assembly (`Kakeibo.Api`). Communication is in-process: no network hops, no message brokers, no cross-assembly contracts.
 
 ### 7.1 Design Principles
 
 | Principle | Description |
 |-----------|-------------|
-| Decoupling | Modules are independent of each other |
-| Event-driven | Modules communicate through integration events, not direct calls |
-| Request/response | Synchronous queries via module request pattern |
-| No direct references | Module A NEVER references Module B's project |
+| Decoupling | Domains are organized by folder, not by project |
+| Event-driven | Async communication via `IEventBus.Publish()` → `ChannelEventBus` → `EventDispatcher` → `IEventHandler<T>` |
+| Direct calls | Synchronous cross-domain queries use direct handler injection via DI (no IModuleClient) |
+| Single assembly | All domains are in one project — no cross-assembly boundary checks needed |
 
 ### 7.2 Event Catalog
 
@@ -493,31 +495,31 @@ Integration events published by each module and their subscribers:
 | Goals | `GoalAchievedEvent` | GoalId, UserId, TargetAmount, AchievedAt | Notifications |
 | Recurring | `RecurringTransactionGeneratedEvent` | RecurringPatternId, TransactionId, UserId, GeneratedAt | Notifications |
 
-### 7.3 Request/Response Patterns
+### 7.3 Synchronous Cross-Domain Queries (Direct Handler Calls)
 
-Synchronous module requests for cross-module data queries:
+In a simple monolith, there is no `IModuleClient` or cross-assembly boundary. When a feature handler
+needs data from another domain, it injects the other domain's handler or service directly via DI.
 
-| Requesting Module | Request | Handling Module | Response Type |
-|------------------|---------|----------------|---------------|
-| Any | `GetWalletMembersRequest(WalletId)` | **Wallets** | `List<UserId>` |
-| Budgets | `GetTransactionsInPeriodRequest(WalletId, CategoryId, StartDate, EndDate)` | **Transactions** | `List<TransactionSummaryDto>` |
-| Goals, Wallets | `GetWalletBalanceRequest(WalletId)` | **Transactions** | `decimal Balance` |
-| Budgets | `GetCategoryByIdRequest(CategoryId)` | **Transactions** | `CategoryDto` |
-| Any | `ValidateInvitationRequest(InvitationCode)` | **Wallets** | `InvitationStatus` |
+| Requesting Domain | Data Needed | Source Domain | How |
+|------------------|-------------|---------------|-----|
+| Budgets | Transactions in period | Transactions | Inject `GetTransactionsInPeriodHandler` |
+| Goals, Wallets | Wallet balance | Transactions | Inject `GetWalletBalanceHandler` |
+| Budgets | Category details | Transactions | Inject `GetCategoryByIdHandler` |
+| Any | Wallet members | Wallets | Inject `GetWalletMembersHandler` |
+| Any | Invitation status | Wallets | Inject `ValidateInvitationHandler` |
 
 ### 7.4 Communication Strategy
 
-**Use Integration Events when**:
+**Use IEventBus (async, fire-and-forget) when**:
 - The caller does not need an immediate response
-- Multiple modules need to react to the same event
+- Multiple domains need to react to the same event
 - The action should be asynchronous and decoupled
-- Example: `TransactionRecordedEvent` triggers debt recalculation (Collaboration), spending update (Budgets), and progress update (Goals)
+- Example: `TransactionRecordedEvent` → debt recalculation (Wallets), spending update (Budgets), progress update (Goals)
 
-**Use Module Requests when**:
+**Use direct handler injection (sync) when**:
 - The caller needs data synchronously to proceed
-- Only one module can provide the data
-- The operation should block if the data is unavailable
-- Example: Budgets needs transaction history from Transactions to calculate current spending
+- Only one domain can provide the data
+- Example: Budgets handler injects `GetTransactionsInPeriodHandler` to calculate current spending
 
 ---
 
@@ -792,7 +794,7 @@ These narrative descriptions show how modules work together to fulfill user jour
 - **Budgets + Goals + Recurring**: Fourth layer — depend on Transactions
 - **Notifications + Auditing**: Cross-cutting — consumed by all modules, depend only on Identity
 
-**Deployment Note**: The diagram shows logical dependencies, not physical deployment boundaries. All modules are deployed together in a single modular monolith. Module boundaries are enforced through architecture tests, not separate processes.
+**Deployment Note**: The diagram shows logical dependencies, not physical deployment boundaries. All domains are deployed together in a single simple monolith. Domain boundaries are enforced through folder structure and naming conventions, not separate assemblies.
 
 ---
 

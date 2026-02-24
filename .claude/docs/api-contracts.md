@@ -51,7 +51,7 @@ Every endpoint returns one of the following status codes. The mapping is determi
 The endpoint maps `Result<T>.Error.Code` to the appropriate HTTP status using a `switch` expression. This pattern is consistent across all endpoints.
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Features.CreateWallet;
+namespace Kakeibo.Api.Features.Wallets.CreateWallet;
 
 public sealed class CreateWalletEndpoint : IEndpoint
 {
@@ -189,7 +189,7 @@ All error responses follow a single envelope format. Every error includes a `cod
 
 ### 2.2 Error Code Namespace
 
-Error codes use dot-separated namespaces following the pattern `{Module}.{Entity}.{Rule}`. The top-level `code` field on the envelope is always one of the five standard codes. The `message` field contains the domain-specific error.
+Error codes use dot-separated namespaces following the pattern `{Domain}.{Entity}.{Rule}`. The top-level `code` field on the envelope is always one of the five standard codes. The `message` field contains the domain-specific error.
 
 | Error Code | HTTP Status | Description |
 |------------|-------------|-------------|
@@ -201,10 +201,10 @@ Error codes use dot-separated namespaces following the pattern `{Module}.{Entity
 
 ### 2.3 Backend Error Construction (C#)
 
-Errors are constructed using the `Error` record factories defined in `Kakeibo.Common`.
+Errors are constructed using the `Error` record factories defined in `Kakeibo.Api.Common.Abstractions`.
 
 ```csharp
-namespace Kakeibo.Common;
+namespace Kakeibo.Api.Common.Abstractions;
 
 // Discriminated error type with factory methods for each HTTP error category.
 public sealed record Error(string Code, string Message)
@@ -217,12 +217,12 @@ public sealed record Error(string Code, string Message)
 }
 ```
 
-Module-specific error constants group related errors by entity.
+Domain-specific error constants group related errors by entity.
 
 ```csharp
-namespace Kakeibo.Modules.Wallets.Errors;
+namespace Kakeibo.Api.Features.Wallets;
 
-// Typed error constants for the Wallets module.
+// Typed error constants for the Wallets domain.
 public static class WalletErrors
 {
     public static Error NotFound(Guid walletId) =>
@@ -244,7 +244,7 @@ public static class WalletErrors
 The `ValidationFilter<T>` endpoint filter intercepts requests before they reach the handler. When validation fails, it returns a `400 Bad Request` with field-level errors.
 
 ```csharp
-namespace Kakeibo.Common;
+namespace Kakeibo.Api.Common.Endpoints;
 
 // Endpoint filter that runs FluentValidation before the handler executes.
 public sealed class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilter
@@ -449,7 +449,7 @@ Content-Type: application/json
 A generic paginated response record used across all list endpoints.
 
 ```csharp
-namespace Kakeibo.Common;
+namespace Kakeibo.Api.Common.Abstractions;
 
 // Generic paginated response wrapper for collection endpoints.
 public sealed record PaginatedResponse<T>(
@@ -577,7 +577,7 @@ Every paginated response includes a `pagination` object alongside the `data` arr
 Pagination parameters are bound from the query string. The `ToPaginatedAsync` extension method (from Section 3.6) handles the database query.
 
 ```csharp
-namespace Kakeibo.Modules.Transactions.Features.ListTransactions;
+namespace Kakeibo.Api.Features.Transactions.ListTransactions;
 
 public sealed class ListTransactionsEndpoint : IEndpoint
 {
@@ -788,7 +788,7 @@ GET /api/categories?search=food
 Filters are bound from query parameters into a strongly-typed record and applied to the EF Core query.
 
 ```csharp
-namespace Kakeibo.Modules.Transactions.Features.ListTransactions;
+namespace Kakeibo.Api.Features.Transactions.ListTransactions;
 
 // Query parameters for filtering and sorting transactions.
 public sealed record ListTransactionsQuery
@@ -807,7 +807,7 @@ public sealed record ListTransactionsQuery
 }
 
 // Applies filters, sorting, and pagination to the transactions query.
-public sealed class ListTransactionsHandler(TransactionsDbContext db)
+public sealed class ListTransactionsHandler(AppDbContext db)
 {
     public async Task<Result<PaginatedResponse<ListTransactionsEndpoint.ListTransactionsResponse>>>
         HandleAsync(Guid walletId, ListTransactionsQuery query, CancellationToken ct)
@@ -971,7 +971,7 @@ The key is a client-generated UUID v4 string. The client must generate a new key
 Idempotency keys are stored in Redis with a TTL. When a duplicate key is detected, the cached response is returned instead of processing the request again.
 
 ```csharp
-namespace Kakeibo.Infrastructure.Idempotency;
+namespace Kakeibo.Api.Infrastructure.Idempotency;
 
 // Middleware that enforces idempotency for mutating HTTP methods using Redis.
 public sealed class IdempotencyMiddleware(
@@ -1371,7 +1371,7 @@ Content-Type: application/json
 
 **Backend (C#)**:
 ```csharp
-namespace Kakeibo.Modules.Identity.Features.Register;
+namespace Kakeibo.Api.Features.Identity.Register;
 
 public sealed class RegisterEndpoint : IEndpoint
 {
@@ -1936,12 +1936,11 @@ export async function setDefaultWallet(id: string): Promise<void> {
 NodaTime is the sole date/time library. `DateTime`, `DateTimeOffset`, and `DateOnly` are prohibited (see tech-stack.md).
 
 ```csharp
-// Configured in Program.cs via NpgsqlDataSourceBuilder
-builder.Services.AddDbContext<WalletsDbContext>(options =>
+// Configured in Program.cs
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString, npgsql =>
     {
         npgsql.UseNodaTime(); // Maps NodaTime types to PostgreSQL timestamptz/date
-        npgsql.MigrationsHistoryTable("__ef_migrations_history", WalletsDbContext.SchemaName);
     })
     .UseSnakeCaseNamingConvention());
 

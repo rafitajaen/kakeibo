@@ -16,15 +16,14 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 
 | Phase | Name | Duration | Deliverable |
 |-------|------|----------|-------------|
-| **1a** | Infrastructure Base | 2-3 days | Docker Compose, CI/CD, project scaffolding, Common interfaces |
+| **1a** | Infrastructure Base | 2-3 days | Docker Compose, CI/CD, project scaffolding, Common interfaces, Events System (ChannelEventBus + EventDispatcher) |
 | **1b** | Identity Backend | 4-5 days | User registration, login, JWT tokens, password recovery |
-| **1c** | Events System | 1-2 days | In-memory async event bus (IEventBus, ChannelEventBus, EventDispatcher) |
-| **1d** | Audit Logging | 1-2 days | ClickHouse integration for audit trail |
-| **1e** | Identity Frontend | 2-3 days | Login/register screens, token refresh, route guards |
+| **1c** | Audit Logging | 1-2 days | ClickHouse integration for audit trail, IEventHandler<T> implementations |
+| **1d** | Identity Frontend | 2-3 days | Login/register screens, token refresh, route guards |
 
 **Total estimated duration**: 10-15 days
 
-**Sequential dependencies**: 1a → 1b → 1c → 1d → 1e
+**Sequential dependencies**: 1a → 1b → 1c → 1d
 
 ---
 
@@ -48,13 +47,13 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - Session tracking
 - OAuth (Google, Apple) — basic implementation
 
-**Event Infrastructure (1c + 1d)**:
-- In-memory event bus (`IEventBus` / `ChannelEventBus`) with `System.Threading.Channels`
-- `EventDispatcher` BackgroundService dispatches to `IEventHandler<T>` implementations
-- ClickHouse audit trail for all user actions
-- Audit handlers registered as `IEventHandler<T>`
+**Event Infrastructure (1a + 1c)**:
+- In-memory event bus (`IEventBus` / `ChannelEventBus`) with `System.Threading.Channels` — implemented in 1a
+- `EventDispatcher` BackgroundService dispatches to `IEventHandler<T>` implementations — implemented in 1a
+- ClickHouse audit trail for all user actions — implemented in 1c
+- Audit handlers registered as `IEventHandler<T>` — implemented in 1c
 
-**Authentication Frontend (1e)**:
+**Authentication Frontend (1d)**:
 - Login, register, password recovery screens
 - Pinia auth store with automatic token refresh
 - Axios interceptors for auth headers
@@ -119,7 +118,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - [ ] Unit tests >= 90% coverage
 - [ ] Integration tests: full auth flows
 
-### Phase 1c — Events System
+### Phase 1a — Infrastructure Base (Events System included)
 - [ ] `ChannelEventBus` (singleton) writes events to `Channel<IEvent>`
 - [ ] `EventDispatcher` (BackgroundService) reads channel and dispatches to `IEventHandler<T>`
 - [ ] All `IEventHandler<T>` implementations auto-registered via Scrutor
@@ -127,14 +126,14 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - [ ] DI scope created per event in dispatcher
 - [ ] Architecture tests: Events infrastructure naming conventions
 
-### Phase 1d — Audit Logging
+### Phase 1c — Audit Logging
 - [ ] ClickHouse `audit_events` table with indefinite retention
 - [ ] `ClickHouseAuditService` writes batched events
 - [ ] `IEventHandler<T>` implementations in `Features/Auditing/` receive events from `IEventBus`
 - [ ] Health check for ClickHouse connectivity
 - [ ] Integration test: event persistence and query
 
-### Phase 1e — Identity Frontend
+### Phase 1d — Identity Frontend
 - [ ] Login screen with validation (email format, password required)
 - [ ] Register screen with password confirmation
 - [ ] Email verification success/failure handling
@@ -156,7 +155,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 
 ## Definition of "Phase 1 Completed"
 
-1. All five sub-phases (1a, 1b, 1c, 1d, 1e) complete
+1. All four sub-phases (1a, 1b, 1c, 1d) complete
 2. Infrastructure fully functional (Docker, CI, Email service)
 3. Authentication works end-to-end (register → verify → login → logout)
 4. Events System delivers events via in-memory channel to registered handlers
