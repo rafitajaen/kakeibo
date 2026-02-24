@@ -12,5 +12,70 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "close": "Cerrar"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "description": "Introduce tus credenciales para acceder a tu cuenta",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu{'@'}ejemplo.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Iniciar sesión",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tienes una cuenta?",
+      "register": "Regístrate"
+    },
+    "register": {
+      "title": "Crear una cuenta",
+      "description": "Introduce tus datos para empezar",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu{'@'}ejemplo.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "••••••••",
+      "currency": "Moneda",
+      "currencyPlaceholder": "Selecciona tu moneda",
+      "submit": "Crear cuenta",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "login": "Inicia sesión",
+      "checkEmail": "Revisa tu correo para verificar tu cuenta"
+    },
+    "verifyEmail": {
+      "title": "Verifica tu correo",
+      "success": "Tu correo ha sido verificado. Ya puedes iniciar sesión.",
+      "error": "El enlace de verificación es inválido o ha expirado.",
+      "verifying": "Verificando tu correo...",
+      "backToLogin": "Volver al inicio de sesión"
+    },
+    "forgotPassword": {
+      "title": "Olvidé mi contraseña",
+      "description": "Introduce tu correo y te enviaremos un enlace para restablecerla",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu{'@'}ejemplo.com",
+      "submit": "Enviar enlace",
+      "sent": "Si ese correo está registrado, recibirás un enlace de restablecimiento en breve.",
+      "backToLogin": "Volver al inicio de sesión"
+    },
+    "resetPassword": {
+      "title": "Restablecer contraseña",
+      "description": "Elige una nueva contraseña para tu cuenta",
+      "newPassword": "Nueva contraseña",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Restablecer contraseña",
+      "success": "Tu contraseña ha sido restablecida. Ya puedes iniciar sesión.",
+      "backToLogin": "Volver al inicio de sesión"
+    },
+    "errors": {
+      "invalidCredentials": "Correo o contraseña incorrectos",
+      "emailNotVerified": "Por favor, verifica tu correo antes de iniciar sesión",
+      "emailConflict": "Ya existe una cuenta con este correo",
+      "tokenExpired": "Este enlace ha expirado. Por favor, solicita uno nuevo.",
+      "tokenInvalid": "Este enlace no es válido.",
+      "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+    }
   }
 }

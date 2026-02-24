@@ -19,6 +19,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
 
     /* Path alias */
     "baseUrl": ".",
@@ -27,5 +28,6 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.vue"],
+  "exclude": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

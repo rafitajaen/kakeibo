@@ -7,7 +7,3 @@
         <router-view />
     </div>
 </template>
-
-<style>
-@import "tailwindcss";
-</style>

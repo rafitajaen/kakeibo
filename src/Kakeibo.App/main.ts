@@ -1,3 +1,4 @@
+import "./index.css";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
@@ -5,8 +6,8 @@ import App from "./App.vue";
 import router from "./router";
 
 // Import i18n messages
-import en from "../locales/en.json";
-import es from "../locales/es.json";
+import en from "./locales/en.json";
+import es from "./locales/es.json";
 
 // Create i18n instance
 const i18n = createI18n({
