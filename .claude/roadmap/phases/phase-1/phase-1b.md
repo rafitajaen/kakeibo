@@ -28,6 +28,8 @@
 - Password reset
 - Session tracking (Session entity with device info)
 - Logout all sessions (`POST /api/auth/logout-all`)
+- `UserRole` enum (`User`, `Admin`) stored as `Role` field on `User` entity
+- Initial Admin user seeded from env var (`ADMIN_EMAIL` + `ADMIN_PASSWORD`) on first run
 
 **Security**:
 - PBKDF2-SHA512 password hashing

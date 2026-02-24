@@ -10,7 +10,7 @@
 
 ## Document Purpose
 
-This roadmap defines the strategic development plan for the Kakeibo platform — a personal finance and shared expense management system inspired by the traditional Japanese household budgeting method. The roadmap organizes work into 9 phases (0–8) with 32 total deliverables across 3–4 months of development.
+This roadmap defines the strategic development plan for the Kakeibo platform — a personal finance and shared expense management system inspired by the traditional Japanese household budgeting method. The roadmap organizes work into 8 phases (1–8) with 21 sub-phases across 3–4 months of development.
 
 **For complete context**, see [kakeibo/overview.md](./overview.md).
 
@@ -232,10 +232,11 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 **Objective:** Automated transaction pattern management with forecast visibility.
 
 **Key Deliverables:**
-- **Phase 6a: Recurring Patterns** — Backend: RecurringTransaction entity, CRUD endpoints, recurrence rules. Frontend: Recurring configuration screen
+- **Phase 6a: Recurring Patterns** — Backend: RecurringPattern entity, CRUD endpoints, recurrence rules (daily, weekly, biweekly, monthly, yearly). Frontend: Recurring configuration screen
 - **Phase 6b: Auto-Generation + Forecast** — Backend: Hangfire background job, forecast calculation. Frontend: Forecast timeline view
 
 **Status:** Pending (blocked by Phase 3b — can run in parallel with Phases 4, 5)
+**Blocks:** Phase 7 (Phase 7a requires `RecurringTransactionGeneratedEvent` from Phase 6b)
 **Link:** [phases/phase-6/phase-6.md](./phases/phase-6/phase-6.md)
 
 ---
@@ -309,7 +310,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 | **4 (Budgets)** | 5 (Goals), 6 (Recurring) | All three consume `TransactionRecordedEvent` but are otherwise independent |
 | **5 (Goals)** | 4 (Budgets), 6 (Recurring) | All three consume `TransactionRecordedEvent` but are otherwise independent |
 | **6 (Recurring)** | 4 (Budgets), 5 (Goals) | All three consume `TransactionRecordedEvent` but are otherwise independent |
-| **7a (Notifications)** | 7b (Auditing) | Independent consumers of integration events |
+| **7a (Notifications)** | 7b (Auditing) | Independent consumers of integration events. Recommended: start 7a first (larger scope), then begin 7b once notification infrastructure is established. |
 
 **Strategy:** Maximize parallel development after Phase 3b (Transactions) completes. Phases 4, 5, 6 can all be developed simultaneously by different developers or teams.
 
@@ -319,8 +320,7 @@ Phase 8a (Dashboard) → 8b (Onboarding) → 8c (Settings) → 8d (Testing + Lau
 
 | Phase | Business Value Delivered (Backend + Frontend) |
 |-------|----------------------------------------------|
-| **0** | Infrastructure → Development environment ready for feature work |
-| **1** | Identity → Users can register, log in, verify email, reset password, and super admin can manage accounts |
+| **1** | Identity → Users can register, log in, verify email, reset password, and admin can manage accounts |
 | **2** | Wallets + Collaboration → Users can create personal/shared wallets, invite others, view balances, see debts, record settlements |
 | **3** | Transactions + Categories → Users can record income/expense/transfer with calculator UI, categorize transactions, split shared expenses |
 | **4** | Budgets → Users can create spending limits, monitor progress in real-time, receive warnings |
@@ -372,14 +372,14 @@ During implementation, every phase should reference these source files from the 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Development approach** | Iterative vertical slices (backend + frontend together) | Each phase delivers complete features (API + UI). Enables early user feedback. Aligns with agile development. Reduces risk of API-UI mismatches discovered late. |
-| **RBAC implementation** | Simple (SuperAdmin + user isolation) | Kakeibo's permission model is intentionally flat. Full RBAC adds complexity for no business value. Shared wallet permissions are membership checks, not role-based. |
+| **RBAC implementation** | Simple (Admin + user isolation) | Kakeibo's permission model is intentionally flat. Full RBAC adds complexity for no business value. Shared wallet permissions are membership checks, not role-based. |
 | **Notification module timing** | Late (Phase 7 after business modules) | Consumers need events from all business modules. Building early means constant modification. Building late means implementing once against complete event catalog. |
 | **Phase 2c placement** | In Phase 2 with Phase 3b prerequisite | Conceptually belongs in Wallets module (debt calc) and Transactions module (splits). Prerequisite explicitly documented. Actual dev order: 2a → 2b → 3a → 3b → 2c. Phase 3c absorbed into 2c. |
 | **Events System timing** | Phase 1a (infrastructure) | The in-memory event bus (`IEventBus` / `ChannelEventBus` / `EventDispatcher`) is part of the infrastructure base. It is wired and operational from Phase 1a. Identity events (`UserRegisteredEvent`, `UserLoggedInEvent`) are the first real events dispatched through it in Phase 1b. |
 | **Dashboard + Onboarding timing** | Phase 8 (after all modules complete) | Dashboard aggregates data from all 6 business modules. Onboarding guides users through features that must already exist. Settings centralizes preferences from all modules. |
 | **OAuth login** | Post-MVP | OAuth listed in platform.md but not in MVP scope. Focus on email/password for MVP. Google/Apple Sign-In deferred. |
 | **Multi-currency** | Post-MVP | Single-currency MVP per constraints.md. User selects currency at registration. Multi-currency deferred to post-MVP. |
-| **Import/Export** | Post-MVP | CSV/PDF export deferred to post-MVP for scope management. |
+| **Import/Export** | Post-MVP | CSV/PDF import and export deferred to post-MVP for scope management. |
 | **Activity log detail** | Simplified (who, what, when) | Simplified activity logging for MVP per platform.md. Full change diffs deferred to post-MVP. |
 
 ---
@@ -393,8 +393,9 @@ During implementation, every phase should reference these source files from the 
 
 ### Auditing
 
-- **Phase 1a:** ClickHouse `audit_events` table created at infrastructure level.
-- **Phase 1d:** Audit pipeline fully operational — `IEventHandler<T>` implementations in `Features/Auditing/` receive events published via `IEventBus` and write to ClickHouse.
+- **Phase 1a:** ClickHouse service started (Docker Compose). No schema created yet.
+- **Phase 1c:** ClickHouse `audit_events` table created. `IEventHandler<T>` implementations in `Features/Auditing/` receive events published via `IEventBus` and write to ClickHouse. Audit pipeline fully operational.
+- **Phase 1d:** No additional audit work. Audit pipeline is already operational from Phase 1c.
 - **Phase 2-6:** Each feature handler publishes domain events (`IEvent`) via `IEventBus`. Auditing handlers react asynchronously via `EventDispatcher`.
 - **Phase 7b:** `Features/Auditing/` adds Activity query endpoints and admin UI for browsing audit trail.
 

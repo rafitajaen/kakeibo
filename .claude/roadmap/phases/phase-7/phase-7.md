@@ -15,6 +15,8 @@
 
 **Total**: 3-5 days
 
+> **Parallelism note:** 7a and 7b can be implemented in parallel — both are independent consumers of integration events. Recommended: start 7a first due to its larger scope (consumes all business events and sets up the notification infrastructure), then begin 7b once the notification infrastructure is established.
+
 ---
 
 ## Scope

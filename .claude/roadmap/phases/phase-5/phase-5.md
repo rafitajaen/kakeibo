@@ -21,9 +21,9 @@
 
 ### ✅ Included
 - Goal creation (name, target amount, deadline, linked wallet)
-- Tracking modes: wallet-linked, cross-wallet, manual
+- Tracking mode: wallet-linked (MVP only; cross-wallet and manual deferred to post-MVP)
 - Progress monitoring
-- Milestone notifications
+- Milestone notifications (25%, 50%, 75%, 100%)
 - Frontend: goal list, create/edit, progress visualization
 
 ### ❌ Excluded

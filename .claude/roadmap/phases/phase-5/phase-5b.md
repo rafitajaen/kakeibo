@@ -25,12 +25,19 @@
 ### Backend
 **`src/Kakeibo.Api/Features/Goals/`**:
 - Events/TransactionRecordedHandler.cs — `IEventHandler<TransactionRecordedEvent>` for progress updates
+- Events/TransactionUpdatedHandler.cs — `IEventHandler<TransactionUpdatedEvent>` for progress recalculation
+- Events/TransactionDeletedHandler.cs — `IEventHandler<TransactionDeletedEvent>` for progress recalculation
 - GetGoalProgress/
 
 **Endpoints**:
 - `GET /api/goals/{id}/progress`
 
-**Events**:
+**Listens to**:
+- `TransactionRecordedEvent`
+- `TransactionUpdatedEvent`
+- `TransactionDeletedEvent`
+
+**Publishes**:
 - `GoalMilestoneReachedEvent`
 - `GoalAchievedEvent`
 
@@ -43,6 +50,10 @@
 ## Acceptance Criteria
 
 - [ ] Listen to `TransactionRecordedEvent` → update progress
+- [ ] Listen to `TransactionUpdatedEvent` → recalculate progress
+- [ ] Listen to `TransactionDeletedEvent` → recalculate progress
+- [ ] Goal progress recalculates correctly when a transaction is edited
+- [ ] Goal progress recalculates correctly when a transaction is deleted
 - [ ] Calculate current progress from wallet balance
 - [ ] Detect milestones (25%, 50%, 75%, 100%)
 - [ ] Publish milestone events
@@ -54,5 +65,5 @@
 ## Definition of "Phase 5b Completed"
 
 1. Goal tracking operational
-2. All 6 acceptance criteria checked
+2. All 10 acceptance criteria checked
 3. Phase 7 can use goal alerts

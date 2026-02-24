@@ -1,7 +1,7 @@
 # Phase 6: Recurring Transactions
 
 **Status**: Not Started
-**Blocks**: None
+**Blocks**: Phase 7 (Phase 7a requires `RecurringTransactionGeneratedEvent` from Phase 6b)
 **Requires**: Phase 3b (Transactions)
 
 ---
@@ -21,7 +21,7 @@
 
 ### ✅ Included
 - Recurring pattern creation (transaction template + schedule)
-- Recurrence rules (daily, weekly, monthly, yearly)
+- Recurrence rules: daily, weekly, biweekly, monthly, yearly (no custom rules in MVP)
 - Auto-generation via Hangfire background jobs
 - Forecast visibility (next 30/90 days)
 - Frontend: pattern list, create/edit, forecast view

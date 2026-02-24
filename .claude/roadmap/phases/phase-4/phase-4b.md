@@ -26,12 +26,19 @@
 ### Backend
 **`src/Kakeibo.Api/Features/Budgets/`**:
 - Events/TransactionRecordedHandler.cs — `IEventHandler<TransactionRecordedEvent>` for spending updates
+- Events/TransactionUpdatedHandler.cs — `IEventHandler<TransactionUpdatedEvent>` for spending recalculation
+- Events/TransactionDeletedHandler.cs — `IEventHandler<TransactionDeletedEvent>` for spending recalculation
 - GetBudgetStatus/
 
 **Endpoints**:
 - `GET /api/budgets/{id}/status`
 
-**Events**:
+**Listens to**:
+- `TransactionRecordedEvent`
+- `TransactionUpdatedEvent`
+- `TransactionDeletedEvent`
+
+**Publishes**:
 - `BudgetWarningEvent` (75% threshold)
 - `BudgetExceededEvent` (100% threshold)
 
@@ -44,6 +51,10 @@
 ## Acceptance Criteria
 
 - [ ] Listen to `TransactionRecordedEvent` → update spending
+- [ ] Listen to `TransactionUpdatedEvent` → recalculate spending
+- [ ] Listen to `TransactionDeletedEvent` → recalculate spending
+- [ ] Budget spending recalculates correctly when a transaction is edited
+- [ ] Budget spending recalculates correctly when a transaction is deleted
 - [ ] Calculate current spending from Transactions module
 - [ ] Calculate remaining budget
 - [ ] Calculate percentage used
@@ -57,5 +68,5 @@
 ## Definition of "Phase 4b Completed"
 
 1. Budget monitoring operational
-2. All 8 acceptance criteria checked
+2. All 12 acceptance criteria checked
 3. Phase 7 can use budget alerts

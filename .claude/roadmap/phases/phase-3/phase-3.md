@@ -11,7 +11,8 @@
 | Item | Status | Required For |
 |------|--------|--------------|
 | Wallets | ⏳ Phase 2 | Transactions affect wallet balances |
-| Debt Calculation | ⏳ Phase 2c | Transaction splits trigger debt updates |
+
+> **Dependency note:** Phase 3 does **not** depend on Phase 2c. The reverse is true: Phase 2c (Debt Calculation + Settlements) requires Phase 3b to be complete because debt calculation consumes `TransactionRecordedEvent`, `TransactionUpdatedEvent`, and `TransactionDeletedEvent` published by the Transactions module. Development order: 2a → 2b → 3a → 3b → **2c**.
 
 ---
 
@@ -24,8 +25,7 @@
 
 **Total estimated duration**: 4-6 days
 
-> **Note:** Transaction split configuration (Equal, Percentage, Custom) was moved to Phase 2c.
-> See [phase-2c.md](../phase-2/phase-2c.md) and [phase-3c.md](./phase-3c.md) for details.
+> **Note:** Transaction split configuration (Equal, Percentage, Custom) is defined and implemented in Phase 2c, which runs after Phase 3b. See [phase-2c.md](../phase-2/phase-2c.md) for all split-related deliverables.
 
 ---
 
@@ -49,7 +49,7 @@
 
 ### ❌ Excluded
 
-- Import/export of transactions — Phase 8
+- Import/export of transactions — post-MVP
 - Transaction attachments (receipts) — post-MVP
 - Geolocation tagging — post-MVP
 - Transaction templates — Phase 6

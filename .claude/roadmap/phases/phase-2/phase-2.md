@@ -55,8 +55,7 @@
 
 - Multi-currency wallets — single currency MVP
 - Wallet sharing with non-users — invitations require account
-- Proration on plan changes — Phase 5
-- Import/export for wallets — Phase 8
+- Import/export for wallets — post-MVP
 
 ---
 
@@ -70,9 +69,10 @@
 - `Wallet` (aggregate root, personal + shared)
 - `WalletMember` (shared wallet membership)
 - `Invitation` (access grant)
-- `Split` (expense division config)
-- `Debt` (calculated debt)
+- `TransactionSplit` (expense division config — in Transactions domain)
 - `Settlement` (external payment)
+
+> **Note:** `Debt` is **not** a persisted EF Core entity. It is a calculated runtime DTO returned by `DebtCalculationService.CalculateDebts(walletId)`, which reads `TransactionSplit` records and computes net balances in memory using the Splitwise algorithm.
 
 **Endpoints**:
 - `POST /api/wallets` — Create wallet
@@ -88,9 +88,11 @@
 
 **Integration Events**:
 - `WalletCreatedEvent`
+- `WalletArchivedEvent`
 - `InvitationSentEvent`
 - `InvitationAcceptedEvent`
 - `MemberJoinedEvent`
+- `MemberLeftEvent`
 - `SettlementRecordedEvent`
 
 ---
@@ -98,11 +100,10 @@
 ## MVP Acceptance Criteria
 
 ### Phase 2a — Personal Wallets
-- [ ] Create personal wallet with initial balance
+- [ ] Create personal wallet (initial balance is set via a transaction in Phase 3b)
 - [ ] List user's personal wallets
 - [ ] Update wallet name and metadata
 - [ ] Archive wallet (soft delete)
-- [ ] Balance tracking accurate
 - [ ] Frontend: wallet list screen
 - [ ] Frontend: create wallet form
 - [ ] Frontend: edit wallet form
@@ -133,8 +134,8 @@
 1. All three sub-phases (2a, 2b, 2c) complete
 2. Personal and shared wallets functional
 3. Invitation system operational
-4. Debt calculation accurate
-5. All 23 acceptance criteria checked
+4. Debt calculation accurate (runtime DTO, not persisted entity)
+5. All 21 acceptance criteria checked
 6. CI pipeline green
 7. Manual testing complete
 8. Phase 3 can begin (Transactions depend on Wallets)

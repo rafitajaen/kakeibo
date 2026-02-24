@@ -18,6 +18,9 @@
 > maintained by the `WalletBalance` entity in `AppDbContext` and updated atomically with every
 > transaction. Wallets feature handlers query `AppDbContext.WalletBalances` directly — no
 > cross-module indirection needed in a Simple Monolith. This is implemented in Phase 3b.
+>
+> **Initial balance:** There is no "initial balance" field on wallet creation. A wallet starts
+> with zero balance. Users set an opening balance by recording an income transaction in Phase 3b.
 
 ### ❌ Excluded
 - Shared wallets — Phase 2b
@@ -49,11 +52,10 @@
 
 ## Acceptance Criteria
 
-- [ ] Create personal wallet with initial balance
+- [ ] Create personal wallet (balance starts at zero; initial balance set via transaction in Phase 3b)
 - [ ] List user's personal wallets
 - [ ] Update wallet name and metadata
 - [ ] Archive wallet (soft delete via `DeletedAt`)
-- [ ] Balance tracking accurate
 - [ ] Frontend: wallet list screen
 - [ ] Frontend: create wallet form
 - [ ] Frontend: edit wallet form
@@ -65,6 +67,6 @@
 ## Definition of "Phase 2a Completed"
 
 1. All wallet CRUD functional
-2. All 10 acceptance criteria checked
+2. All 9 acceptance criteria checked
 3. Tests pass
 4. Phase 2b can begin

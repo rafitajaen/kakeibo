@@ -36,6 +36,8 @@
 - Debt visibility for all shared wallet members (symmetric)
 - Debt recalculation on transaction create, update, or delete
 
+> **Debt is not a persisted entity.** There is no `Debt` table in the database. `DebtCalculationService.CalculateDebts(walletId)` reads `TransactionSplit` records from `AppDbContext` and returns a `List<DebtDto>` computed in memory. The result is served on demand when `GET /api/wallets/{id}/debts` is called.
+
 **Settlements**:
 - Settlement recording (external payments that don't affect wallet balance)
 - Settlement amount validation (cannot exceed current debt between two members)

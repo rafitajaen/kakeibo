@@ -45,7 +45,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - Password recovery flow with email tokens
 - PBKDF2-SHA512 password hashing
 - Session tracking
-- OAuth (Google, Apple) — basic implementation
+- Admin role seeding (one Admin user configured via env var at first run)
 
 **Event Infrastructure (1a + 1c)**:
 - In-memory event bus (`IEventBus` / `ChannelEventBus`) with `System.Threading.Channels` — implemented in 1a
@@ -62,11 +62,11 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 
 ### ❌ Excluded
 
+- OAuth (Google, Apple) — post-MVP
 - Multi-factor authentication (MFA) — post-MVP
 - Account deletion — Phase 8c
 - Session management UI — Phase 8c
 - Password strength meter — basic validation only
-- Social login UI refinement — Phase 8b
 
 ---
 
@@ -82,12 +82,13 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 - `PasswordResetToken`
 - `Session`
 
-**Endpoints**:
+**Endpoints** (9 total):
 - `POST /api/auth/register`
 - `POST /api/auth/verify-email`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
 - `POST /api/auth/logout`
+- `POST /api/auth/logout-all`
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`
 - `GET /api/auth/me`
@@ -149,7 +150,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 
 ---
 
-**Total acceptance criteria**: 40 items
+**Total acceptance criteria**: 41 items
 
 ---
 
@@ -160,7 +161,7 @@ All prerequisites are part of Phase 1a (Infrastructure Base).
 3. Authentication works end-to-end (register → verify → login → logout)
 4. Events System delivers events via in-memory channel to registered handlers
 5. Audit logging captures all actions in ClickHouse
-6. All 40 acceptance criteria checked
+6. All 41 acceptance criteria checked
 7. CI pipeline green (all tests pass)
 8. Manual testing complete in Docker Compose
 9. Code review complete (all PRs merged)

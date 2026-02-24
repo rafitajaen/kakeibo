@@ -10,7 +10,7 @@
 ### ✅ Included
 - Profile (name, email, currency preference)
 - Password change
-- Notification preferences
+- Notification preferences UI (the `PUT /api/notifications/preferences` endpoint is defined in Phase 7a; Phase 8c adds the `PreferencesView` frontend screen that calls it)
 - Account deletion (30-day grace period, GDPR compliant)
 - Session management (view active sessions, revoke session)
 - Frontend: settings screens

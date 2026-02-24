@@ -35,7 +35,7 @@
 
 ### ❌ Excluded
 
-- Social login buttons — Phase 8b
+- OAuth / social login buttons — post-MVP
 - Password strength meter — basic validation only
 - "Remember me" checkbox — refresh tokens handle this
 
