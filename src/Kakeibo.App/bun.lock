@@ -5,13 +5,14 @@
     "": {
       "name": "@kakeibo/app",
       "dependencies": {
+        "@hugeicons/core-free-icons": "^1.0.0",
+        "@hugeicons/vue": "^1.0.0",
         "@vee-validate/zod": "^4.15.1",
         "@vueuse/core": "^14.2.1",
         "axios": "^1.7.9",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
-        "lucide-vue-next": "^0.575.0",
         "pinia": "^2.3.0",
         "radix-vue": "^1.9.17",
         "reka-ui": "^2.8.2",
@@ -21,8 +22,6 @@
         "vue-router": "^4.5.0",
       },
       "devDependencies": {
-        "@hugeicons/core-free-icons": "^1.0.0",
-        "@hugeicons/vue": "^1.0.0",
         "@playwright/test": "^1.49.1",
         "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-vue": "^5.2.1",
@@ -500,8 +499,6 @@
     "loupe": ["loupe@3.2.1", "", {}, "sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ=="],
 
     "lru-cache": ["lru-cache@10.4.3", "", {}, "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="],
-
-    "lucide-vue-next": ["lucide-vue-next@0.575.0", "", { "peerDependencies": { "vue": ">=3.0.1" } }, "sha512-UHzA3cYMCgBLyGay5R9IQaidwV0NLocx7cIBnFt8vJ9Xhl6IM/oKD0fUhoCUuouFta15SX1rLXVoko9s3TzWMA=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 

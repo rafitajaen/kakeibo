@@ -69,6 +69,13 @@
       "success": "Tu contraseña ha sido restablecida. Ya puedes iniciar sesión.",
       "backToLogin": "Volver al inicio de sesión"
     },
+    "validation": {
+      "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+      "passwordUppercase": "La contraseña debe contener al menos una letra mayúscula",
+      "passwordLowercase": "La contraseña debe contener al menos una letra minúscula",
+      "passwordDigit": "La contraseña debe contener al menos un dígito",
+      "passwordsMustMatch": "Las contraseñas no coinciden"
+    },
     "errors": {
       "invalidCredentials": "Correo o contraseña incorrectos",
       "emailNotVerified": "Por favor, verifica tu correo antes de iniciar sesión",

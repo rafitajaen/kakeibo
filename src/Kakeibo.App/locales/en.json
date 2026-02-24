@@ -69,6 +69,13 @@
       "success": "Your password has been reset. You can now sign in.",
       "backToLogin": "Back to sign in"
     },
+    "validation": {
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordUppercase": "Password must contain at least one uppercase letter",
+      "passwordLowercase": "Password must contain at least one lowercase letter",
+      "passwordDigit": "Password must contain at least one digit",
+      "passwordsMustMatch": "Passwords do not match"
+    },
     "errors": {
       "invalidCredentials": "Invalid email or password",
       "emailNotVerified": "Please verify your email before signing in",

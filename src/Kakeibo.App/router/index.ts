@@ -58,8 +58,8 @@ const router = createRouter({
 router.beforeEach(async (to) => {
     const auth = useAuthStore();
 
-    // Resolve user from session cookies if not yet loaded.
-    if (auth.user === null) {
+    // Resolve user from session cookies on first navigation only.
+    if (!auth.initialized) {
         await auth.fetchCurrentUser();
     }
 

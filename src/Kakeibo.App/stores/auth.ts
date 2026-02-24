@@ -24,6 +24,8 @@ export interface LoginData {
 export const useAuthStore = defineStore("auth", () => {
     // State
     const user = ref<User | null>(null);
+    // True after the first fetchCurrentUser() call completes (success or failure).
+    const initialized = ref(false);
 
     // Getters
     const isAuthenticated = computed(() => user.value !== null);
@@ -88,11 +90,14 @@ export const useAuthStore = defineStore("auth", () => {
             user.value = response.data;
         } catch {
             user.value = null;
+        } finally {
+            initialized.value = true;
         }
     }
 
     return {
         user,
+        initialized,
         isAuthenticated,
         clearUser,
         register,

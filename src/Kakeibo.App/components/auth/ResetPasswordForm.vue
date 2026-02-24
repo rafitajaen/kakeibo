@@ -24,10 +24,10 @@ const success = ref(false);
 
 const passwordSchema = z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one digit");
+    .min(8, t("auth.validation.passwordMinLength"))
+    .regex(/[A-Z]/, t("auth.validation.passwordUppercase"))
+    .regex(/[a-z]/, t("auth.validation.passwordLowercase"))
+    .regex(/[0-9]/, t("auth.validation.passwordDigit"));
 
 const schema = toTypedSchema(
     z
@@ -36,7 +36,7 @@ const schema = toTypedSchema(
             confirmPassword: z.string(),
         })
         .refine((data) => data.newPassword === data.confirmPassword, {
-            message: "Passwords do not match",
+            message: t("auth.validation.passwordsMustMatch"),
             path: ["confirmPassword"],
         }),
 );
