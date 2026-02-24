@@ -97,7 +97,7 @@ site, or a service — it must be simultaneously registered in all four quality 
    { name: "test:unit", project: "app", cmd: ["bun", "run", "app:test:unit"] }
    ```
 
-3. **`.github/workflows/ci.yml`** — A dedicated job for the project, or a new step inside an
+3. **`.github/workflows/quality.yml`** — A dedicated job for the project, or a new step inside an
    existing job if the project is a subcomponent. Examples:
 
    **Backend tests (single step inside `quality-api` job — all tests in `Kakeibo.Tests`):**

@@ -125,9 +125,7 @@ This project uses [semantic-release](https://semantic-release.gitbook.io/) for a
 
 All scripts are defined in `package.json` (root). Run with `bun run <script>`.
 
-**Currently available:** `api:*`, `email:*`, `docker:*`
-
-**Future (when implemented):** `app:*` commands will be added when `sites/Kakeibo.App` is created.
+**Currently available:** `api:*`, `app:*`, `email:*`, `docker:*`
 
 **CLI tools:** Use `bunx` instead of `npx` for all one-off CLI invocations. Add `--bun` when the tool must run under the Bun runtime. See mandatory.md Rule 9.
 
@@ -149,6 +147,8 @@ dotnet ef migrations add <Name> \
 ### Architecture
 
 Vertical Slices + Screaming Architecture + Simple Monolith. Full spec: `.claude/rules/architecture.md` — feature folder structure, event system (`IEventBus` / `IEventHandler<T>`), DI registration pattern.
+
+> **Architecture history:** This project was migrated from a Modular Monolith (12 projects) to a Simple Monolith (2 projects) at ~5% implementation. See `.claude/rules/knowledge.md` KB-010 for the full migration record, what was removed, and the rationale for the current design.
 
 Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up to 3 files: `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Validator.cs`. Handlers are plain classes auto-registered by Scrutor. No MVC controllers, no FastEndpoints, no MediatR.
 
@@ -177,7 +177,7 @@ Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up t
 
 > Full rules: `.claude/rules/technical-debt.md` (TD-017–TD-018) — i18n rule: `.claude/rules/mandatory.md` (Rule 5)
 
-**Note:** `sites/Kakeibo.App` does not exist yet (planned for future phases). These conventions apply when it is implemented.
+**Note:** `sites/Kakeibo.App` exists. The shell and development tooling are in place but business screens are pending (Phase 1d onwards).
 
 **Components:** `<script setup lang="ts">` always. SFC order: script → template → style scoped. PascalCase filenames.
 **Pinia:** Setup function style (`defineStore('name', () => {...})`). `ref()` for state, `computed()` for getters, functions for actions.

@@ -39,11 +39,11 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 - ✅ CI/CD pipeline skeleton (GitHub Actions)
 - ✅ Development tooling (lefthook, commitlint, semantic-release)
 - ✅ Email rendering service (Bun + Hono + React Email)
-- ✅ Core abstractions: Entity, Result&lt;T&gt;, Error, IEndpoint, IEventBus, AppDbContext
+- ✅ Core abstractions: Entity, Result&lt;T&gt;, Error, IEndpoint, IEventBus, ChannelEventBus, EventDispatcher
 - ✅ Architecture tests: naming convention enforcement (Kakeibo.Tests)
 
 ### What's Coming
-- 🔨 **Phase 1 (In Progress):** Identity - Authentication, registration, email verification
+- 🔨 **Phase 1 (In Progress):** Identity - Authentication, registration, email verification, JWT tokens, password recovery
 - ⏳ **Phases 2-6 (Planned):** Business domains - Wallets, Transactions, Budgets, Goals, Recurring
 - ⏳ **Phase 7 (Planned):** Notifications + Auditing
 - ⏳ **Phase 8 (Planned):** Dashboard + Production launch
@@ -271,7 +271,7 @@ All commands run from the **monorepo root** via `bun run <script>`.
 | `bun run api:restore` | Restore .NET packages |
 | `bun run api:build` | Build solution in Release mode |
 | `bun run api:format:check` | Verify C# formatting (CI only — user runs `dotnet format` manually) |
-| `bun run api:test` | Run Identity module tests |
+| `bun run api:test` | Run all tests |
 
 #### App Commands (Frontend)
 
@@ -352,8 +352,10 @@ For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/r
 
 | Phase | Status | Deliverables |
 |-------|--------|-------------|
-| **0 - Infrastructure** | 🔨 Partial | Solution structure, Docker Compose, CI skeleton, Email service |
-| **1 - Identity** | 🔨 In Progress | Registration, login, email verification, OAuth (Google, Apple) |
+| **1a - Infrastructure Base** | 🔨 Partial | Solution structure, Docker Compose, CI pipeline, Email service, core abstractions, ChannelEventBus |
+| **1b - Identity Backend** | ⏳ Planned | Registration, login, JWT tokens, sessions, password recovery |
+| **1c - Audit Logging** | ⏳ Planned | ClickHouse integration, IEventHandler implementations |
+| **1d - Identity Frontend** | ⏳ Planned | Login/register screens, token refresh, route guards |
 | **2 - Wallets + Collaboration** | ⏳ Planned | Personal/shared wallets, invitations, splits, debts, settlements |
 | **3 - Transactions + Categories** | ⏳ Planned | Recording, editing, deletion, categorization, 12 system categories |
 | **4 - Budgets** | ⏳ Planned | Personal + shared budgets, spending tracking, warnings |

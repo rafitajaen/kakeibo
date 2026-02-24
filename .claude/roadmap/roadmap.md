@@ -21,7 +21,7 @@ This roadmap defines the strategic development plan for the Kakeibo platform —
 1. [Status at Planning](#status-at-planning)
 2. [Core Philosophy](#core-philosophy)
 3. [Architecture Overview](#architecture-overview)
-4. [Module Dependency Graph](#module-dependency-graph)
+4. [Domain Dependency Graph](#domain-dependency-graph)
 5. [Phase Summaries](#phase-summaries)
 6. [Development Order](#development-order)
 7. [Parallel Development Opportunities](#parallel-development-opportunities)
@@ -120,7 +120,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 
 ---
 
-## Module Dependency Graph
+## Domain Dependency Graph
 
 ```
                     Identity (foundation)
@@ -137,16 +137,16 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
         │                │                │
         └────────┬───────┴────────────────┘
                  v
-          Notifications  ←─ All modules emit
-          Auditing       ←─ All modules log
+          Notifications  ←─ All domains emit
+          Auditing       ←─ All domains log
 ```
 
 **Dependency Notes**:
-- **Identity**: Foundation layer — no dependencies on other modules
+- **Identity**: Foundation layer — no dependencies on other domains
 - **Wallets**: Second layer — depends only on Identity
 - **Transactions**: Third layer — depends on Wallets (for balance updates)
 - **Budgets + Goals + Recurring**: Fourth layer — all depend on Transactions (consume transaction events)
-- **Notifications + Auditing**: Cross-cutting — consumed by all modules, depend only on Identity
+- **Notifications + Auditing**: Cross-cutting — consumed by all domains, depend only on Identity
 
 **Deployment Note**: The diagram shows logical dependencies, not physical deployment boundaries. All domains are deployed together in a single monolith. Domain boundaries are enforced through folder structure, not separate assemblies.
 
@@ -359,8 +359,8 @@ During implementation, every phase should reference these source files from the 
 | File | Purpose |
 |------|---------|
 | [kakeibo/overview.md](./overview.md) | Project vision, core philosophy, user flows, business context |
-| [kakeibo/architecture.md](./architecture.md) | Module structure, project dependencies, feature slice pattern, DI registration pattern, inter-module communication |
-| [kakeibo/platform.md](./platform.md) | Module catalog (8 modules), dependency matrix, integration event catalog, module request/response catalog, entity descriptions |
+| [kakeibo/architecture.md](./architecture.md) | Domain structure, project dependencies, feature slice pattern, DI registration pattern, inter-domain communication |
+| [kakeibo/platform.md](./platform.md) | Domain catalog (8 domains), dependency matrix, integration event catalog, domain request/response catalog, entity descriptions |
 | [kakeibo/constraints.md](./constraints.md) | Business limits, rate limits, pagination, soft delete, GDPR, timezone handling |
 | [kakeibo/tech-stack.md](./tech-stack.md) | Technology choices, prohibited technologies, framework versions |
 | [kakeibo/infrastructure.md](./infrastructure.md) | Docker Compose layout, CI/CD pipeline, environment strategy, deployment model |

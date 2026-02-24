@@ -472,9 +472,9 @@ All domains live in one assembly (`Kakeibo.Api`). Communication is in-process: n
 
 ### 7.2 Event Catalog
 
-Integration events published by each module and their subscribers:
+Integration events published by each domain and their consumers:
 
-| Emitting Module | Event | Payload | Subscribed Modules |
+| Emitting Domain | Event | Payload | Consuming Domains |
 |----------------|-------|---------|-------------------|
 | Identity | `UserRegisteredEvent` | UserId, Email, RegisteredAt | Auditing, Notifications |
 | Identity | `UserLoggedInEvent` | UserId, IpAddress, UserAgent, LoggedInAt | Auditing |

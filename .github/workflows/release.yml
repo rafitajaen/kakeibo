@@ -20,6 +20,8 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
+      # Node.js 22.x required: Bun alone caused a workflow execution error in GitHub Actions.
+      # Do NOT remove this step even though Bun provides its own runtime.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
