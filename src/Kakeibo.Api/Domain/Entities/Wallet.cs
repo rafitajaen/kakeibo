@@ -19,4 +19,5 @@ public sealed class Wallet : Entity
     // Navigation properties
     public User? Owner { get; set; }
     public ICollection<WalletMember> WalletMembers { get; set; } = [];
+    public WalletBalance? WalletBalance { get; set; }
 }

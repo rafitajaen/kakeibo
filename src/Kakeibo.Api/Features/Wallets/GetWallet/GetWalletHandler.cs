@@ -26,12 +26,18 @@ public sealed class GetWalletHandler(AppDbContext db)
         if (!isOwner && !isMember)
             return Error.Forbidden("You do not have access to this wallet.");
 
+        // Read the current balance owned by the Transactions domain.
+        var balance = await db.WalletBalances
+            .Where(wb => wb.WalletId == walletId)
+            .Select(wb => wb.Balance)
+            .FirstOrDefaultAsync(ct);
+
         return new GetWalletEndpoint.GetWalletResponse(
             wallet.Id,
             wallet.Name,
             wallet.Type.ToString(),
             wallet.Currency,
-            Balance: 0m,
+            Balance: balance,
             IsArchived: wallet.DeletedAt != null,
             wallet.CreatedAt);
     }

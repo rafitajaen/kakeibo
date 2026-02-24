@@ -11,6 +11,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<WalletMember> WalletMembers => Set<WalletMember>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<WalletBalance> WalletBalances => Set<WalletBalance>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

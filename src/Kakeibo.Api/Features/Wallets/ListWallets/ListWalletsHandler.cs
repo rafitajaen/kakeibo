@@ -27,7 +27,7 @@ public sealed class ListWalletsHandler(AppDbContext db)
                 w.Name,
                 w.Type.ToString(),
                 w.Currency,
-                Balance: 0m,
+                Balance: w.WalletBalance != null ? w.WalletBalance.Balance : 0m,
                 IsArchived: w.DeletedAt != null,
                 w.CreatedAt))
             .ToListAsync(ct);

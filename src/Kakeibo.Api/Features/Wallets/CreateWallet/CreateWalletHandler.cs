@@ -38,6 +38,9 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
 
         db.Wallets.Add(wallet);
 
+        // Create WalletBalance atomically alongside the wallet — always starts at zero.
+        db.WalletBalances.Add(new Domain.Entities.WalletBalance { WalletId = wallet.Id, Balance = 0m });
+
         // For shared wallets, auto-add the creator as a WalletMember in the same transaction
         if (walletType == WalletType.Shared)
         {
