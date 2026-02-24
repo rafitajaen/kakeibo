@@ -85,6 +85,66 @@
       "unexpected": "Something went wrong. Please try again."
     }
   },
+  "categories": {
+    "title": "Categories",
+    "system": "System",
+    "custom": "Custom",
+    "createNew": "New category",
+    "empty": "No custom categories yet",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "e.g. Hobbies",
+      "submit": "Create category",
+      "submitEdit": "Save changes"
+    },
+    "actions": {
+      "edit": "Edit",
+      "archive": "Archive",
+      "archiveConfirm": "Are you sure you want to archive this category?"
+    },
+    "errors": {
+      "conflict": "A category with this name already exists.",
+      "notFound": "Category not found.",
+      "forbidden": "You do not have permission to modify this category.",
+      "hasTransactions": "This category has active transactions and cannot be archived.",
+      "unexpected": "Something went wrong. Please try again."
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "empty": "No transactions yet",
+    "createNew": "New transaction",
+    "viewAll": "View transactions",
+    "type": {
+      "income": "Income",
+      "expense": "Expense",
+      "transfer": "Transfer"
+    },
+    "form": {
+      "type": "Type",
+      "amount": "Amount",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Grocery shopping",
+      "date": "Date",
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "destinationWallet": "Destination wallet",
+      "destinationWalletPlaceholder": "Select a wallet",
+      "submit": "Record transaction",
+      "submitEdit": "Save changes"
+    },
+    "filters": {
+      "dateFrom": "From",
+      "dateTo": "To",
+      "allTypes": "All types",
+      "allCategories": "All categories"
+    },
+    "errors": {
+      "notFound": "Transaction not found.",
+      "forbidden": "You do not have access to this transaction.",
+      "unexpected": "Something went wrong. Please try again."
+    }
+  },
   "wallets": {
     "title": "Wallets",
     "personal": "Personal",

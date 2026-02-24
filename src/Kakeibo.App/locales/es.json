@@ -85,6 +85,66 @@
       "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
     }
   },
+  "categories": {
+    "title": "Categorías",
+    "system": "Sistema",
+    "custom": "Personalizadas",
+    "createNew": "Nueva categoría",
+    "empty": "Aún no hay categorías personalizadas",
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "p. ej. Aficiones",
+      "submit": "Crear categoría",
+      "submitEdit": "Guardar cambios"
+    },
+    "actions": {
+      "edit": "Editar",
+      "archive": "Archivar",
+      "archiveConfirm": "¿Seguro que quieres archivar esta categoría?"
+    },
+    "errors": {
+      "conflict": "Ya existe una categoría con este nombre.",
+      "notFound": "Categoría no encontrada.",
+      "forbidden": "No tienes permiso para modificar esta categoría.",
+      "hasTransactions": "Esta categoría tiene transacciones activas y no puede archivarse.",
+      "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+    }
+  },
+  "transactions": {
+    "title": "Transacciones",
+    "empty": "Aún no hay transacciones",
+    "createNew": "Nueva transacción",
+    "viewAll": "Ver transacciones",
+    "type": {
+      "income": "Ingreso",
+      "expense": "Gasto",
+      "transfer": "Transferencia"
+    },
+    "form": {
+      "type": "Tipo",
+      "amount": "Importe",
+      "description": "Descripción",
+      "descriptionPlaceholder": "p. ej. Compra en el supermercado",
+      "date": "Fecha",
+      "category": "Categoría",
+      "categoryPlaceholder": "Selecciona una categoría",
+      "destinationWallet": "Cartera destino",
+      "destinationWalletPlaceholder": "Selecciona una cartera",
+      "submit": "Registrar transacción",
+      "submitEdit": "Guardar cambios"
+    },
+    "filters": {
+      "dateFrom": "Desde",
+      "dateTo": "Hasta",
+      "allTypes": "Todos los tipos",
+      "allCategories": "Todas las categorías"
+    },
+    "errors": {
+      "notFound": "Transacción no encontrada.",
+      "forbidden": "No tienes acceso a esta transacción.",
+      "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+    }
+  },
   "wallets": {
     "title": "Carteras",
     "personal": "Personal",

@@ -64,7 +64,28 @@ async function handleArchive() {
                     </div>
                 </CardContent>
 
-                <CardFooter class="flex gap-2">
+                <CardFooter class="flex flex-wrap gap-2">
+                    <Button
+                        @click="
+                            router.push({
+                                name: 'transactions',
+                                params: { walletId: walletsStore.currentWallet.id },
+                            })
+                        "
+                    >
+                        {{ t("transactions.viewAll") }}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        @click="
+                            router.push({
+                                name: 'transaction-record',
+                                params: { walletId: walletsStore.currentWallet.id },
+                            })
+                        "
+                    >
+                        {{ t("transactions.createNew") }}
+                    </Button>
                     <Button
                         variant="outline"
                         @click="

@@ -89,6 +89,42 @@ const routes: RouteRecordRaw[] = [
         name: "accept-invitation",
         component: () => import("@/views/wallets/AcceptInvitationView.vue"),
     },
+    {
+        path: "/categories",
+        name: "categories",
+        component: () => import("@/views/categories/CategoriesView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/categories/new",
+        name: "category-create",
+        component: () => import("@/views/categories/CreateCategoryView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/categories/:id/edit",
+        name: "category-edit",
+        component: () => import("@/views/categories/EditCategoryView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:walletId/transactions",
+        name: "transactions",
+        component: () => import("@/views/transactions/TransactionsView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:walletId/transactions/new",
+        name: "transaction-record",
+        component: () => import("@/views/transactions/RecordTransactionView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/wallets/:walletId/transactions/:id/edit",
+        name: "transaction-edit",
+        component: () => import("@/views/transactions/EditTransactionView.vue"),
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({
