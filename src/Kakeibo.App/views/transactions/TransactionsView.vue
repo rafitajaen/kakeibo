@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useTransactionsStore } from "@/stores/transactions";
 import { useCategoriesStore } from "@/stores/categories";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import TransactionList from "@/components/transactions/TransactionList.vue";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -56,6 +55,10 @@ async function handleDelete(id: string) {
     } catch {
         apiError.value = t("transactions.errors.unexpected");
     }
+}
+
+function handleEdit(id: string) {
+    router.push({ name: "transaction-edit", params: { walletId, id } });
 }
 
 onMounted(async () => {
@@ -132,80 +135,11 @@ onMounted(async () => {
 
         <p v-if="apiError" class="mb-4 text-destructive">{{ apiError }}</p>
 
-        <p v-if="transactionsStore.isLoading" class="text-muted-foreground">
-            {{ t("common.loading") }}
-        </p>
-
-        <template v-else>
-            <p v-if="transactionsStore.transactions.length === 0" class="text-muted-foreground">
-                {{ t("transactions.empty") }}
-            </p>
-
-            <div v-else class="space-y-2">
-                <Card
-                    v-for="tx in transactionsStore.transactions"
-                    :key="tx.id"
-                    class="cursor-pointer hover:bg-muted/50"
-                >
-                    <CardHeader class="flex flex-row items-center justify-between py-3">
-                        <div class="flex items-center gap-2">
-                            <Badge
-                                :variant="
-                                    tx.type === 'Income'
-                                        ? 'default'
-                                        : tx.type === 'Expense'
-                                          ? 'destructive'
-                                          : 'secondary'
-                                "
-                            >
-                                {{ t(`transactions.type.${tx.type.toLowerCase()}`) }}
-                            </Badge>
-                            <CardTitle class="text-base">{{ tx.description }}</CardTitle>
-                        </div>
-                        <span
-                            :class="[
-                                'text-lg font-semibold tabular-nums',
-                                tx.type === 'Income'
-                                    ? 'text-green-600'
-                                    : tx.type === 'Expense'
-                                      ? 'text-destructive'
-                                      : 'text-foreground',
-                            ]"
-                        >
-                            {{ tx.type === "Income" ? "+" : tx.type === "Expense" ? "-" : ""
-                            }}{{ tx.amount.toFixed(2) }}
-                        </span>
-                    </CardHeader>
-                    <CardContent class="flex items-center justify-between py-2 pt-0">
-                        <div class="flex gap-3 text-sm text-muted-foreground">
-                            <span>{{ tx.date }}</span>
-                            <span>{{ tx.categoryName }}</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                @click="
-                                    router.push({
-                                        name: 'transaction-edit',
-                                        params: { walletId, id: tx.id },
-                                    })
-                                "
-                            >
-                                {{ t("common.edit") }}
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                class="text-destructive hover:text-destructive"
-                                @click="handleDelete(tx.id)"
-                            >
-                                {{ t("common.delete") }}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </template>
+        <TransactionList
+            :transactions="transactionsStore.transactions"
+            :is-loading="transactionsStore.isLoading"
+            @edit="handleEdit"
+            @delete="handleDelete"
+        />
     </div>
 </template>

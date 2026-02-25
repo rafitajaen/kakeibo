@@ -28,7 +28,7 @@ function evaluateExpression(expr: string): number | null {
     // Only allow digits, decimal points, and the four basic arithmetic operators + parentheses
     if (!/^[\d.+\-*/()]+$/.test(sanitized)) return null;
     try {
-        // eslint-disable-next-line no-new-func
+        // oxlint-disable-next-line no-new-func
         const result = Function('"use strict"; return (' + sanitized + ")")() as number;
         if (typeof result !== "number" || !isFinite(result) || result <= 0) return null;
         return Math.round(result * 100) / 100;
