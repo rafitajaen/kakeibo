@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { Budget } from "@/stores/budgets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import BudgetProgressBar from "@/components/budgets/BudgetProgressBar.vue";
 import BudgetStatusBadge from "@/components/budgets/BudgetStatusBadge.vue";
 
-defineProps<{
+const props = defineProps<{
     budgets: Budget[];
     isLoading: boolean;
 }>();
@@ -16,6 +18,11 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+// Compute remaining for each budget (capped at 0)
+function remaining(budget: Budget): number {
+    return Math.max(0, budget.limit - budget.currentSpending);
+}
 </script>
 
 <template>
@@ -47,11 +54,25 @@ const { t } = useI18n();
                             {{ budget.startDate }} – {{ budget.endDate }}
                         </p>
 
-                        <p class="mt-1 text-sm">
-                            {{ t("wallets.budgets.detail.spent") }}:
-                            {{ budget.currentSpending.toFixed(2) }} /
-                            {{ budget.limit.toFixed(2) }}
-                        </p>
+                        <!-- Progress bar -->
+                        <BudgetProgressBar
+                            class="mt-2"
+                            :current-spending="budget.currentSpending"
+                            :limit="budget.limit"
+                        />
+
+                        <!-- Spending detail -->
+                        <div class="mt-1 flex justify-between text-sm">
+                            <span>
+                                {{ t("wallets.budgets.detail.spent") }}:
+                                {{ budget.currentSpending.toFixed(2) }} /
+                                {{ budget.limit.toFixed(2) }}
+                            </span>
+                            <span class="text-muted-foreground">
+                                {{ t("wallets.budgets.detail.remaining") }}:
+                                {{ remaining(budget).toFixed(2) }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Actions -->

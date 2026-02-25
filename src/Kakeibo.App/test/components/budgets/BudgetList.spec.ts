@@ -78,4 +78,15 @@ describe("BudgetList", () => {
         expect(wrapper.emitted("delete")).toBeTruthy();
         expect(wrapper.emitted("delete")?.[0]?.[0]).toBe("budget-1");
     });
+
+    it("renders remaining amount text", () => {
+        const wrapper = mountList([makeBudget({ currentSpending: 100, limit: 400 })]);
+        // Remaining = 400 - 100 = 300
+        expect(wrapper.text()).toContain("300.00");
+    });
+
+    it("renders the progress bar element", () => {
+        const wrapper = mountList([makeBudget()]);
+        expect(wrapper.find('[role="progressbar"]').exists()).toBe(true);
+    });
 });
