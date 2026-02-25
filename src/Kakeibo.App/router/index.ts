@@ -125,6 +125,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/transactions/EditTransactionView.vue"),
         meta: { requiresAuth: true },
     },
+    {
+        path: "/budgets",
+        name: "budgets",
+        component: () => import("@/views/budgets/BudgetsView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/budgets/new",
+        name: "budget-create",
+        component: () => import("@/views/budgets/CreateBudgetView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/budgets/:id/edit",
+        name: "budget-edit",
+        component: () => import("@/views/budgets/EditBudgetView.vue"),
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({

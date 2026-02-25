@@ -43,6 +43,7 @@ export const useWalletsStore = defineStore("wallets", () => {
         wallets.value.filter((w) => w.type === "Shared" && !w.isArchived),
     );
     const archivedWallets = computed(() => wallets.value.filter((w) => w.isArchived));
+    const activeWallets = computed(() => wallets.value.filter((w) => !w.isArchived));
 
     // Fetches the wallet list. Pass includeArchived=true to include archived wallets.
     async function fetchWallets(includeArchived = false): Promise<void> {
@@ -134,6 +135,7 @@ export const useWalletsStore = defineStore("wallets", () => {
         personalWallets,
         sharedWallets,
         archivedWallets,
+        activeWallets,
         fetchWallets,
         fetchWallet,
         createWallet,

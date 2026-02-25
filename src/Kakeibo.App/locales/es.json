@@ -198,6 +198,49 @@
         "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
       }
     },
+    "budgets": {
+      "title": "Presupuestos",
+      "empty": "Sin presupuestos aún. Crea uno para empezar a controlar tu gasto.",
+      "createNew": "Nuevo presupuesto",
+      "allWallets": "Todas las carteras",
+      "status": {
+        "onTrack": "En control",
+        "warning": "Alerta",
+        "exceeded": "Superado"
+      },
+      "form": {
+        "name": "Nombre",
+        "namePlaceholder": "Ej. Presupuesto de comida mensual",
+        "category": "Categoría",
+        "categoryPlaceholder": "Selecciona una categoría",
+        "limit": "Límite de gasto",
+        "limitPlaceholder": "0,00",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "wallet": "Cartera (opcional)",
+        "walletPlaceholder": "Todas las carteras",
+        "submit": "Crear presupuesto",
+        "submitEdit": "Guardar cambios"
+      },
+      "detail": {
+        "spent": "Gastado",
+        "remaining": "Restante",
+        "percentage": "del límite usado",
+        "period": "Período",
+        "wallet": "Cartera"
+      },
+      "actions": {
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "deleteConfirm": "¿Estás seguro de que quieres eliminar este presupuesto?"
+      },
+      "errors": {
+        "notFound": "Presupuesto no encontrado.",
+        "forbidden": "No tienes acceso a este presupuesto.",
+        "validation": "Por favor, revisa el formulario.",
+        "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+      }
+    },
     "invitation": {
       "title": "Invitar a la cartera",
       "email": "Correo electrónico",
