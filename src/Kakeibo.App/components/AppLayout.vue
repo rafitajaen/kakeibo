@@ -1,12 +1,19 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import NotificationBell from "@/components/notifications/NotificationBell.vue";
+import { usePushNotifications } from "@/composables/usePushNotifications";
 
 const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
+const { initPushSubscription } = usePushNotifications();
+
+onMounted(() => {
+    initPushSubscription();
+});
 
 const navLinks = [
     { name: "home", label: "app.home" },
