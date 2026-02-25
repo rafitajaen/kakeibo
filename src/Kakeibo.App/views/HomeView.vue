@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useWalletsStore } from "@/stores/wallets";
 import { useTransactionsStore } from "@/stores/transactions";
@@ -12,6 +13,7 @@ import BudgetSummary from "@/components/dashboard/BudgetSummary.vue";
 import GoalSummary from "@/components/dashboard/GoalSummary.vue";
 import QuickActions from "@/components/dashboard/QuickActions.vue";
 
+const router = useRouter();
 const { t } = useI18n();
 const walletsStore = useWalletsStore();
 const transactionsStore = useTransactionsStore();
@@ -31,6 +33,11 @@ onMounted(async () => {
             budgetsStore.fetchBudgets(),
             goalsStore.fetchGoals(),
         ]);
+        // Redirect new users (no wallets) to onboarding wizard.
+        if (walletsStore.activeWallets.length === 0) {
+            router.replace({ name: "onboarding" });
+            return;
+        }
         const walletIds = walletsStore.activeWallets.map((w) => w.id);
         recentTransactions.value = await transactionsStore.fetchRecentForDashboard(walletIds);
     } finally {

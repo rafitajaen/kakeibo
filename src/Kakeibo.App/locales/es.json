@@ -15,7 +15,10 @@
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "errorGeneric": "Algo salió mal. Por favor, inténtalo de nuevo."
   },
   "auth": {
     "logout": "Cerrar sesión",
@@ -471,6 +474,50 @@
       "previous": "Anterior",
       "next": "Siguiente",
       "showing": "Mostrando {from}–{to} de {total}"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Bienvenido a Kakeibo",
+      "subtitle": "Gestión financiera consciente",
+      "description": "Kakeibo está inspirado en el método japonés de presupuesto tradicional. Registra tus gastos, define presupuestos y alcanza tus metas de ahorro.",
+      "getStarted": "Comenzar",
+      "skip": "Omitir"
+    },
+    "tour": {
+      "title": "¿Qué puedes hacer?",
+      "wallets": {
+        "title": "Billeteras",
+        "description": "Gestiona cuentas financieras personales y compartidas"
+      },
+      "transactions": {
+        "title": "Transacciones",
+        "description": "Registra ingresos, gastos y transferencias"
+      },
+      "budgets": {
+        "title": "Presupuestos",
+        "description": "Establece límites de gasto y sigue el progreso"
+      },
+      "goals": {
+        "title": "Metas",
+        "description": "Ahorra hacia tus objetivos financieros"
+      }
+    },
+    "walletSetup": {
+      "title": "Crea tu primera billetera",
+      "description": "Comienza añadiendo una billetera que represente tu cuenta principal.",
+      "walletName": "Nombre de la billetera",
+      "walletNamePlaceholder": "ej. Cuenta Corriente",
+      "create": "Crear Billetera",
+      "skip": "Lo haré más tarde"
+    },
+    "completion": {
+      "title": "¡Todo listo!",
+      "description": "Tu espacio de trabajo está listo. Comienza a gestionar tus finanzas con Kakeibo.",
+      "goToDashboard": "Ir al Dashboard"
+    },
+    "progress": {
+      "step": "Paso {current} de {total}"
     }
   }
 }

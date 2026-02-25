@@ -15,7 +15,10 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "auth": {
     "logout": "Sign out",
@@ -471,6 +474,50 @@
       "previous": "Previous",
       "next": "Next",
       "showing": "Showing {from}–{to} of {total}"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Kakeibo",
+      "subtitle": "Mindful money management",
+      "description": "Kakeibo is inspired by the traditional Japanese budgeting method. Track spending, set budgets, and reach your savings goals.",
+      "getStarted": "Get Started",
+      "skip": "Skip"
+    },
+    "tour": {
+      "title": "What you can do",
+      "wallets": {
+        "title": "Wallets",
+        "description": "Manage personal and shared financial accounts"
+      },
+      "transactions": {
+        "title": "Transactions",
+        "description": "Record income, expenses, and transfers"
+      },
+      "budgets": {
+        "title": "Budgets",
+        "description": "Set spending limits and track progress"
+      },
+      "goals": {
+        "title": "Goals",
+        "description": "Save towards your financial targets"
+      }
+    },
+    "walletSetup": {
+      "title": "Create your first wallet",
+      "description": "Start by adding a wallet that represents your main account.",
+      "walletName": "Wallet name",
+      "walletNamePlaceholder": "e.g. Checking Account",
+      "create": "Create Wallet",
+      "skip": "I'll do this later"
+    },
+    "completion": {
+      "title": "You're all set!",
+      "description": "Your workspace is ready. Start tracking your finances with Kakeibo.",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "progress": {
+      "step": "Step {current} of {total}"
     }
   }
 }

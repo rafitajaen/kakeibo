@@ -42,6 +42,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/auth/ResetPasswordView.vue"),
         meta: { requiresGuest: true },
     },
+    // Onboarding — authenticated but outside AppLayout (full-page wizard).
+    {
+        path: "/onboarding",
+        name: "onboarding",
+        component: () => import("@/views/onboarding/OnboardingView.vue"),
+        meta: { requiresAuth: true },
+    },
     {
         // No requiresAuth — view handles unauthenticated users with redirect-to-login flow.
         path: "/wallets/invitations/:code/accept",
