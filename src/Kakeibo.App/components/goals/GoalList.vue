@@ -2,6 +2,7 @@
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
+import GoalMilestoneIndicator from "@/components/goals/GoalMilestoneIndicator.vue";
 import GoalProgressBar from "@/components/goals/GoalProgressBar.vue";
 import GoalStatusBadge from "@/components/goals/GoalStatusBadge.vue";
 import type { Goal } from "@/stores/goals";
@@ -69,6 +70,12 @@ function handleDelete(id: string) {
                     {{ t("wallets.goals.detail.deadline") }}: {{ goal.deadline }}
                 </span>
             </div>
+
+            <GoalMilestoneIndicator
+                :last-milestone="goal.lastMilestone"
+                :target-amount="goal.targetAmount"
+                :current-progress="goal.currentProgress"
+            />
 
             <div class="text-xs text-muted-foreground">
                 {{ t("wallets.goals.detail.wallet") }}: {{ goal.walletName }}
