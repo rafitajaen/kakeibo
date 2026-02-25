@@ -52,6 +52,12 @@ async function handleLogout() {
 
                 <div class="ml-auto flex items-center gap-2">
                     <NotificationBell />
+                    <router-link
+                        :to="{ name: 'settings' }"
+                        class="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        {{ t("settings.title") }}
+                    </router-link>
                     <button
                         class="text-sm text-muted-foreground hover:text-foreground"
                         @click="handleLogout"

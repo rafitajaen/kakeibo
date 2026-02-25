@@ -519,5 +519,46 @@
     "progress": {
       "step": "Step {current} of {total}"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "name": "Display name",
+      "namePlaceholder": "Your name",
+      "currency": "Currency",
+      "currencyPlaceholder": "Select currency",
+      "save": "Save changes",
+      "saved": "Saved!"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change Password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "save": "Change password",
+      "saved": "Password changed!"
+    },
+    "sessions": {
+      "title": "Active Sessions",
+      "description": "Manage devices and sessions with access to your account.",
+      "ip": "IP Address",
+      "userAgent": "Device",
+      "createdAt": "Signed in",
+      "revoke": "Revoke",
+      "revoked": "Revoked",
+      "empty": "No active sessions found.",
+      "unknownDevice": "Unknown device"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Your account will be permanently deleted after a 30-day grace period. You can cancel by logging in again within that time.",
+      "confirm": "Delete my account",
+      "password": "Confirm your password",
+      "passwordPlaceholder": "Enter your password",
+      "warning": "This action cannot be undone after 30 days.",
+      "success": "Account deletion requested."
+    }
   }
 }

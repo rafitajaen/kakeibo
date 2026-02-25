@@ -8,6 +8,7 @@ export interface User {
     role: string;
     currency: string;
     isVerified: boolean;
+    name: string | null;
 }
 
 export interface RegisterData {

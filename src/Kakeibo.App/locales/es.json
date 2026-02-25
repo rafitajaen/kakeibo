@@ -519,5 +519,46 @@
     "progress": {
       "step": "Paso {current} de {total}"
     }
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": {
+      "title": "Perfil",
+      "name": "Nombre de visualización",
+      "namePlaceholder": "Tu nombre",
+      "currency": "Moneda",
+      "currencyPlaceholder": "Seleccionar moneda",
+      "save": "Guardar cambios",
+      "saved": "¡Guardado!"
+    },
+    "security": {
+      "title": "Seguridad",
+      "changePassword": "Cambiar contraseña",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "save": "Cambiar contraseña",
+      "saved": "¡Contraseña cambiada!"
+    },
+    "sessions": {
+      "title": "Sesiones Activas",
+      "description": "Gestiona los dispositivos y sesiones con acceso a tu cuenta.",
+      "ip": "Dirección IP",
+      "userAgent": "Dispositivo",
+      "createdAt": "Inicio de sesión",
+      "revoke": "Revocar",
+      "revoked": "Revocado",
+      "empty": "No se encontraron sesiones activas.",
+      "unknownDevice": "Dispositivo desconocido"
+    },
+    "deleteAccount": {
+      "title": "Eliminar Cuenta",
+      "description": "Tu cuenta será eliminada permanentemente tras un período de gracia de 30 días. Puedes cancelarlo iniciando sesión dentro de ese período.",
+      "confirm": "Eliminar mi cuenta",
+      "password": "Confirma tu contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "warning": "Esta acción no se puede deshacer después de 30 días.",
+      "success": "Eliminación de cuenta solicitada."
+    }
   }
 }
