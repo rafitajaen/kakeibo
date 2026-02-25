@@ -143,6 +143,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/budgets/EditBudgetView.vue"),
         meta: { requiresAuth: true },
     },
+    {
+        path: "/goals",
+        name: "goals",
+        component: () => import("@/views/goals/GoalsView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/goals/new",
+        name: "goal-create",
+        component: () => import("@/views/goals/CreateGoalView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/goals/:id/edit",
+        name: "goal-edit",
+        component: () => import("@/views/goals/EditGoalView.vue"),
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({

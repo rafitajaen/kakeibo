@@ -241,6 +241,52 @@
         "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
       }
     },
+    "goals": {
+      "title": "Metas",
+      "empty": "Sin metas aún. Crea una para empezar a ahorrar.",
+      "createNew": "Nueva meta",
+      "status": {
+        "notStarted": "Sin empezar",
+        "inProgress": "En progreso",
+        "nearTarget": "Casi lograda",
+        "achieved": "Lograda"
+      },
+      "form": {
+        "name": "Nombre",
+        "namePlaceholder": "Ej. Vacaciones en Europa",
+        "targetAmount": "Importe objetivo",
+        "targetAmountPlaceholder": "0,00",
+        "deadline": "Fecha límite (opcional)",
+        "wallet": "Cartera",
+        "walletPlaceholder": "Selecciona una cartera",
+        "submit": "Crear meta",
+        "submitEdit": "Guardar cambios"
+      },
+      "detail": {
+        "progress": "Progreso",
+        "deadline": "Fecha límite",
+        "wallet": "Cartera",
+        "remaining": "Restante",
+        "percentage": "completado"
+      },
+      "milestones": {
+        "25": "25% alcanzado",
+        "50": "A mitad de camino",
+        "75": "¡Casi allí!",
+        "100": "¡Meta lograda!"
+      },
+      "actions": {
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "deleteConfirm": "¿Estás seguro de que quieres eliminar esta meta?"
+      },
+      "errors": {
+        "notFound": "Meta no encontrada.",
+        "forbidden": "No tienes acceso a esta meta.",
+        "validation": "Por favor, revisa el formulario.",
+        "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+      }
+    },
     "invitation": {
       "title": "Invitar a la cartera",
       "email": "Correo electrónico",
