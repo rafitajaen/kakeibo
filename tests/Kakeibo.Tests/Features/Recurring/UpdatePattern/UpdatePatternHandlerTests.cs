@@ -149,4 +149,87 @@ public sealed class UpdatePatternHandlerTests
         Assert.True(result.IsFailure);
         Assert.Equal("not_found", result.Error.Code);
     }
+
+    [Fact]
+    public async Task TransferPattern_CanUpdateDestinationWallet()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var user = await CreateUserAsync(db);
+        var (sourceWallet, category, _) = await SetupAsync(db, user.Id);
+
+        // Add a second wallet for transfer destination
+        var destWallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        db.Wallets.Add(destWallet);
+        db.WalletBalances.Add(new WalletBalance { WalletId = destWallet.Id, Balance = 0m });
+        await db.SaveChangesAsync(ct);
+
+        // Create a transfer pattern pointing to destWallet
+        var pattern = new RecurringPattern
+        {
+            UserId = user.Id,
+            Name = "Monthly Transfer",
+            Amount = 300m,
+            Description = "Savings",
+            TransactionType = TransactionType.Transfer,
+            Frequency = RecurrenceFrequency.Monthly,
+            CategoryId = category.Id,
+            WalletId = sourceWallet.Id,
+            DestinationWalletId = destWallet.Id,
+            StartDate = new LocalDate(2026, 1, 1),
+            NextOccurrence = new LocalDate(2026, 3, 1)
+        };
+        db.RecurringPatterns.Add(pattern);
+        await db.SaveChangesAsync(ct);
+
+        var handler = new UpdatePatternHandler(db, TestClock);
+        var request = new UpdatePatternEndpoint.UpdatePatternRequest(
+            "Monthly Transfer Updated", 400m, "Savings updated", "Transfer", "Monthly",
+            category.Id, sourceWallet.Id, destWallet.Id, null);
+
+        var result = await handler.HandleAsync(pattern.Id, request, user.Id, ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Transfer", result.Value.TransactionType);
+        Assert.Equal(destWallet.Id, result.Value.DestinationWalletId);
+        Assert.Equal(400m, result.Value.Amount);
+    }
+
+    [Fact]
+    public async Task EndDate_CanBeNullified()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var user = await CreateUserAsync(db);
+        var (wallet, category, _) = await SetupAsync(db, user.Id);
+
+        // Create pattern with an EndDate
+        var pattern = new RecurringPattern
+        {
+            UserId = user.Id,
+            Name = "Limited Pattern",
+            Amount = 100m,
+            Description = "Expires soon",
+            TransactionType = TransactionType.Expense,
+            Frequency = RecurrenceFrequency.Monthly,
+            CategoryId = category.Id,
+            WalletId = wallet.Id,
+            StartDate = new LocalDate(2026, 1, 1),
+            NextOccurrence = new LocalDate(2026, 3, 1),
+            EndDate = new LocalDate(2026, 6, 1)
+        };
+        db.RecurringPatterns.Add(pattern);
+        await db.SaveChangesAsync(ct);
+
+        // Update removing the EndDate (null = indefinite)
+        var handler = new UpdatePatternHandler(db, TestClock);
+        var request = new UpdatePatternEndpoint.UpdatePatternRequest(
+            pattern.Name, pattern.Amount, pattern.Description, "Expense", "Monthly",
+            category.Id, wallet.Id, null, null); // EndDate = null → remove it
+
+        var result = await handler.HandleAsync(pattern.Id, request, user.Id, ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.EndDate);
+    }
 }

@@ -208,4 +208,97 @@ public sealed class GenerateRecurringTransactionsJobTests
         var transactions = await db.Transactions.Where(t => t.UserId == user.Id).ToListAsync(ct);
         Assert.Single(transactions);
     }
+
+    [Fact]
+    public async Task GeneratesTransaction_PublishesRecurringTransactionGeneratedEvent()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var (user, wallet, _, category) = await SetupAsync(db);
+
+        var pattern = CreatePattern(user.Id, wallet.Id, category.Id,
+            nextOccurrence: new LocalDate(2026, 3, 15));
+        db.RecurringPatterns.Add(pattern);
+        await db.SaveChangesAsync(ct);
+
+        // Use a spy to verify the event was published
+        var spyEventBus = Substitute.For<IEventBus>();
+        var recordHandler = new RecordTransactionHandler(db, CreateFakeEventBus(), TestClock);
+        var job = new GenerateRecurringTransactionsJob(db, recordHandler, spyEventBus, TestClock, CreateFakeLogger());
+
+        await job.ExecuteAsync();
+
+        spyEventBus.Received(1).Publish(
+            Arg.Any<Kakeibo.Api.Features.Recurring.Events.RecurringTransactionGeneratedEvent>());
+    }
+
+    [Fact]
+    public async Task TransferPattern_GeneratesTransactionWithDestinationWallet()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var (user, sourceWallet, _, category) = await SetupAsync(db);
+
+        // Add a destination wallet with balance
+        var destinationWallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        db.Wallets.Add(destinationWallet);
+        db.WalletBalances.Add(new WalletBalance { WalletId = destinationWallet.Id, Balance = 0m });
+        await db.SaveChangesAsync(ct);
+
+        // Transfer pattern due today
+        var pattern = new RecurringPattern
+        {
+            UserId = user.Id,
+            Name = "Monthly Transfer",
+            Amount = 200m,
+            Description = "Savings transfer",
+            TransactionType = TransactionType.Transfer,
+            Frequency = RecurrenceFrequency.Monthly,
+            CategoryId = category.Id,
+            WalletId = sourceWallet.Id,
+            DestinationWalletId = destinationWallet.Id,
+            StartDate = new LocalDate(2026, 1, 1),
+            NextOccurrence = new LocalDate(2026, 3, 15)
+        };
+        db.RecurringPatterns.Add(pattern);
+        await db.SaveChangesAsync(ct);
+
+        var recordHandler = new RecordTransactionHandler(db, CreateFakeEventBus(), TestClock);
+        var job = new GenerateRecurringTransactionsJob(db, recordHandler, CreateFakeEventBus(), TestClock, CreateFakeLogger());
+
+        await job.ExecuteAsync();
+
+        var transactions = await db.Transactions.Where(t => t.UserId == user.Id).ToListAsync(ct);
+        Assert.Single(transactions);
+        Assert.Equal(TransactionType.Transfer, transactions[0].Type);
+        Assert.Equal(destinationWallet.Id, transactions[0].DestinationWalletId);
+    }
+
+    [Fact]
+    public async Task MultipleUsers_PatternsProcessedIndependently()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var (userA, walletA, _, categoryA) = await SetupAsync(db);
+        var (userB, walletB, _, categoryB) = await SetupAsync(db);
+
+        // Both users have a monthly pattern due today
+        db.RecurringPatterns.Add(CreatePattern(userA.Id, walletA.Id, categoryA.Id,
+            nextOccurrence: new LocalDate(2026, 3, 15)));
+        db.RecurringPatterns.Add(CreatePattern(userB.Id, walletB.Id, categoryB.Id,
+            nextOccurrence: new LocalDate(2026, 3, 15)));
+        await db.SaveChangesAsync(ct);
+
+        var recordHandler = new RecordTransactionHandler(db, CreateFakeEventBus(), TestClock);
+        var job = new GenerateRecurringTransactionsJob(db, recordHandler, CreateFakeEventBus(), TestClock, CreateFakeLogger());
+
+        await job.ExecuteAsync();
+
+        var txA = await db.Transactions.Where(t => t.UserId == userA.Id).ToListAsync(ct);
+        var txB = await db.Transactions.Where(t => t.UserId == userB.Id).ToListAsync(ct);
+
+        // Each user gets exactly one transaction from their own pattern
+        Assert.Single(txA);
+        Assert.Single(txB);
+    }
 }

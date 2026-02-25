@@ -98,4 +98,22 @@ public sealed class DeletePatternHandlerTests
         Assert.True(result.IsFailure);
         Assert.Equal("not_found", result.Error.Code);
     }
+
+    [Fact]
+    public async Task AlreadyDeletedPattern_ReturnsNotFound()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var (user, pattern) = await SetupAsync(db);
+        var handler = new DeletePatternHandler(db, TestClock);
+
+        // First delete succeeds
+        var firstResult = await handler.HandleAsync(pattern.Id, user.Id, ct);
+        Assert.True(firstResult.IsSuccess);
+
+        // Second delete on the same already-soft-deleted pattern returns not_found
+        var secondResult = await handler.HandleAsync(pattern.Id, user.Id, ct);
+        Assert.True(secondResult.IsFailure);
+        Assert.Equal("not_found", secondResult.Error.Code);
+    }
 }
