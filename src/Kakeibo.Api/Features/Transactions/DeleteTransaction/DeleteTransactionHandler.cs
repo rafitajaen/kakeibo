@@ -82,7 +82,9 @@ public sealed class DeleteTransactionHandler(AppDbContext db, IEventBus eventBus
             WalletId = transaction.WalletId,
             Type = transaction.Type.ToString(),
             Amount = transaction.Amount,
-            UserId = userId
+            UserId = userId,
+            CategoryId = transaction.CategoryId,
+            Date = transaction.Date
         });
 
         await db.SaveChangesAsync(ct);

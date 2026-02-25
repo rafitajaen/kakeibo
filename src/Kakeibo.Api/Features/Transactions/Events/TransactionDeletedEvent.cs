@@ -12,4 +12,6 @@ public sealed record TransactionDeletedEvent : IEvent
     public required string Type { get; init; }
     public required decimal Amount { get; init; }
     public required Guid UserId { get; init; }
+    public required Guid CategoryId { get; init; }
+    public required LocalDate Date { get; init; }
 }

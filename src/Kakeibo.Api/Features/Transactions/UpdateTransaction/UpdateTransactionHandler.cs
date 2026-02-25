@@ -152,6 +152,10 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
 
         sourceBalance.UpdatedAt = clock.GetCurrentInstant();
 
+        // Capture old values before mutation — needed for budget recalculation in event handlers
+        var oldCategoryId = transaction.CategoryId;
+        var oldDate = transaction.Date;
+
         // Update the transaction fields
         transaction.Amount = request.Amount;
         transaction.Description = request.Description;
@@ -166,7 +170,12 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             WalletId = transaction.WalletId,
             Type = transaction.Type.ToString(),
             Amount = request.Amount,
-            UserId = userId
+            UserId = userId,
+            CategoryId = request.CategoryId,
+            Date = newDate,
+            OldCategoryId = oldCategoryId,
+            OldDate = oldDate,
+            OldAmount = oldAmount
         });
 
         await db.SaveChangesAsync(ct);

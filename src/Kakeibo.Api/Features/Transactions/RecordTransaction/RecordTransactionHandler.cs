@@ -118,7 +118,9 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             WalletId = transaction.WalletId,
             Type = transactionType.ToString(),
             Amount = request.Amount,
-            UserId = userId
+            UserId = userId,
+            CategoryId = request.CategoryId,
+            Date = date
         });
 
         await db.SaveChangesAsync(ct);

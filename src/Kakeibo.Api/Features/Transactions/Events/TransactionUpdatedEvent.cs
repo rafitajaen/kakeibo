@@ -12,4 +12,9 @@ public sealed record TransactionUpdatedEvent : IEvent
     public required string Type { get; init; }
     public required decimal Amount { get; init; }
     public required Guid UserId { get; init; }
+    public required Guid CategoryId { get; init; }
+    public required LocalDate Date { get; init; }
+    public required Guid OldCategoryId { get; init; }
+    public required LocalDate OldDate { get; init; }
+    public required decimal OldAmount { get; init; }
 }
