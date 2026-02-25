@@ -243,6 +243,113 @@ public sealed class TransactionCrudTests
     }
 
     [Fact]
+    public async Task RecordTransaction_WithArchivedCategory_ReturnsNotFound()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var eventBus = Substitute.For<IEventBus>();
+        var user = await CreateUserAsync(db, ct);
+        var wallet = await CreateWalletAsync(db, user, ct);
+
+        // Create a custom category with DeletedAt already set (simulates an archived category)
+        var archivedCategory = new Category
+        {
+            Name = "Archived Category",
+            UserId = user.Id,
+            DeletedAt = Instant.FromUtc(2026, 1, 1, 0, 0)
+        };
+        db.Categories.Add(archivedCategory);
+        await db.SaveChangesAsync(ct);
+
+        var handler = new RecordTransactionHandler(db, eventBus, TestClock);
+        var result = await handler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Expense", 50m, "Using archived category", TestDate, archivedCategory.Id, wallet.Id, null),
+            user.Id, ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("not_found", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task GetTransaction_ByOtherUser_ReturnsForbidden()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var eventBus = Substitute.For<IEventBus>();
+        var owner = await CreateUserAsync(db, ct);
+        var stranger = await CreateUserAsync(db, ct);
+        var wallet = await CreateWalletAsync(db, owner, ct);
+
+        var recordHandler = new RecordTransactionHandler(db, eventBus, TestClock);
+        var recorded = await recordHandler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Income", 100m, "Salary", TestDate, HousingCategoryId, wallet.Id, null),
+            owner.Id, ct);
+
+        Assert.True(recorded.IsSuccess);
+
+        var getHandler = new GetTransactionHandler(db);
+        var result = await getHandler.HandleAsync(recorded.Value.Id, stranger.Id, ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task UpdateTransaction_ByOtherUser_ReturnsForbidden()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var eventBus = Substitute.For<IEventBus>();
+        var owner = await CreateUserAsync(db, ct);
+        var stranger = await CreateUserAsync(db, ct);
+        var wallet = await CreateWalletAsync(db, owner, ct);
+
+        var recordHandler = new RecordTransactionHandler(db, eventBus, TestClock);
+        var recorded = await recordHandler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Income", 100m, "Salary", TestDate, HousingCategoryId, wallet.Id, null),
+            owner.Id, ct);
+
+        Assert.True(recorded.IsSuccess);
+
+        var updateHandler = new UpdateTransactionHandler(db, eventBus, TestClock);
+        var result = await updateHandler.HandleAsync(
+            recorded.Value.Id,
+            new UpdateTransactionEndpoint.UpdateTransactionRequest(200m, "Hijacked", TestDate, HousingCategoryId, null),
+            stranger.Id, ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task DeleteTransaction_ByOtherUser_ReturnsForbidden()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var eventBus = Substitute.For<IEventBus>();
+        var owner = await CreateUserAsync(db, ct);
+        var stranger = await CreateUserAsync(db, ct);
+        var wallet = await CreateWalletAsync(db, owner, ct);
+
+        var recordHandler = new RecordTransactionHandler(db, eventBus, TestClock);
+        var recorded = await recordHandler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Income", 100m, "Salary", TestDate, HousingCategoryId, wallet.Id, null),
+            owner.Id, ct);
+
+        Assert.True(recorded.IsSuccess);
+
+        var deleteHandler = new DeleteTransactionHandler(db, eventBus, TestClock);
+        var result = await deleteHandler.HandleAsync(recorded.Value.Id, stranger.Id, ct);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("forbidden", result.Error.Code);
+    }
+
+    [Fact]
     public async Task GetWallet_AfterTransactions_ReturnsCorrectBalance()
     {
         await using var db = await TestDbContextFactory.CreateAsync();

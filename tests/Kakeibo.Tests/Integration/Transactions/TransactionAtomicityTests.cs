@@ -196,6 +196,42 @@ public sealed class TransactionAtomicityTests
     }
 
     [Fact]
+    public async Task DeleteTransfer_ReversesSourceAndDestinationBalances()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var eventBus = Substitute.For<IEventBus>();
+        var (user, sourceWallet) = await SeedAsync(db, ct);
+
+        var destWallet = new Wallet { Name = "Destination", OwnerId = user.Id, Currency = "EUR" };
+        db.Wallets.Add(destWallet);
+        db.WalletBalances.Add(new WalletBalance { WalletId = destWallet.Id, Balance = 0m });
+        db.WalletBalances.First(wb => wb.WalletId == sourceWallet.Id).Balance = 1000m;
+        await db.SaveChangesAsync(ct);
+
+        // Record the transfer first
+        var recordHandler = new RecordTransactionHandler(db, eventBus, TestClock);
+        var recorded = await recordHandler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Transfer", 400m, "To destination", TestDate,
+                Guid.Parse("10000000-0000-0000-0000-000000000009"), // Savings & Investments
+                sourceWallet.Id, destWallet.Id),
+            user.Id, ct);
+
+        Assert.True(recorded.IsSuccess);
+        Assert.Equal(600m, await GetBalanceAsync(db, sourceWallet.Id, ct));
+        Assert.Equal(400m, await GetBalanceAsync(db, destWallet.Id, ct));
+
+        // Delete the transfer — both balances must revert atomically
+        var deleteHandler = new DeleteTransactionHandler(db, eventBus, TestClock);
+        var deleteResult = await deleteHandler.HandleAsync(recorded.Value.Id, user.Id, ct);
+
+        Assert.True(deleteResult.IsSuccess);
+        Assert.Equal(1000m, await GetBalanceAsync(db, sourceWallet.Id, ct));
+        Assert.Equal(0m, await GetBalanceAsync(db, destWallet.Id, ct));
+    }
+
+    [Fact]
     public async Task UpdateTransfer_ChangeDestination_RebalancesCorrectly()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
