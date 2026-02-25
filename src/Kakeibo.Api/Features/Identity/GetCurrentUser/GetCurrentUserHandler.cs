@@ -26,6 +26,7 @@ public sealed class GetCurrentUserHandler(AppDbContext db)
             user.Email,
             user.Role.ToString(),
             user.IsVerified,
-            user.Currency);
+            user.Currency,
+            user.Name);
     }
 }

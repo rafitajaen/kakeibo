@@ -39,6 +39,13 @@ public sealed class LoginUserHandler(
 
         var now = clock.GetCurrentInstant();
 
+        // If the user had previously requested deletion, cancel it (account recovery within grace period)
+        if (user.DeletionRequestedAt is not null)
+        {
+            user.DeletionRequestedAt = null;
+            user.UpdatedAt = now;
+        }
+
         // Generate tokens
         var accessToken = jwtService.GenerateAccessToken(user);
         var rawRefreshToken = RandomString.Generate(64, CharSets.Alphanumeric);

@@ -23,4 +23,8 @@ public sealed class User : Entity
 
     // User preferences
     public required string Currency { get; set; }
+    public string? Name { get; set; }
+
+    // GDPR account deletion — 30-day grace period before permanent deletion.
+    public Instant? DeletionRequestedAt { get; set; }
 }

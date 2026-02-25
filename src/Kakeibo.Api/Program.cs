@@ -6,6 +6,7 @@ using NodaTime;
 using Kakeibo.Api.Common.Endpoints;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Common.Utils;
+using Kakeibo.Api.Features.Identity.Jobs;
 using Kakeibo.Api.Features.Recurring.Jobs;
 using Kakeibo.Api.Infrastructure.Audit;
 using Kakeibo.Api.Infrastructure.Auth;
@@ -127,6 +128,7 @@ builder.Services.AddHangfireServer();
 
 // --- Background jobs: Hangfire recurring jobs ---
 builder.Services.AddScoped<GenerateRecurringTransactionsJob>();
+builder.Services.AddScoped<AccountDeletionJob>();
 
 // --- Clock: NodaTime singleton used by all handlers and JwtService ---
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
@@ -210,6 +212,11 @@ RecurringJob.AddOrUpdate<GenerateRecurringTransactionsJob>(
     "generate-recurring-transactions",
     job => job.ExecuteAsync(),
     "0 1 * * *"); // Daily at 01:00 UTC
+
+RecurringJob.AddOrUpdate<AccountDeletionJob>(
+    "account-deletion-cleanup",
+    job => job.ExecuteAsync(),
+    "0 2 * * *"); // Daily at 02:00 UTC
 
 app.Run();
 

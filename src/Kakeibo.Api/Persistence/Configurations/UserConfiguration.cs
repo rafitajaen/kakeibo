@@ -30,6 +30,9 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(3);
 
+        builder.Property(u => u.Name)
+            .HasMaxLength(100);
+
         builder.Property(u => u.EmailVerificationToken)
             .HasMaxLength(64);
 

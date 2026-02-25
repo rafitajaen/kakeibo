@@ -1,38 +1,34 @@
 using Kakeibo.Api.Common.Endpoints;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
-namespace Kakeibo.Api.Features.Identity.GetCurrentUser;
+namespace Kakeibo.Api.Features.Identity.RevokeSession;
 
-public sealed class GetCurrentUserEndpoint : IEndpoint
+public sealed class RevokeSessionEndpoint : IEndpoint
 {
-    public sealed record GetCurrentUserResponse(
-        Guid Id,
-        string Email,
-        string Role,
-        bool IsVerified,
-        string Currency,
-        string? Name);
+    public sealed record RevokeSessionResponse(string Message);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/auth/me", HandleAsync)
+        app.MapDelete("/api/users/me/sessions/{id:guid}", HandleAsync)
             .WithTags("Identity")
             .RequireAuthorization();
     }
 
     private static async Task<IResult> HandleAsync(
-        GetCurrentUserHandler handler,
-        HttpContext httpContext,
+        Guid id,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
+        RevokeSessionHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(httpContext, ct);
+        var result = await handler.HandleAsync(id, userId, ct);
         return result.IsSuccess
             ? TypedResults.Ok(result.Value)
             : result.Error.Code switch
             {
-                "unauthorized" => TypedResults.Unauthorized(),
                 "not_found" => TypedResults.NotFound(result.Error),
+                "forbidden" => TypedResults.Forbid(),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }
