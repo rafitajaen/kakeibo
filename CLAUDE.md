@@ -1,6 +1,6 @@
 # Kakeibo
 
-Personal finance and shared expense management platform inspired by traditional Japanese budgeting. Simple monolith monorepo with event-driven architecture. Current phase: **Phase 6 (Recurring Transactions) — complete. Phase 7 (Notifications) next**.
+Personal finance and shared expense management platform inspired by traditional Japanese budgeting. Simple monolith monorepo with event-driven architecture. Current phase: **Phase 8 complete. MVP.**
 
 **Language:** Always respond in Spanish. All code, commits, PRs, code comments, and documentation must be in English.
 

@@ -29,7 +29,7 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 
 ## 🚧 Version 3.0 - Single-Tenant MVP
 
-**Current Status:** ✅ **Phase 7 (Notifications & Activity Logging) — Complete**
+**Current Status:** ✅ **Phase 8 (Dashboard + Onboarding + Settings + Launch) — Complete. MVP Ready.**
 
 ### What Works Now
 - ✅ Solution structure: 2 projects (Kakeibo.Api + Kakeibo.Tests)
@@ -46,9 +46,10 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 - ✅ **Phase 5 — Goals:** Savings targets, 3 tracking modes (wallet-linked/cross-wallet/manual), milestones, projected completion
 - ✅ **Phase 6 — Recurring Transactions:** Pattern CRUD, recurrence rules (daily/weekly/biweekly/monthly/yearly), Hangfire auto-generation job, 30/90-day forecast
 - ✅ **Phase 7 — Notifications + Activity Logging:** In-app notification center (`/notifications/preferences`), email + Web Push delivery, notification preferences, activity feed (`/activity`) with filters and pagination
+- ✅ **Phase 8 — Dashboard + Onboarding + Settings + Launch:** Responsive dashboard (balance, transactions, budgets, goals), new-user onboarding wizard, profile/password/sessions settings, account deletion with GDPR grace period, Vite bundle optimization, comprehensive E2E test suite
 
-### What's Coming
-- 🔨 **Phase 8 (Next):** Dashboard + Onboarding + Settings + Production launch
+### MVP Complete 🎉
+All 8 phases implemented. The application is feature-complete for the single-tenant MVP.
 
 For detailed roadmap, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
