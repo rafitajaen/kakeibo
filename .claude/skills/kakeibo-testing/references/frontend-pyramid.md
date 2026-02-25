@@ -566,19 +566,19 @@ await page.route('**/api/members', async (route) => {
 
 ```bash
 # Trace viewer — run after a CI failure to replay the test step-by-step
-npx playwright show-trace playwright-report/trace.zip
+bunx --bun playwright show-trace playwright-report/trace.zip
 
 # Codegen — record interactions to scaffold test code
-npx playwright codegen http://localhost:5173
+bunx --bun playwright codegen http://localhost:5173
 
 # UI mode — visual interactive test runner (great for local development)
-npx playwright test --ui
+bunx --bun playwright test --ui
 
 # Debug a single test with Playwright Inspector
-npx playwright test --debug e2e/members/subscription.spec.ts
+bunx --bun playwright test --debug e2e/members/subscription.spec.ts
 
 # Headed mode — watch the browser while the test runs
-npx playwright test --headed
+bunx --bun playwright test --headed
 ```
 
 **Trace files are generated automatically** when `trace: 'on-first-retry'` is set in

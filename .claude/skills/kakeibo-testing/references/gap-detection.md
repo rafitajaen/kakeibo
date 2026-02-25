@@ -217,7 +217,7 @@ Find, fix, or quarantine them immediately.
 dotnet test Kakeibo.slnx --count 5
 
 # Run Playwright tests with retries (already configured in playwright.config.ts for CI)
-npx playwright test --retries 3
+bunx --bun playwright test --retries 3
 ```
 
 ### Quarantine strategy
