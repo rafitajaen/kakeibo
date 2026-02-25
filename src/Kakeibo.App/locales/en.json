@@ -411,6 +411,34 @@
       "saved": "Preferences saved."
     }
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "balanceOverview": {
+      "title": "Balance Overview",
+      "totalBalance": "Total Balance",
+      "noWallets": "No wallets yet"
+    },
+    "recentTransactions": {
+      "title": "Recent Transactions",
+      "empty": "No recent transactions",
+      "viewAll": "View all"
+    },
+    "budgetSummary": {
+      "title": "Budget Summary",
+      "empty": "No active budgets",
+      "createNew": "Create budget"
+    },
+    "goalSummary": {
+      "title": "Goal Summary",
+      "empty": "No active goals",
+      "createNew": "Create goal"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "recordTransaction": "Record Transaction",
+      "createWallet": "Create Wallet"
+    }
+  },
   "activity": {
     "title": "Activity",
     "noActivity": "No activity found.",

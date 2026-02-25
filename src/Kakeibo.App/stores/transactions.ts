@@ -128,6 +128,28 @@ export const useTransactionsStore = defineStore("transactions", () => {
         total.value = Math.max(0, total.value - 1);
     }
 
+    // Fetches recent transactions from multiple wallets for the dashboard.
+    // Returns merged list sorted by date descending without mutating store state.
+    async function fetchRecentForDashboard(
+        walletIds: string[],
+        limit = 10,
+    ): Promise<Transaction[]> {
+        if (walletIds.length === 0) return [];
+        const results = await Promise.all(
+            walletIds.map((walletId) =>
+                api
+                    .get<TransactionListResult>("/api/transactions", {
+                        params: { walletId, page: 1, pageSize: limit },
+                    })
+                    .then((r) => r.data.items),
+            ),
+        );
+        return results
+            .flat()
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, limit);
+    }
+
     return {
         transactions,
         currentTransaction,
@@ -140,5 +162,6 @@ export const useTransactionsStore = defineStore("transactions", () => {
         recordTransaction,
         updateTransaction,
         deleteTransaction,
+        fetchRecentForDashboard,
     };
 });

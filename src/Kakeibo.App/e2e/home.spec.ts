@@ -1,13 +1,15 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Home Page", () => {
-    test("should load and display welcome message", async ({ page }) => {
+test.describe("Dashboard", () => {
+    test("should load and display dashboard sections", async ({ page }) => {
         await page.goto("/");
 
-        // Check that the welcome heading is visible
-        await expect(page.getByRole("heading", { name: /welcome to kakeibo/i })).toBeVisible();
-
-        // Check that the tagline is visible
-        await expect(page.getByText(/mindful money management/i)).toBeVisible();
+        // The dashboard renders section headings for all key areas.
+        // These are visible once data is loaded (or on empty state).
+        await expect(page.getByText(/balance overview/i)).toBeVisible();
+        await expect(page.getByText(/recent transactions/i)).toBeVisible();
+        await expect(page.getByText(/budget summary/i)).toBeVisible();
+        await expect(page.getByText(/goal summary/i)).toBeVisible();
+        await expect(page.getByText(/quick actions/i)).toBeVisible();
     });
 });
