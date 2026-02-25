@@ -14,6 +14,7 @@ using Kakeibo.Api.Infrastructure.Email;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.HealthChecks;
 using Kakeibo.Api.Infrastructure.Storage;
+using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -102,6 +103,11 @@ builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOpt
 builder.Services.Configure<EmailRendererOptions>(builder.Configuration.GetSection(EmailRendererOptions.SectionName));
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<IEmailService, EmailService>();
+
+// --- Web Push ---
+builder.Services.Configure<WebPushOptions>(builder.Configuration.GetSection(WebPushOptions.SectionName));
+builder.Services.AddHttpClient<Lib.Net.Http.WebPush.PushServiceClient>();
+builder.Services.AddScoped<IWebPushService, WebPushService>();
 
 // --- Storage: S3-compatible (RustFS via MinIO SDK) ---
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));

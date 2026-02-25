@@ -13,8 +13,25 @@ public sealed record AuditEntry(
     string? UserAgent,
     string? Changes);
 
-// Appends audit events to the ClickHouse audit trail.
+// An activity entry returned from the activity feed query.
+public sealed record ActivityEntry(
+    Guid Id,
+    string Action,
+    string? EntityType,
+    Guid? EntityId,
+    Instant OccurredAt);
+
+// Appends audit events to the ClickHouse audit trail and provides activity feed queries.
 public interface IAuditService
 {
     Task RecordAsync(AuditEntry entry, CancellationToken cancellationToken = default);
+
+    Task<(IReadOnlyList<ActivityEntry> Items, int Total)> GetActivitiesAsync(
+        Guid userId,
+        LocalDate? start,
+        LocalDate? end,
+        string? actionType,
+        int offset,
+        int limit,
+        CancellationToken cancellationToken = default);
 }

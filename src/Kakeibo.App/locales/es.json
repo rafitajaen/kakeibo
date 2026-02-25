@@ -2,7 +2,11 @@
   "app": {
     "name": "Kakeibo",
     "welcome": "Bienvenido a Kakeibo",
-    "tagline": "Gestión consciente del dinero para presupuestos personales y gastos colaborativos"
+    "tagline": "Gestión consciente del dinero para presupuestos personales y gastos colaborativos",
+    "home": "Inicio",
+    "budgets": "Presupuestos",
+    "goals": "Metas",
+    "recurring": "Recurrentes"
   },
   "common": {
     "loading": "Cargando...",
@@ -14,6 +18,7 @@
     "close": "Cerrar"
   },
   "auth": {
+    "logout": "Cerrar sesión",
     "login": {
       "title": "Iniciar sesión",
       "description": "Introduce tus credenciales para acceder a tu cuenta",
@@ -375,6 +380,69 @@
         "conflict": "Ya eres miembro de esta cartera.",
         "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
       }
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "unread": "sin leer",
+    "markAllRead": "Marcar todas como leídas",
+    "noNotifications": "Sin notificaciones",
+    "preferences": "Preferencias",
+    "close": "Cerrar",
+    "types": {
+      "budget.warning": "Advertencia de presupuesto",
+      "budget.exceeded": "Presupuesto excedido",
+      "goal.milestone": "Hito de meta",
+      "goal.achieved": "Meta alcanzada",
+      "invitation.sent": "Invitación",
+      "member.joined": "Miembro unido",
+      "settlement.recorded": "Liquidación registrada",
+      "recurring.generated": "Transacción recurrente"
+    },
+    "prefs": {
+      "title": "Preferencias de notificación",
+      "emailAlerts": "Notificaciones por correo",
+      "pushAlerts": "Notificaciones push",
+      "budgetAlerts": "Alertas de presupuesto",
+      "goalMilestones": "Hitos de metas",
+      "invitations": "Invitaciones",
+      "recurringUpdates": "Actualizaciones recurrentes",
+      "save": "Guardar preferencias",
+      "saved": "Preferencias guardadas."
+    }
+  },
+  "activity": {
+    "title": "Actividad",
+    "noActivity": "No se encontró actividad.",
+    "filters": {
+      "startDate": "Fecha de inicio",
+      "endDate": "Fecha de fin",
+      "type": "Tipo de acción",
+      "all": "Todas las acciones",
+      "apply": "Aplicar filtros"
+    },
+    "actions": {
+      "user.registered": "Registrado",
+      "user.logged_in": "Inició sesión",
+      "user.logged_out": "Cerró sesión",
+      "wallet.created": "Cartera creada",
+      "wallet.archived": "Cartera archivada",
+      "transaction.recorded": "Transacción registrada",
+      "transaction.updated": "Transacción actualizada",
+      "transaction.deleted": "Transacción eliminada",
+      "budget.created": "Presupuesto creado",
+      "goal.created": "Meta creada",
+      "invitation.sent": "Invitación enviada",
+      "invitation.accepted": "Invitación aceptada",
+      "member.joined": "Miembro unido",
+      "member.left": "Miembro salió",
+      "settlement.recorded": "Liquidación registrada",
+      "recurring.generated": "Transacción recurrente generada"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "showing": "Mostrando {from}–{to} de {total}"
     }
   }
 }

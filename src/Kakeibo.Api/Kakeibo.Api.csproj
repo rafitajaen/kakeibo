@@ -50,6 +50,8 @@
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.ClickHouse" />
+    <!-- Web Push -->
+    <PackageReference Include="Lib.Net.Http.WebPush" />
     <!-- Utilities -->
     <PackageReference Include="Medo.Uuid7" />
     <PackageReference Include="Scrutor" />

@@ -30,3 +30,8 @@ app.use(i18n);
 
 // Mount app
 app.mount("#app");
+
+// Register service worker for Web Push notifications
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js");
+}

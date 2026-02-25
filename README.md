@@ -29,7 +29,7 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 
 ## 🚧 Version 3.0 - Single-Tenant MVP
 
-**Current Status:** ✅ **Phase 6 (Recurring Transactions) — Complete**
+**Current Status:** ✅ **Phase 7 (Notifications & Activity Logging) — Complete**
 
 ### What Works Now
 - ✅ Solution structure: 2 projects (Kakeibo.Api + Kakeibo.Tests)
@@ -45,10 +45,10 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 - ✅ **Phase 4 — Budgets:** Spending limits, budget monitoring (on track / warning / exceeded), multi-wallet support, alerts
 - ✅ **Phase 5 — Goals:** Savings targets, 3 tracking modes (wallet-linked/cross-wallet/manual), milestones, projected completion
 - ✅ **Phase 6 — Recurring Transactions:** Pattern CRUD, recurrence rules (daily/weekly/biweekly/monthly/yearly), Hangfire auto-generation job, 30/90-day forecast
+- ✅ **Phase 7 — Notifications + Activity Logging:** In-app notification center (`/notifications/preferences`), email + Web Push delivery, notification preferences, activity feed (`/activity`) with filters and pagination
 
 ### What's Coming
-- 🔨 **Phase 7 (Next):** Notifications + Auditing — multi-channel notifications, in-app notification center, audit trail UI
-- ⏳ **Phase 8 (Planned):** Dashboard + Onboarding + Settings + Production launch
+- 🔨 **Phase 8 (Next):** Dashboard + Onboarding + Settings + Production launch
 
 For detailed roadmap, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
@@ -70,7 +70,7 @@ Kakeibo uses a **simple monolith** with vertical slices and screaming architectu
 | Tier | Domain | Status | Description |
 |------|--------|--------|-------------|
 | **Platform Core** | Identity | ✅ Done | Authentication, user accounts, sessions, password recovery |
-| **Platform Core** | Notifications | ⏳ Planned | Multi-channel notifications (email, push, in-app) |
+| **Platform Core** | Notifications | ✅ Done | Multi-channel notifications (email, push, in-app), preferences, notification bell |
 | **Platform Core** | Auditing | ✅ Done (Phase 1c) | Activity logs, audit trail, immutable event recording |
 | **Financial Core** | Wallets | ✅ Done | Personal + shared wallets, invitations, splits, debts, settlements |
 | **Financial Core** | Transactions | ✅ Done | Income, expense, transfer recording + categorization |
@@ -344,7 +344,7 @@ Backend formatting (`dotnet format`) is **never** run by Claude — the user run
 
 ## 📊 Roadmap
 
-**Current Phase:** Phase 6 - Recurring Transactions (Complete) — Phase 7 next
+**Current Phase:** Phase 7 - Notifications & Activity Logging (Complete) — Phase 8 next
 
 For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
@@ -363,8 +363,8 @@ For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/r
 | **4 - Budgets** | ✅ Done | Personal + shared budgets, spending tracking, warnings |
 | **5 - Goals** | ✅ Done | Savings targets, milestones, progress tracking |
 | **6 - Recurring** | ✅ Done | Pattern management, auto-generation, forecasting |
-| **7 - Notifications + Auditing** | 🔨 Next | Multi-channel notifications, audit trail, activity logs |
-| **8 - Dashboard + Launch** | ⏳ Planned | Onboarding flow, settings, production deployment |
+| **7 - Notifications + Auditing** | ✅ Done | Multi-channel notifications, in-app bell, activity feed, Web Push, preferences |
+| **8 - Dashboard + Launch** | 🔨 Next | Onboarding flow, settings, production deployment |
 
 ### Key Features (Planned)
 

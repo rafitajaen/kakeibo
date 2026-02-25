@@ -314,3 +314,72 @@ available"), and #1800.
 **Required action:** Re-evaluate SSE before implementing features that handle sensitive documents
 requiring encryption at rest. If SSE is still broken, alternatives: client-side encryption
 (AES-256-GCM before upload) or filesystem-level encryption on the Docker volume (LUKS/dm-crypt).
+
+
+---
+
+## KB-011: VAPID Keys for Web Push — Generation and Configuration
+
+**Discovered:** 2026-02-25
+**Affects:** `src/Kakeibo.Api/Infrastructure/WebPush/`, `src/Kakeibo.App/`, `appsettings.json`
+
+Web Push notifications require VAPID (Voluntary Application Server Identification) key pairs.
+These must be generated once per deployment environment and stored securely.
+
+### Generation
+
+Use the web-push CLI via Bun:
+
+```bash
+bunx web-push generate-vapid-keys
+```
+
+Output example:
+```
+Public Key:
+BKxxx...yyy
+
+Private Key:
+Zzzz...aaa
+```
+
+### Where to store
+
+| Key | Backend | Frontend |
+|-----|---------|----------|
+| Public key | `appsettings.json` → `WebPush:VapidPublicKey` | `.env.local` → `VITE_VAPID_PUBLIC_KEY` |
+| Private key | `appsettings.json` → `WebPush:VapidPrivateKey` | **Never in frontend** |
+| Subject | `appsettings.json` → `WebPush:VapidSubject` | Not needed |
+
+`VapidSubject` must be `mailto:email@domain.com` or an HTTPS URL. Example: `"mailto:admin@kakeibo.app"`.
+
+### Configuration files
+
+**`appsettings.json` (empty skeleton — keys populated from environment or user secrets):**
+```json
+{
+  "WebPush": {
+    "VapidPublicKey": "",
+    "VapidPrivateKey": "",
+    "VapidSubject": ""
+  }
+}
+```
+
+**`src/Kakeibo.App/.env.local` (for dev):**
+```
+VITE_VAPID_PUBLIC_KEY=BKxxx...yyy
+```
+
+**`src/Kakeibo.App/.env.local.example` (template):**
+```
+VITE_VAPID_PUBLIC_KEY=
+```
+
+### Important
+
+- VAPID keys are **environment-specific** — generate separate pairs for dev and production.
+- The private key must never be exposed to the browser — backend only.
+- The public key is safe to embed in frontend code (it is not a secret).
+- In production, inject `WebPush__VapidPublicKey` / `WebPush__VapidPrivateKey` via environment variables (Docker Compose `environment:` block or GitHub Actions secrets).
+- The `Lib.Net.Http.WebPush` NuGet package handles signing with the VAPID keys automatically when calling `WebPushClient.RequestPushMessageDeliveryAsync`.

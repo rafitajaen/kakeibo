@@ -12,12 +12,7 @@ declare module "vue-router" {
 }
 
 const routes: RouteRecordRaw[] = [
-    {
-        path: "/",
-        name: "home",
-        component: () => import("@/views/HomeView.vue"),
-        meta: { requiresAuth: true },
-    },
+    // Public routes (no AppLayout)
     {
         path: "/login",
         name: "login",
@@ -48,136 +43,139 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresGuest: true },
     },
     {
-        path: "/wallets",
-        name: "wallets",
-        component: () => import("@/views/wallets/WalletsView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/new",
-        name: "wallets-create",
-        component: () => import("@/views/wallets/CreateWalletView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:id",
-        name: "wallet-detail",
-        component: () => import("@/views/wallets/WalletDetailView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:id/edit",
-        name: "wallet-edit",
-        component: () => import("@/views/wallets/EditWalletView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:id/members",
-        name: "wallet-members",
-        component: () => import("@/views/wallets/SharedWalletView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:id/invite",
-        name: "wallet-invite",
-        component: () => import("@/views/wallets/InviteMemberView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
         // No requiresAuth — view handles unauthenticated users with redirect-to-login flow.
         path: "/wallets/invitations/:code/accept",
         name: "accept-invitation",
         component: () => import("@/views/wallets/AcceptInvitationView.vue"),
     },
+
+    // Authenticated routes — nested under AppLayout (header + sidebar + NotificationBell)
     {
-        path: "/categories",
-        name: "categories",
-        component: () => import("@/views/categories/CategoriesView.vue"),
+        path: "/",
+        component: () => import("@/components/AppLayout.vue"),
         meta: { requiresAuth: true },
-    },
-    {
-        path: "/categories/new",
-        name: "category-create",
-        component: () => import("@/views/categories/CreateCategoryView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/categories/:id/edit",
-        name: "category-edit",
-        component: () => import("@/views/categories/EditCategoryView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:walletId/transactions",
-        name: "transactions",
-        component: () => import("@/views/transactions/TransactionsView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:walletId/transactions/new",
-        name: "transaction-record",
-        component: () => import("@/views/transactions/RecordTransactionView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/wallets/:walletId/transactions/:id/edit",
-        name: "transaction-edit",
-        component: () => import("@/views/transactions/EditTransactionView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/budgets",
-        name: "budgets",
-        component: () => import("@/views/budgets/BudgetsView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/budgets/new",
-        name: "budget-create",
-        component: () => import("@/views/budgets/CreateBudgetView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/budgets/:id/edit",
-        name: "budget-edit",
-        component: () => import("@/views/budgets/EditBudgetView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/goals",
-        name: "goals",
-        component: () => import("@/views/goals/GoalsView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/goals/new",
-        name: "goal-create",
-        component: () => import("@/views/goals/CreateGoalView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/goals/:id/edit",
-        name: "goal-edit",
-        component: () => import("@/views/goals/EditGoalView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/recurring",
-        name: "recurring",
-        component: () => import("@/views/recurring/RecurringView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/recurring/new",
-        name: "recurring-create",
-        component: () => import("@/views/recurring/CreatePatternView.vue"),
-        meta: { requiresAuth: true },
-    },
-    {
-        path: "/recurring/:id/edit",
-        name: "recurring-edit",
-        component: () => import("@/views/recurring/EditPatternView.vue"),
-        meta: { requiresAuth: true },
+        children: [
+            {
+                path: "",
+                name: "home",
+                component: () => import("@/views/HomeView.vue"),
+            },
+            {
+                path: "wallets",
+                name: "wallets",
+                component: () => import("@/views/wallets/WalletsView.vue"),
+            },
+            {
+                path: "wallets/new",
+                name: "wallets-create",
+                component: () => import("@/views/wallets/CreateWalletView.vue"),
+            },
+            {
+                path: "wallets/:id",
+                name: "wallet-detail",
+                component: () => import("@/views/wallets/WalletDetailView.vue"),
+            },
+            {
+                path: "wallets/:id/edit",
+                name: "wallet-edit",
+                component: () => import("@/views/wallets/EditWalletView.vue"),
+            },
+            {
+                path: "wallets/:id/members",
+                name: "wallet-members",
+                component: () => import("@/views/wallets/SharedWalletView.vue"),
+            },
+            {
+                path: "wallets/:id/invite",
+                name: "wallet-invite",
+                component: () => import("@/views/wallets/InviteMemberView.vue"),
+            },
+            {
+                path: "categories",
+                name: "categories",
+                component: () => import("@/views/categories/CategoriesView.vue"),
+            },
+            {
+                path: "categories/new",
+                name: "category-create",
+                component: () => import("@/views/categories/CreateCategoryView.vue"),
+            },
+            {
+                path: "categories/:id/edit",
+                name: "category-edit",
+                component: () => import("@/views/categories/EditCategoryView.vue"),
+            },
+            {
+                path: "wallets/:walletId/transactions",
+                name: "transactions",
+                component: () => import("@/views/transactions/TransactionsView.vue"),
+            },
+            {
+                path: "wallets/:walletId/transactions/new",
+                name: "transaction-record",
+                component: () => import("@/views/transactions/RecordTransactionView.vue"),
+            },
+            {
+                path: "wallets/:walletId/transactions/:id/edit",
+                name: "transaction-edit",
+                component: () => import("@/views/transactions/EditTransactionView.vue"),
+            },
+            {
+                path: "budgets",
+                name: "budgets",
+                component: () => import("@/views/budgets/BudgetsView.vue"),
+            },
+            {
+                path: "budgets/new",
+                name: "budget-create",
+                component: () => import("@/views/budgets/CreateBudgetView.vue"),
+            },
+            {
+                path: "budgets/:id/edit",
+                name: "budget-edit",
+                component: () => import("@/views/budgets/EditBudgetView.vue"),
+            },
+            {
+                path: "goals",
+                name: "goals",
+                component: () => import("@/views/goals/GoalsView.vue"),
+            },
+            {
+                path: "goals/new",
+                name: "goal-create",
+                component: () => import("@/views/goals/CreateGoalView.vue"),
+            },
+            {
+                path: "goals/:id/edit",
+                name: "goal-edit",
+                component: () => import("@/views/goals/EditGoalView.vue"),
+            },
+            {
+                path: "recurring",
+                name: "recurring",
+                component: () => import("@/views/recurring/RecurringView.vue"),
+            },
+            {
+                path: "recurring/new",
+                name: "recurring-create",
+                component: () => import("@/views/recurring/CreatePatternView.vue"),
+            },
+            {
+                path: "recurring/:id/edit",
+                name: "recurring-edit",
+                component: () => import("@/views/recurring/EditPatternView.vue"),
+            },
+            {
+                path: "notifications/preferences",
+                name: "notification-preferences",
+                component: () => import("@/views/notifications/PreferencesView.vue"),
+            },
+            {
+                path: "activity",
+                name: "activity",
+                component: () => import("@/views/activity/ActivityView.vue"),
+            },
+        ],
     },
 ];
 

@@ -80,6 +80,42 @@ public sealed class EmailService(
         logger.LogInformation("Goal milestone email sent to {Email} for user {UserId}", email, userId);
     }
 
+    public async Task SendGoalAchievedEmailAsync(
+        Guid userId,
+        string email,
+        string goalName,
+        decimal target,
+        CancellationToken cancellationToken = default)
+    {
+        var html = await RenderTemplateAsync("GoalAchieved", new { goalName, target }, cancellationToken);
+        await SendEmailAsync(email, $"Goal Achieved: {goalName}!", html, cancellationToken);
+        logger.LogInformation("Goal achieved email sent to {Email} for user {UserId}", email, userId);
+    }
+
+    public async Task SendMemberJoinedEmailAsync(
+        Guid userId,
+        string email,
+        string walletName,
+        string newMemberName,
+        CancellationToken cancellationToken = default)
+    {
+        var html = await RenderTemplateAsync("MemberJoined", new { walletName, newMemberName }, cancellationToken);
+        await SendEmailAsync(email, $"New member joined {walletName}", html, cancellationToken);
+        logger.LogInformation("Member joined email sent to {Email} for user {UserId}", email, userId);
+    }
+
+    public async Task SendRecurringTransactionGeneratedEmailAsync(
+        Guid userId,
+        string email,
+        string patternName,
+        decimal amount,
+        CancellationToken cancellationToken = default)
+    {
+        var html = await RenderTemplateAsync("RecurringGenerated", new { patternName, amount }, cancellationToken);
+        await SendEmailAsync(email, $"Recurring transaction generated: {patternName}", html, cancellationToken);
+        logger.LogInformation("Recurring generated email sent to {Email} for user {UserId}", email, userId);
+    }
+
     // Renders an email template via the external email-renderer service.
     private async Task<string> RenderTemplateAsync(
         string template,

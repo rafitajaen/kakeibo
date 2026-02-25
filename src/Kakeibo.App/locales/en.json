@@ -2,7 +2,11 @@
   "app": {
     "name": "Kakeibo",
     "welcome": "Welcome to Kakeibo",
-    "tagline": "Mindful money management for personal budgeting and collaborative expenses"
+    "tagline": "Mindful money management for personal budgeting and collaborative expenses",
+    "home": "Home",
+    "budgets": "Budgets",
+    "goals": "Goals",
+    "recurring": "Recurring"
   },
   "common": {
     "loading": "Loading...",
@@ -14,6 +18,7 @@
     "close": "Close"
   },
   "auth": {
+    "logout": "Sign out",
     "login": {
       "title": "Sign in",
       "description": "Enter your credentials to access your account",
@@ -375,6 +380,69 @@
         "conflict": "You are already a member of this wallet.",
         "unexpected": "Something went wrong. Please try again."
       }
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "unread",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "preferences": "Preferences",
+    "close": "Close",
+    "types": {
+      "budget.warning": "Budget Warning",
+      "budget.exceeded": "Budget Exceeded",
+      "goal.milestone": "Goal Milestone",
+      "goal.achieved": "Goal Achieved",
+      "invitation.sent": "Invitation",
+      "member.joined": "Member Joined",
+      "settlement.recorded": "Settlement Recorded",
+      "recurring.generated": "Recurring Transaction"
+    },
+    "prefs": {
+      "title": "Notification Preferences",
+      "emailAlerts": "Email Notifications",
+      "pushAlerts": "Push Notifications",
+      "budgetAlerts": "Budget alerts",
+      "goalMilestones": "Goal milestones",
+      "invitations": "Invitations",
+      "recurringUpdates": "Recurring updates",
+      "save": "Save preferences",
+      "saved": "Preferences saved."
+    }
+  },
+  "activity": {
+    "title": "Activity",
+    "noActivity": "No activity found.",
+    "filters": {
+      "startDate": "Start date",
+      "endDate": "End date",
+      "type": "Action type",
+      "all": "All actions",
+      "apply": "Apply filters"
+    },
+    "actions": {
+      "user.registered": "Registered",
+      "user.logged_in": "Logged in",
+      "user.logged_out": "Logged out",
+      "wallet.created": "Created wallet",
+      "wallet.archived": "Archived wallet",
+      "transaction.recorded": "Recorded transaction",
+      "transaction.updated": "Updated transaction",
+      "transaction.deleted": "Deleted transaction",
+      "budget.created": "Created budget",
+      "goal.created": "Created goal",
+      "invitation.sent": "Sent invitation",
+      "invitation.accepted": "Accepted invitation",
+      "member.joined": "Member joined",
+      "member.left": "Member left",
+      "settlement.recorded": "Recorded settlement",
+      "recurring.generated": "Generated recurring transaction"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "showing": "Showing {from}–{to} of {total}"
     }
   }
 }

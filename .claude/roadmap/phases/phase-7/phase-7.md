@@ -1,6 +1,6 @@
 # Phase 7: Notifications & Activity Logging
 
-**Status**: Not Started
+**Status**: Completed
 **Blocks**: Phase 8
 **Requires**: Phases 2, 3, 4, 5, 6 (Phase 7a consumes InvitationSentEvent from Phase 2b and TransactionRecordedEvent from Phase 3b)
 
@@ -35,10 +35,10 @@
 
 ## MVP Acceptance Criteria
 
-- [ ] Email notifications sent
-- [ ] In-app notifications displayed
-- [ ] User preferences saved
-- [ ] Activity logs recorded
+- [x] Email notifications sent
+- [x] In-app notifications displayed
+- [x] User preferences saved
+- [x] Activity logs recorded
 
 ---
 
