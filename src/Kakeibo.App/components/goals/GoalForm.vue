@@ -37,7 +37,20 @@ const schema = toTypedSchema(
         targetAmount: z.number().gt(0).lte(999_999_999.99),
         deadline: z
             .string()
-            .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
+            // Empty string is treated as "no deadline" — only validate non-empty values
+            .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), {
+                message: t("wallets.goals.validation.deadlineFormat"),
+            })
+            // Business constraint: deadline cannot exceed 10 years from today
+            .refine(
+                (v) => {
+                    if (!v) return true;
+                    const maxDate = new Date();
+                    maxDate.setFullYear(maxDate.getFullYear() + 10);
+                    return new Date(v) <= maxDate;
+                },
+                { message: t("wallets.goals.validation.deadlineMaxYears") },
+            )
             .nullable()
             .optional(),
         walletId: z.string().uuid(),
@@ -58,7 +71,8 @@ const onSubmit = form.handleSubmit((values) => {
     emit("submit", {
         name: values.name,
         targetAmount: values.targetAmount,
-        deadline: values.deadline ?? null,
+        // Normalize empty string (cleared date input) to null
+        deadline: values.deadline || null,
         walletId: values.walletId,
     });
 });

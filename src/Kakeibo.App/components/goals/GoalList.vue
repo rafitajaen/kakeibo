@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
+import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import GoalMilestoneIndicator from "@/components/goals/GoalMilestoneIndicator.vue";
 import GoalProgressBar from "@/components/goals/GoalProgressBar.vue";
 import GoalStatusBadge from "@/components/goals/GoalStatusBadge.vue";
@@ -22,10 +34,9 @@ function handleEdit(id: string) {
     router.push({ name: "goal-edit", params: { id } });
 }
 
-function handleDelete(id: string) {
-    if (confirm(t("wallets.goals.actions.deleteConfirm"))) {
-        emit("delete", id);
-    }
+// Formats a YYYY-MM-DD deadline string for display (e.g. "Dec 31, 2026").
+function formatDeadline(deadline: string): string {
+    return format(parseISO(deadline), "PP");
 }
 </script>
 
@@ -49,9 +60,34 @@ function handleDelete(id: string) {
                     <Button variant="outline" size="sm" @click="handleEdit(goal.id)">
                         {{ t("wallets.goals.actions.edit") }}
                     </Button>
-                    <Button variant="destructive" size="sm" @click="handleDelete(goal.id)">
-                        {{ t("wallets.goals.actions.delete") }}
-                    </Button>
+
+                    <!-- AlertDialog replaces native confirm() for delete confirmation -->
+                    <AlertDialog>
+                        <AlertDialogTrigger as-child>
+                            <Button variant="destructive" size="sm">
+                                {{ t("wallets.goals.actions.delete") }}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    {{ t("wallets.goals.actions.deleteTitle") }}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {{ t("wallets.goals.actions.deleteConfirm") }}
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>{{ t("common.cancel") }}</AlertDialogCancel>
+                                <AlertDialogAction
+                                    data-testid="delete-confirm"
+                                    @click="emit('delete', goal.id)"
+                                >
+                                    {{ t("wallets.goals.actions.delete") }}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
 
@@ -67,7 +103,7 @@ function handleDelete(id: string) {
                     {{ goal.targetAmount.toFixed(2) }}
                 </span>
                 <span v-if="goal.deadline">
-                    {{ t("wallets.goals.detail.deadline") }}: {{ goal.deadline }}
+                    {{ t("wallets.goals.detail.deadline") }}: {{ formatDeadline(goal.deadline) }}
                 </span>
             </div>
 

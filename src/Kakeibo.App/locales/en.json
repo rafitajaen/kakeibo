@@ -278,7 +278,12 @@
       "actions": {
         "edit": "Edit",
         "delete": "Delete",
+        "deleteTitle": "Delete goal",
         "deleteConfirm": "Are you sure you want to delete this goal?"
+      },
+      "validation": {
+        "deadlineFormat": "Deadline must be a valid date (YYYY-MM-DD)",
+        "deadlineMaxYears": "Deadline cannot be more than 10 years from today"
       },
       "errors": {
         "notFound": "Goal not found.",

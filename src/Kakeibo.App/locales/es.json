@@ -278,7 +278,12 @@
       "actions": {
         "edit": "Editar",
         "delete": "Eliminar",
+        "deleteTitle": "Eliminar meta",
         "deleteConfirm": "¿Estás seguro de que quieres eliminar esta meta?"
+      },
+      "validation": {
+        "deadlineFormat": "La fecha límite debe ser una fecha válida (AAAA-MM-DD)",
+        "deadlineMaxYears": "La fecha límite no puede ser más de 10 años desde hoy"
       },
       "errors": {
         "notFound": "Meta no encontrada.",
