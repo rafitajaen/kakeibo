@@ -3,7 +3,7 @@
 **Mindful money management for personal budgeting and collaborative expenses**
 
 **Version:** 3.0 (Single-Tenant MVP)
-**Status:** Phase 6 complete — Phase 7 next
+**Status:** Phase 8 complete — MVP Ready
 **Last Updated:** 2026-02-25
 
 ---
@@ -41,8 +41,8 @@ This roadmap defines the strategic development plan for the Kakeibo platform —
 | 4 — Budgets | ✅ Complete | Done | Done | — |
 | 5 — Goals | ✅ Complete | Done | Done | — |
 | 6 — Recurring | ✅ Complete | Done | Done | — |
-| 7 — Notifications + Auditing | 🔨 Next | Not started | Not started | Phases 2–6 |
-| 8 — Dashboard + Launch | Pending | Not started | Not started | Phases 2–7 |
+| 7 — Notifications + Auditing | ✅ Complete | Done | Done | — |
+| 8 — Dashboard + Launch | ✅ Complete | Done | Done | — |
 
 **Existing foundation:**
 - Solution structure: `Kakeibo.slnx` with 2 projects (Kakeibo.Api + Kakeibo.Tests)
@@ -248,7 +248,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 7a: Notification System** — Backend: Notification entity, consumers for ALL integration events, email templates. Frontend: In-app notification center, preferences screen
 - **Phase 7b: Activity Logging** — Backend: Activity entity, query endpoints, CSV export. Frontend: Admin audit trail screen
 
-**Status:** Pending (blocked by Phases 2–6 — comes after all business modules)
+**Status:** ✅ Complete
 **Link:** [phases/phase-7/phase-7.md](./phases/phase-7/phase-7.md)
 
 ---
@@ -262,7 +262,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 8c: Settings + Profile** — User profile, notification preferences, language selector, theme preference
 - **Phase 8d: E2E Testing + Performance + Launch** — Playwright E2E tests, Lighthouse PWA score > 90, production deployment
 
-**Status:** Pending (blocked by all modules — final phase)
+**Status:** ✅ Complete
 **Link:** [phases/phase-8/phase-8.md](./phases/phase-8/phase-8.md)
 
 ---

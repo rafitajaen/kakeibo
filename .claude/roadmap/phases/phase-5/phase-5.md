@@ -1,6 +1,6 @@
 # Phase 5: Savings Goals
 
-**Status**: Not Started
+**Status**: Complete
 **Blocks**: Phase 7 (Notifications need goal alerts)
 **Requires**: Phase 3b (Transactions), Phase 2a (Wallets)
 

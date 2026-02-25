@@ -1,6 +1,6 @@
 # Phase 4: Budgets
 
-**Status**: Not Started
+**Status**: Complete
 **Blocks**: Phase 7 (Notifications need budget alerts)
 **Requires**: Phase 3b (Transactions)
 
