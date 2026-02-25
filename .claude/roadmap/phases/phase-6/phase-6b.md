@@ -1,6 +1,6 @@
 # Phase 6b: Auto-Generation + Forecast Backend + UI
 
-**Status**: Not Started
+**Status**: Completed
 **Objective**: Implement automatic transaction generation and forecast visibility
 
 ---
@@ -40,11 +40,11 @@
 
 ## Acceptance Criteria
 
-- [ ] Hangfire job generates transactions
-- [ ] Transactions created from patterns
-- [ ] Forecast calculated for 30/90 days
-- [ ] Frontend: forecast view
-- [ ] E2E test: create pattern → wait for generation → verify transaction
+- [x] Hangfire job generates transactions
+- [x] Transactions created from patterns
+- [x] Forecast calculated for 30/90 days
+- [x] Frontend: forecast view
+- [x] E2E test: create pattern → wait for generation → verify transaction
 
 ---
 

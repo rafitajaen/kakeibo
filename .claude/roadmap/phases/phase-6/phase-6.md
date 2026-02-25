@@ -1,6 +1,6 @@
 # Phase 6: Recurring Transactions
 
-**Status**: Not Started
+**Status**: Completed
 **Blocks**: Phase 7 (Phase 7a requires `RecurringTransactionGeneratedEvent` from Phase 6b)
 **Requires**: Phase 3b (Transactions)
 
@@ -34,10 +34,10 @@
 
 ## MVP Acceptance Criteria
 
-- [ ] Create recurring pattern
-- [ ] Auto-generate transactions
-- [ ] Forecast upcoming transactions
-- [ ] Frontend: pattern management
+- [x] Create recurring pattern
+- [x] Auto-generate transactions
+- [x] Forecast upcoming transactions
+- [x] Frontend: pattern management
 
 ---
 

@@ -3,8 +3,8 @@
 **Mindful money management for personal budgeting and collaborative expenses**
 
 **Version:** 3.0 (Single-Tenant MVP)
-**Status:** Planning phase
-**Last Updated:** 2026-02-21
+**Status:** Phase 6 complete — Phase 7 next
+**Last Updated:** 2026-02-25
 
 ---
 
@@ -35,13 +35,13 @@ This roadmap defines the strategic development plan for the Kakeibo platform —
 
 | Phase | Status | Backend | Frontend | Blockers |
 |-------|--------|---------|----------|----------|
-| 1 — Foundation & Authentication | Partially complete | Infrastructure done, Identity pending | Shell created | None |
-| 2 — Wallets + Collaboration | Pending | Not started | Not started | Phase 1 |
-| 3 — Transactions + Categories | Pending | Not started | Not started | Phase 2 |
-| 4 — Budgets | Pending | Not started | Not started | Phase 3 |
-| 5 — Goals | Pending | Not started | Not started | Phase 3 |
-| 6 — Recurring | Pending | Not started | Not started | Phase 3 |
-| 7 — Notifications + Auditing | Pending | Not started | Not started | Phases 2–6 |
+| 1 — Foundation & Authentication | ✅ Complete | Done | Done | None |
+| 2 — Wallets + Collaboration | ✅ Complete | Done | Done | — |
+| 3 — Transactions + Categories | ✅ Complete | Done | Done | — |
+| 4 — Budgets | ✅ Complete | Done | Done | — |
+| 5 — Goals | ✅ Complete | Done | Done | — |
+| 6 — Recurring | ✅ Complete | Done | Done | — |
+| 7 — Notifications + Auditing | 🔨 Next | Not started | Not started | Phases 2–6 |
 | 8 — Dashboard + Launch | Pending | Not started | Not started | Phases 2–7 |
 
 **Existing foundation:**
@@ -173,7 +173,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 
 **Integration Events Note:** `UserLoggedInEvent` and `UserLoggedOutEvent` (published in Phase 1b) are consumed by the Auditing module (Phase 1d) to record session activity in the audit trail. They have no other consumers.
 
-**Status:** Partially complete (1a infrastructure in progress)
+**Status:** ✅ Complete
 **Duration:** 10-15 days total
 **Link:** [phases/phase-1/phase-1.md](./phases/phase-1/phase-1.md)
 
@@ -187,7 +187,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 2b: Shared Wallets + Invitations** — Backend: SharedWallet, WalletMember, Invitation entities. Frontend: Shared wallet screen, invitation flow, member list
 - **Phase 2c: Splits + Debt Calculation + Settlements** — Backend: TransactionSplit (Equal/Percentage/Custom), DebtCalculationService (Splitwise algorithm), Settlement entity. Frontend: Split configurator, debts screen, settlement modal. *Implemented after Phase 3b.*
 
-**Status:** Pending (blocked by Phase 1)
+**Status:** ✅ Complete
 **Link:** [phases/phase-2/phase-2.md](./phases/phase-2/phase-2.md)
 
 ---
@@ -199,7 +199,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 3a: Categories** — Backend: Category entity with 12 system categories + custom categories. Frontend: Category management screen
 - **Phase 3b: Transaction Recording** — Backend: Transaction entity (income, expense, transfer), WalletBalance entity (atomic balance tracking in Transactions module). Frontend: Transaction form with calculator UI
 
-**Status:** Pending (blocked by Phase 2)
+**Status:** ✅ Complete
 **Link:** [phases/phase-3/phase-3.md](./phases/phase-3/phase-3.md)
 
 ---
@@ -211,7 +211,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 4a: Budget CRUD** — Backend: Budget entity, CRUD endpoints, spending tracking. Frontend: Budget planning screen, create budget modal
 - **Phase 4b: Budget Monitoring** — Backend: Budget status calculation (on track/warning/exceeded), alert events. Frontend: Budget status dashboard
 
-**Status:** Pending (blocked by Phase 3b — can run in parallel with Phases 5, 6)
+**Status:** ✅ Complete
 **Link:** [phases/phase-4/phase-4.md](./phases/phase-4/phase-4.md)
 
 ---
@@ -223,7 +223,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 5a: Savings Goal CRUD** — Backend: SavingsGoal entity, CRUD endpoints, 3 tracking modes. Frontend: Goals screen, create goal modal
 - **Phase 5b: Goal Progress** — Backend: Milestone detection (25%/50%/75%/100%), projected completion. Frontend: Goal detail view, progress visualization
 
-**Status:** Pending (blocked by Phase 3b — can run in parallel with Phases 4, 6)
+**Status:** ✅ Complete
 **Link:** [phases/phase-5/phase-5.md](./phases/phase-5/phase-5.md)
 
 ---
@@ -235,7 +235,7 @@ Kakeibo is built as a **simple monolith** with vertical slices and screaming arc
 - **Phase 6a: Recurring Patterns** — Backend: RecurringPattern entity, CRUD endpoints, recurrence rules (daily, weekly, biweekly, monthly, yearly). Frontend: Recurring configuration screen
 - **Phase 6b: Auto-Generation + Forecast** — Backend: Hangfire background job, forecast calculation. Frontend: Forecast timeline view
 
-**Status:** Pending (blocked by Phase 3b — can run in parallel with Phases 4, 5)
+**Status:** ✅ Complete
 **Blocks:** Phase 7 (Phase 7a requires `RecurringTransactionGeneratedEvent` from Phase 6b)
 **Link:** [phases/phase-6/phase-6.md](./phases/phase-6/phase-6.md)
 

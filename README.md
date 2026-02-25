@@ -29,7 +29,7 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 
 ## 🚧 Version 3.0 - Single-Tenant MVP
 
-**Current Status:** 🔨 **Phase 2b (Wallets + Collaboration) - Complete**
+**Current Status:** ✅ **Phase 6 (Recurring Transactions) — Complete**
 
 ### What Works Now
 - ✅ Solution structure: 2 projects (Kakeibo.Api + Kakeibo.Tests)
@@ -40,15 +40,15 @@ This digital implementation brings the Kakeibo philosophy to modern users while 
 - ✅ Core abstractions: Entity, Result&lt;T&gt;, Error, IEndpoint, IEventBus, ChannelEventBus, EventDispatcher
 - ✅ Architecture tests: naming convention enforcement (Kakeibo.Tests)
 - ✅ **Phase 1 — Identity:** Registration, login, JWT tokens, sessions, password recovery, audit logging, full auth frontend
-- ✅ **Phase 2a — Personal Wallets:** Backend (CRUD + events + migration) + Frontend (store, components, views, i18n)
-- ✅ **Phase 2b — Shared Wallets + Invitations:** Backend (WalletMember, Invitation, member management endpoints, email integration) + Frontend (member list, invitation form, accept flow) + Email template
+- ✅ **Phase 2 — Wallets + Collaboration:** Personal wallets, shared wallets, invitations, member management, splits, debt calculation, settlements
+- ✅ **Phase 3 — Transactions + Categories:** Recording income/expense/transfer, 12 system categories + custom categories, balance tracking
+- ✅ **Phase 4 — Budgets:** Spending limits, budget monitoring (on track / warning / exceeded), multi-wallet support, alerts
+- ✅ **Phase 5 — Goals:** Savings targets, 3 tracking modes (wallet-linked/cross-wallet/manual), milestones, projected completion
+- ✅ **Phase 6 — Recurring Transactions:** Pattern CRUD, recurrence rules (daily/weekly/biweekly/monthly/yearly), Hangfire auto-generation job, 30/90-day forecast
 
 ### What's Coming
-- 🔨 **Phase 3 (Next):** Transactions + Categories - Recording income/expense/transfer, categorization, balance tracking
-- ⏳ **Phase 2c (After Phase 3b):** Transaction Splits, Debt Calculation, Settlements
-- ⏳ **Phases 4-6 (Planned):** Budgets, Goals, Recurring
-- ⏳ **Phase 7 (Planned):** Notifications + Auditing
-- ⏳ **Phase 8 (Planned):** Dashboard + Production launch
+- 🔨 **Phase 7 (Next):** Notifications + Auditing — multi-channel notifications, in-app notification center, audit trail UI
+- ⏳ **Phase 8 (Planned):** Dashboard + Onboarding + Settings + Production launch
 
 For detailed roadmap, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
@@ -72,11 +72,11 @@ Kakeibo uses a **simple monolith** with vertical slices and screaming architectu
 | **Platform Core** | Identity | ✅ Done | Authentication, user accounts, sessions, password recovery |
 | **Platform Core** | Notifications | ⏳ Planned | Multi-channel notifications (email, push, in-app) |
 | **Platform Core** | Auditing | ✅ Done (Phase 1c) | Activity logs, audit trail, immutable event recording |
-| **Financial Core** | Wallets | 🔨 Partial (2a+2b done, 2c deferred) | Personal + shared wallets, invitations, splits, debts, settlements |
-| **Financial Core** | Transactions | ⏳ Planned | Income, expense, transfer recording + categorization |
-| **Planning** | Budgets | ⏳ Planned | Spending limits, budget monitoring, alerts |
-| **Planning** | Goals | ⏳ Planned | Savings targets, progress tracking, milestones |
-| **Planning** | Recurring | ⏳ Planned | Pattern management, automatic transaction generation |
+| **Financial Core** | Wallets | ✅ Done | Personal + shared wallets, invitations, splits, debts, settlements |
+| **Financial Core** | Transactions | ✅ Done | Income, expense, transfer recording + categorization |
+| **Planning** | Budgets | ✅ Done | Spending limits, budget monitoring, alerts |
+| **Planning** | Goals | ✅ Done | Savings targets, progress tracking, milestones |
+| **Planning** | Recurring | ✅ Done | Pattern management, automatic transaction generation |
 
 **Note:** Collaboration features live in `Features/Wallets/`. Categories live in `Features/Transactions/`.
 
@@ -344,7 +344,7 @@ Backend formatting (`dotnet format`) is **never** run by Claude — the user run
 
 ## 📊 Roadmap
 
-**Current Phase:** Phase 2b - Wallets + Collaboration (Complete)
+**Current Phase:** Phase 6 - Recurring Transactions (Complete) — Phase 7 next
 
 For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/roadmap/roadmap.md).
 
@@ -358,12 +358,12 @@ For detailed phase documentation, see [`.claude/roadmap/roadmap.md`](./.claude/r
 | **1d - Identity Frontend** | ✅ Done | Login/register screens, token refresh, route guards |
 | **2a - Personal Wallets** | ✅ Done | Personal wallet CRUD, archive, events, frontend store + views |
 | **2b - Shared Wallets + Invitations** | ✅ Done | Shared wallets, member management, invitation flow, email template |
-| **2c - Splits + Debts + Settlements** | ⏳ Deferred (after Phase 3b) | Transaction splits, debt calculation, settlement recording |
-| **3 - Transactions + Categories** | ⏳ Planned | Recording, editing, deletion, categorization, 12 system categories |
-| **4 - Budgets** | ⏳ Planned | Personal + shared budgets, spending tracking, warnings |
-| **5 - Goals** | ⏳ Planned | Savings targets, milestones, progress tracking |
-| **6 - Recurring** | ⏳ Planned | Pattern management, auto-generation, forecasting |
-| **7 - Notifications + Auditing** | ⏳ Planned | Multi-channel notifications, audit trail, activity logs |
+| **2c - Splits + Debts + Settlements** | ✅ Done | Transaction splits, debt calculation, settlement recording |
+| **3 - Transactions + Categories** | ✅ Done | Recording, editing, deletion, categorization, 12 system categories |
+| **4 - Budgets** | ✅ Done | Personal + shared budgets, spending tracking, warnings |
+| **5 - Goals** | ✅ Done | Savings targets, milestones, progress tracking |
+| **6 - Recurring** | ✅ Done | Pattern management, auto-generation, forecasting |
+| **7 - Notifications + Auditing** | 🔨 Next | Multi-channel notifications, audit trail, activity logs |
 | **8 - Dashboard + Launch** | ⏳ Planned | Onboarding flow, settings, production deployment |
 
 ### Key Features (Planned)
