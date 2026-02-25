@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -16,23 +16,25 @@ const isSaving = ref(false);
 const saved = ref(false);
 const errorMessage = ref("");
 
-const schema = toTypedSchema(
-    z
-        .object({
-            currentPassword: z.string().min(1),
-            newPassword: z
-                .string()
-                .min(8)
-                .max(128)
-                .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-                .regex(/[a-z]/, "Must contain at least one lowercase letter")
-                .regex(/[0-9]/, "Must contain at least one digit"),
-            confirmPassword: z.string().min(1),
-        })
-        .refine((d) => d.newPassword === d.confirmPassword, {
-            message: "Passwords do not match",
-            path: ["confirmPassword"],
-        }),
+const schema = computed(() =>
+    toTypedSchema(
+        z
+            .object({
+                currentPassword: z.string().min(1),
+                newPassword: z
+                    .string()
+                    .min(8)
+                    .max(128)
+                    .regex(/[A-Z]/, t("auth.validation.passwordUppercase"))
+                    .regex(/[a-z]/, t("auth.validation.passwordLowercase"))
+                    .regex(/[0-9]/, t("auth.validation.passwordDigit")),
+                confirmPassword: z.string().min(1),
+            })
+            .refine((d) => d.newPassword === d.confirmPassword, {
+                message: t("auth.validation.passwordsMustMatch"),
+                path: ["confirmPassword"],
+            }),
+    ),
 );
 
 const { handleSubmit, defineField, errors, resetForm } = useForm({ validationSchema: schema });
