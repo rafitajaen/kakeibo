@@ -161,6 +161,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/goals/EditGoalView.vue"),
         meta: { requiresAuth: true },
     },
+    {
+        path: "/recurring",
+        name: "recurring",
+        component: () => import("@/views/recurring/RecurringView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/recurring/new",
+        name: "recurring-create",
+        component: () => import("@/views/recurring/CreatePatternView.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/recurring/:id/edit",
+        name: "recurring-edit",
+        component: () => import("@/views/recurring/EditPatternView.vue"),
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({

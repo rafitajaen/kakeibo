@@ -1,9 +1,12 @@
 using DotNetEnv;
 using FluentValidation;
+using Hangfire;
+using Hangfire.PostgreSql;
 using NodaTime;
 using Kakeibo.Api.Common.Endpoints;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Common.Utils;
+using Kakeibo.Api.Features.Recurring.Jobs;
 using Kakeibo.Api.Infrastructure.Audit;
 using Kakeibo.Api.Infrastructure.Auth;
 using Kakeibo.Api.Infrastructure.Caching;
@@ -109,6 +112,16 @@ builder.Services.Configure<ClickHouseOptions>(builder.Configuration.GetSection(C
 builder.Services.AddSingleton<IAuditService, ClickHouseAuditService>();
 builder.Services.AddSingleton<ClickHouseHealthCheck>();
 
+// --- Hangfire: background job processing with PostgreSQL storage ---
+builder.Services.AddHangfire(config => config
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connectionString)));
+builder.Services.AddHangfireServer();
+
+// --- Background jobs: Hangfire recurring jobs ---
+builder.Services.AddScoped<GenerateRecurringTransactionsJob>();
+
 // --- Clock: NodaTime singleton used by all handlers and JwtService ---
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 
@@ -184,6 +197,13 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapHealthChecks("/health");
 app.MapEndpoints(typeof(Program).Assembly);
+app.MapHangfireDashboard();
+
+// --- Recurring jobs ---
+RecurringJob.AddOrUpdate<GenerateRecurringTransactionsJob>(
+    "generate-recurring-transactions",
+    job => job.ExecuteAsync(),
+    "0 1 * * *"); // Daily at 01:00 UTC
 
 app.Run();
 

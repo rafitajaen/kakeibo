@@ -292,6 +292,73 @@
         "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
       }
     },
+    "recurring": {
+      "title": "Patrones Recurrentes",
+      "empty": "Sin patrones recurrentes aún. Crea uno para automatizar tus transacciones.",
+      "createNew": "Nuevo patrón",
+      "frequency": {
+        "daily": "Diario",
+        "weekly": "Semanal",
+        "biweekly": "Quincenal",
+        "monthly": "Mensual",
+        "yearly": "Anual"
+      },
+      "transactionType": {
+        "income": "Ingreso",
+        "expense": "Gasto",
+        "transfer": "Transferencia"
+      },
+      "form": {
+        "name": "Nombre",
+        "namePlaceholder": "Ej. Alquiler mensual",
+        "transactionType": "Tipo",
+        "transactionTypePlaceholder": "Selecciona un tipo",
+        "frequency": "Frecuencia",
+        "frequencyPlaceholder": "Selecciona una frecuencia",
+        "amount": "Importe",
+        "amountPlaceholder": "0,00",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Ej. Alquiler del apartamento",
+        "category": "Categoría",
+        "categoryPlaceholder": "Selecciona una categoría",
+        "wallet": "Cartera",
+        "walletPlaceholder": "Selecciona una cartera",
+        "destinationWallet": "Cartera de destino",
+        "destinationWalletPlaceholder": "Selecciona una cartera",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin (opcional)",
+        "submit": "Crear patrón",
+        "submitEdit": "Guardar cambios"
+      },
+      "detail": {
+        "amount": "Importe",
+        "nextOccurrence": "Próximo",
+        "category": "Categoría",
+        "wallet": "Cartera"
+      },
+      "actions": {
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "deleteTitle": "Eliminar patrón",
+        "deleteConfirm": "¿Estás seguro de que quieres eliminar este patrón recurrente? No se generarán más transacciones futuras."
+      },
+      "validation": {
+        "startDateFormat": "La fecha de inicio debe ser una fecha válida (AAAA-MM-DD)",
+        "endDateFormat": "La fecha de fin debe ser una fecha válida (AAAA-MM-DD)"
+      },
+      "errors": {
+        "notFound": "Patrón recurrente no encontrado.",
+        "forbidden": "No tienes acceso a este patrón recurrente.",
+        "validation": "Por favor, revisa el formulario.",
+        "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
+      },
+      "forecast": {
+        "title": "Previsión",
+        "empty": "Sin transacciones previstas en este período.",
+        "days30": "30 días",
+        "days90": "90 días"
+      }
+    },
     "invitation": {
       "title": "Invitar a la cartera",
       "email": "Correo electrónico",

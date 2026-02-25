@@ -27,6 +27,9 @@
     <!-- FluentValidation -->
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <!-- Hangfire -->
+    <PackageReference Include="Hangfire" />
+    <PackageReference Include="Hangfire.PostgreSql" />
     <!-- HealthChecks -->
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />

@@ -16,6 +16,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<RecurringPattern> RecurringPatterns => Set<RecurringPattern>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
