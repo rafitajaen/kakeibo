@@ -14,4 +14,20 @@ export default defineConfig({
         port: 5173,
         host: true,
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    "vendor-vue": ["vue", "vue-router", "pinia", "vue-i18n"],
+                    "vendor-ui": [
+                        "radix-vue",
+                        "class-variance-authority",
+                        "clsx",
+                        "tailwind-merge",
+                    ],
+                    "vendor-form": ["vee-validate", "zod", "@vee-validate/zod"],
+                },
+            },
+        },
+    },
 });
