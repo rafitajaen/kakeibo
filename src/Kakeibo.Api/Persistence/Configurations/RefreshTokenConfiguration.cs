@@ -29,5 +29,8 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
             .WithMany()
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Exclude tokens whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(rt => rt.User!.DeletedAt == null);
     }
 }

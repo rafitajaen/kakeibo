@@ -48,6 +48,9 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Exclude transactions whose recorder is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(t => t.User!.DeletedAt == null);
+
         // Composite index for common query patterns (wallet history, date-ranged reports).
         builder.HasIndex(t => t.WalletId);
         builder.HasIndex(t => t.Date);

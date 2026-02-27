@@ -31,5 +31,8 @@ public sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .WithMany()
             .HasForeignKey(w => w.OwnerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Exclude wallets whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(w => w.Owner!.DeletedAt == null);
     }
 }

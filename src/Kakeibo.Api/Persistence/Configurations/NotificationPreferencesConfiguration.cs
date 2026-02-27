@@ -17,5 +17,8 @@ public sealed class NotificationPreferencesConfiguration : IEntityTypeConfigurat
             .WithOne()
             .HasForeignKey<NotificationPreferences>(np => np.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Exclude preferences whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(np => np.User!.DeletedAt == null);
     }
 }

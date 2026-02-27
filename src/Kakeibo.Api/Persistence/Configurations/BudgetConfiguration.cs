@@ -42,6 +42,9 @@ public sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
 
+        // Exclude budgets whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(b => b.User!.DeletedAt == null);
+
         // Composite indexes for common query patterns.
         builder.HasIndex(b => new { b.UserId, b.CategoryId });
         builder.HasIndex(b => new { b.UserId, b.StartDate, b.EndDate });

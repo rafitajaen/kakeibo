@@ -36,6 +36,6 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.EmailVerificationToken)
             .HasMaxLength(64);
 
-        builder.HasQueryFilter(u => !u.IsDeleted);
+        builder.HasQueryFilter(u => u.DeletedAt == null);
     }
 }

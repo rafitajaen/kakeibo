@@ -23,5 +23,8 @@ public sealed class PasswordResetTokenConfiguration : IEntityTypeConfiguration<P
             .WithMany()
             .HasForeignKey(prt => prt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Exclude tokens whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(prt => prt.User!.DeletedAt == null);
     }
 }

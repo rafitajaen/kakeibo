@@ -36,6 +36,9 @@ public sealed class SettlementConfiguration : IEntityTypeConfiguration<Settlemen
             .HasForeignKey(s => s.ToUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Exclude settlements where either party is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(s => s.FromUser!.DeletedAt == null && s.ToUser!.DeletedAt == null);
+
         // Index for listing settlements by wallet.
         builder.HasIndex(s => s.WalletId);
 

@@ -57,6 +57,9 @@ public sealed class RecurringPatternConfiguration : IEntityTypeConfiguration<Rec
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
 
+        // Exclude patterns whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(r => r.User!.DeletedAt == null);
+
         // Index for listing patterns by user.
         builder.HasIndex(r => r.UserId);
 

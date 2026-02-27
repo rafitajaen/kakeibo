@@ -36,5 +36,8 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
             .WithMany()
             .HasForeignKey(i => i.InviterUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Exclude invitations whose inviter is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(i => i.Inviter!.DeletedAt == null);
     }
 }

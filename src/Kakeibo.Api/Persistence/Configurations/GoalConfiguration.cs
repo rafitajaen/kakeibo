@@ -35,6 +35,9 @@ public sealed class GoalConfiguration : IEntityTypeConfiguration<Goal>
             .HasForeignKey(g => g.WalletId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Exclude goals whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(g => g.User!.DeletedAt == null);
+
         // Index for listing goals by user.
         builder.HasIndex(g => g.UserId);
 

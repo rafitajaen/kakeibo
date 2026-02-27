@@ -30,6 +30,9 @@ public sealed class PushSubscriptionConfiguration : IEntityTypeConfiguration<Pus
             .HasForeignKey(ps => ps.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Exclude subscriptions whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(ps => ps.User!.DeletedAt == null);
+
         // Index for loading subscriptions by user.
         builder.HasIndex(ps => ps.UserId);
     }

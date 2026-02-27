@@ -26,5 +26,8 @@ public sealed class WalletMemberConfiguration : IEntityTypeConfiguration<WalletM
             .WithMany()
             .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Exclude members whose user is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
+        builder.HasQueryFilter(m => m.User!.DeletedAt == null);
     }
 }
