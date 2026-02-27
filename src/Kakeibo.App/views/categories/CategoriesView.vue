@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { useCategoriesStore } from "@/stores/categories";
 import type { Category } from "@/stores/categories";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CategoryList from "@/components/categories/CategoryList.vue";
 

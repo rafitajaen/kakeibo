@@ -65,7 +65,7 @@ const schema = toTypedSchema(
 const form = useForm({
     validationSchema: schema,
     initialValues: {
-        type: props.initialData?.type ?? "Expense",
+        type: (props.initialData?.type ?? "Expense") as "Income" | "Expense" | "Transfer",
         amount: props.initialData?.amount ?? 0,
         description: props.initialData?.description ?? "",
         date: props.initialData?.date ?? new Date().toISOString().slice(0, 10),
@@ -194,7 +194,8 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                     <Select
                         :model-value="(field.value as string | null) ?? ''"
                         @update:model-value="
-                            form.setFieldValue('destinationWalletId', $event || null)
+                            (v: unknown) =>
+                                form.setFieldValue('destinationWalletId', (v as string) || null)
                         "
                     >
                         <SelectTrigger>

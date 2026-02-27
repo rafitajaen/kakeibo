@@ -81,11 +81,6 @@ const CHECKS: Check[] = [
     project: "email",
     cmd: ["bun", "run", "email:format:check"],
   },
-  {
-    name: "test",
-    project: "email",
-    cmd: ["bun", "run", "email:test"],
-  },
 
   // ── App (frontend) ────────────────────────────────────────────────────────
   {

@@ -151,7 +151,13 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                 <FormControl>
                     <Select
                         :model-value="(field.value as string) ?? ''"
-                        @update:model-value="form.setFieldValue('transactionType', $event)"
+                        @update:model-value="
+                            (v: unknown) =>
+                                form.setFieldValue(
+                                    'transactionType',
+                                    v as 'Income' | 'Expense' | 'Transfer',
+                                )
+                        "
                     >
                         <SelectTrigger>
                             <SelectValue
@@ -182,7 +188,13 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                 <FormControl>
                     <Select
                         :model-value="(field.value as string) ?? ''"
-                        @update:model-value="form.setFieldValue('frequency', $event)"
+                        @update:model-value="
+                            (v: unknown) =>
+                                form.setFieldValue(
+                                    'frequency',
+                                    v as 'Daily' | 'Weekly' | 'Biweekly' | 'Monthly' | 'Yearly',
+                                )
+                        "
                     >
                         <SelectTrigger>
                             <SelectValue
@@ -240,7 +252,9 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                 <FormControl>
                     <Select
                         :model-value="(field.value as string) ?? ''"
-                        @update:model-value="form.setFieldValue('categoryId', $event)"
+                        @update:model-value="
+                            (v: unknown) => form.setFieldValue('categoryId', v as string)
+                        "
                     >
                         <SelectTrigger>
                             <SelectValue
@@ -269,7 +283,9 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                 <FormControl>
                     <Select
                         :model-value="(field.value as string) ?? ''"
-                        @update:model-value="form.setFieldValue('walletId', $event)"
+                        @update:model-value="
+                            (v: unknown) => form.setFieldValue('walletId', v as string)
+                        "
                     >
                         <SelectTrigger>
                             <SelectValue
@@ -299,7 +315,8 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                     <Select
                         :model-value="(field.value as string | null) ?? ''"
                         @update:model-value="
-                            form.setFieldValue('destinationWalletId', $event || null)
+                            (v: unknown) =>
+                                form.setFieldValue('destinationWalletId', (v as string) || null)
                         "
                     >
                         <SelectTrigger>

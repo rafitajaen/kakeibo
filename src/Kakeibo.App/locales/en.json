@@ -453,22 +453,40 @@
       "apply": "Apply filters"
     },
     "actions": {
-      "user.registered": "Registered",
-      "user.logged_in": "Logged in",
-      "user.logged_out": "Logged out",
-      "wallet.created": "Created wallet",
-      "wallet.archived": "Archived wallet",
-      "transaction.recorded": "Recorded transaction",
-      "transaction.updated": "Updated transaction",
-      "transaction.deleted": "Deleted transaction",
-      "budget.created": "Created budget",
-      "goal.created": "Created goal",
-      "invitation.sent": "Sent invitation",
-      "invitation.accepted": "Accepted invitation",
-      "member.joined": "Member joined",
-      "member.left": "Member left",
-      "settlement.recorded": "Recorded settlement",
-      "recurring.generated": "Generated recurring transaction"
+      "user": {
+        "registered": "Registered",
+        "logged_in": "Logged in",
+        "logged_out": "Logged out"
+      },
+      "wallet": {
+        "created": "Created wallet",
+        "archived": "Archived wallet"
+      },
+      "transaction": {
+        "recorded": "Recorded transaction",
+        "updated": "Updated transaction",
+        "deleted": "Deleted transaction"
+      },
+      "budget": {
+        "created": "Created budget"
+      },
+      "goal": {
+        "created": "Created goal"
+      },
+      "invitation": {
+        "sent": "Sent invitation",
+        "accepted": "Accepted invitation"
+      },
+      "member": {
+        "joined": "Member joined",
+        "left": "Member left"
+      },
+      "settlement": {
+        "recorded": "Recorded settlement"
+      },
+      "recurring": {
+        "generated": "Generated recurring transaction"
+      }
     },
     "pagination": {
       "previous": "Previous",

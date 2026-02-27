@@ -453,22 +453,40 @@
       "apply": "Aplicar filtros"
     },
     "actions": {
-      "user.registered": "Registrado",
-      "user.logged_in": "Inició sesión",
-      "user.logged_out": "Cerró sesión",
-      "wallet.created": "Cartera creada",
-      "wallet.archived": "Cartera archivada",
-      "transaction.recorded": "Transacción registrada",
-      "transaction.updated": "Transacción actualizada",
-      "transaction.deleted": "Transacción eliminada",
-      "budget.created": "Presupuesto creado",
-      "goal.created": "Meta creada",
-      "invitation.sent": "Invitación enviada",
-      "invitation.accepted": "Invitación aceptada",
-      "member.joined": "Miembro unido",
-      "member.left": "Miembro salió",
-      "settlement.recorded": "Liquidación registrada",
-      "recurring.generated": "Transacción recurrente generada"
+      "user": {
+        "registered": "Registrado",
+        "logged_in": "Inició sesión",
+        "logged_out": "Cerró sesión"
+      },
+      "wallet": {
+        "created": "Cartera creada",
+        "archived": "Cartera archivada"
+      },
+      "transaction": {
+        "recorded": "Transacción registrada",
+        "updated": "Transacción actualizada",
+        "deleted": "Transacción eliminada"
+      },
+      "budget": {
+        "created": "Presupuesto creado"
+      },
+      "goal": {
+        "created": "Meta creada"
+      },
+      "invitation": {
+        "sent": "Invitación enviada",
+        "accepted": "Invitación aceptada"
+      },
+      "member": {
+        "joined": "Miembro unido",
+        "left": "Miembro salió"
+      },
+      "settlement": {
+        "recorded": "Liquidación registrada"
+      },
+      "recurring": {
+        "generated": "Transacción recurrente generada"
+      }
     },
     "pagination": {
       "previous": "Anterior",

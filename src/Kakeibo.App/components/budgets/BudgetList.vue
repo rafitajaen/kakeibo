@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { Budget } from "@/stores/budgets";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import BudgetProgressBar from "@/components/budgets/BudgetProgressBar.vue";
 import BudgetStatusBadge from "@/components/budgets/BudgetStatusBadge.vue";
 
-const props = defineProps<{
+defineProps<{
     budgets: Budget[];
     isLoading: boolean;
 }>();

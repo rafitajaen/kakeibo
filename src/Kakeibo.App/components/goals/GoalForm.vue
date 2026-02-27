@@ -133,7 +133,9 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                 <FormControl>
                     <Select
                         :model-value="(field.value as string) ?? ''"
-                        @update:model-value="form.setFieldValue('walletId', $event)"
+                        @update:model-value="
+                            (v: unknown) => form.setFieldValue('walletId', v as string)
+                        "
                     >
                         <SelectTrigger>
                             <SelectValue :placeholder="t('wallets.goals.form.walletPlaceholder')" />

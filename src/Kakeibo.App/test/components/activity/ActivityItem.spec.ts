@@ -5,12 +5,11 @@ import ActivityItem from "@/components/activity/ActivityItem.vue";
 import type { ActivityEntry } from "@/stores/activity";
 import en from "@/locales/en.json";
 
-// Standard i18n using the real locale file (note: keys with literal dots don't
-// resolve via path traversal, so the component falls back to the raw action key).
+// Standard i18n using the real locale file (nested keys resolve correctly).
 const i18n = createI18n({ legacy: false, locale: "en", messages: { en } });
 
-// Custom i18n with properly nested (no-dot) keys to verify the translation
-// resolution logic in actionLabel() when a key IS found.
+// Custom i18n with extra nested keys to verify the translation
+// resolution logic in actionLabel() for ad-hoc action types.
 const i18nNested = createI18n({
     legacy: false,
     locale: "en",
@@ -60,7 +59,10 @@ describe("ActivityItem", () => {
         // Uses nested i18n messages to verify the translation path works when keys
         // are accessed without literal dots (e.g., action "custom.event" resolves
         // to activity.actions.custom.event = "My Custom Event")
-        const wrapper = mountItem(makeEntry({ action: "custom.event" }), i18nNested);
+        const wrapper = mountItem(
+            makeEntry({ action: "custom.event" }),
+            i18nNested as unknown as typeof i18n,
+        );
         expect(wrapper.text()).toContain("My Custom Event");
     });
 
@@ -70,11 +72,10 @@ describe("ActivityItem", () => {
         expect(wrapper.text()).toContain("unknown.custom.action");
     });
 
-    it("falls back to raw action string for dot-keyed actions (vue-i18n path traversal limitation)", () => {
-        // Keys like "transaction.recorded" have literal dots in en.json that conflict
-        // with vue-i18n's path separator — the component correctly falls back to the raw key
+    it("translates known action types using nested locale keys", () => {
+        // activity.actions.transaction.recorded is a nested key that resolves correctly
         const wrapper = mountItem(makeEntry({ action: "transaction.recorded" }));
-        expect(wrapper.text()).toContain("transaction.recorded");
+        expect(wrapper.text()).toContain("Recorded transaction");
     });
 
     it("displays a relative timestamp using formatDistanceToNow", () => {

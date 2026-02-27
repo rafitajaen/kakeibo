@@ -3,7 +3,7 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useRecurringStore } from "@/stores/recurring";
-import type { CreatePatternData } from "@/stores/recurring";
+import type { CreatePatternData, UpdatePatternData } from "@/stores/recurring";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +26,11 @@ onMounted(async () => {
     }
 });
 
-async function handleSubmit(values: CreatePatternData) {
+async function handleSubmit(values: CreatePatternData | UpdatePatternData) {
     apiError.value = null;
     isSubmitting.value = true;
     try {
-        await recurringStore.createPattern(values);
+        await recurringStore.createPattern(values as CreatePatternData);
         await router.push({ name: "recurring" });
     } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status;

@@ -17,7 +17,7 @@ vi.mock("@/lib/axios", () => ({
 
 import api from "@/lib/axios";
 
-const apiMock = api as {
+const apiMock = api as unknown as {
     get: ReturnType<typeof vi.fn>;
     post: ReturnType<typeof vi.fn>;
     put: ReturnType<typeof vi.fn>;

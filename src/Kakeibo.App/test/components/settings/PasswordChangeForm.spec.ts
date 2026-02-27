@@ -20,6 +20,14 @@ const i18n = createI18n({
                     saved: "Password changed!",
                 },
             },
+            auth: {
+                validation: {
+                    passwordUppercase: "Password must contain at least one uppercase letter",
+                    passwordLowercase: "Password must contain at least one lowercase letter",
+                    passwordDigit: "Password must contain at least one digit",
+                    passwordsMustMatch: "Passwords do not match",
+                },
+            },
             common: { errorGeneric: "Something went wrong." },
         },
     },

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { format, parseISO } from "date-fns";
 import FrequencyBadge from "@/components/recurring/FrequencyBadge.vue";
 import type { ForecastItem } from "@/stores/recurring";
@@ -7,8 +6,6 @@ import type { ForecastItem } from "@/stores/recurring";
 defineProps<{
     item: ForecastItem;
 }>();
-
-const { t } = useI18n();
 
 // Formats a YYYY-MM-DD date string for display (e.g. "Mar 15, 2026").
 function formatDate(date: string): string {
