@@ -14,7 +14,9 @@ public sealed class TransactionRecordedBudgetHandler(AppDbContext db, IEventBus 
     {
         // Only Expense transactions affect budget spending
         if (@event.Type != "Expense")
+        {
             return;
+        }
 
         var budgets = await db.Budgets
             .Where(b =>
@@ -44,7 +46,7 @@ public sealed class TransactionRecordedBudgetHandler(AppDbContext db, IEventBus 
                     CategoryId = budget.CategoryId,
                     Limit = budget.Limit,
                     CurrentSpending = newSpending,
-                    PercentUsed = (newSpending / budget.Limit) * 100m,
+                    PercentUsed = newSpending / budget.Limit * 100m,
                 });
             }
 

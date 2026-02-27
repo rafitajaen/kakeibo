@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -25,11 +24,15 @@ public sealed class RecurringTransactionGeneratedNotificationHandler(
             .FirstOrDefaultAsync(p => p.Id == @event.RecurringPatternId && p.DeletedAt == null, cancellationToken);
 
         if (pattern is null)
+        {
             return;
+        }
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.UserId, cancellationToken);
         if (user is null)
+        {
             return;
+        }
 
         var title = "Recurring Transaction Generated";
         var body = $"A recurring transaction \"{pattern.Name}\" ({pattern.Amount:F2}) was automatically generated.";

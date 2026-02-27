@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -23,11 +22,15 @@ public sealed class GoalMilestoneReachedNotificationHandler(
             .FirstOrDefaultAsync(g => g.Id == @event.GoalId && g.DeletedAt == null, cancellationToken);
 
         if (goal is null)
+        {
             return;
+        }
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.UserId, cancellationToken);
         if (user is null)
+        {
             return;
+        }
 
         var title = "Goal Milestone Reached";
         var body = $"You've reached {@event.MilestonePercent}% of your goal \"{goal.Name}\"! ({@event.CurrentProgress:F2} / {@event.TargetAmount:F2})";

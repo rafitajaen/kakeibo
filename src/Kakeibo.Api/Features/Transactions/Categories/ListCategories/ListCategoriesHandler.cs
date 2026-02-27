@@ -13,7 +13,7 @@ public sealed class ListCategoriesHandler(AppDbContext db)
     {
         // System categories are always returned; custom categories are filtered by UserId and archived state.
         var categories = await db.Categories
-            .Where(c => c.UserId == null || (c.UserId == userId && (includeArchived || c.DeletedAt == null)))
+            .Where(c => c.UserId == null || c.UserId == userId && (includeArchived || c.DeletedAt == null))
             .OrderBy(c => c.UserId == null ? 0 : 1) // system first, then custom
             .ThenBy(c => c.Name)
             .Select(c => new ListCategoriesEndpoint.ListCategoriesResponse(

@@ -35,7 +35,9 @@ public sealed class RecordSettlementHandler(AppDbContext db, IEventBus eventBus,
             .AnyAsync(wm => wm.WalletId == walletId && wm.UserId == request.ToUserId, ct);
 
         if (!toIsMember)
+        {
             return Error.Conflict("The recipient is not a member of this wallet.");
+        }
 
         var now = clock.GetCurrentInstant();
 

@@ -1,7 +1,5 @@
-using Kakeibo.Api.Common.Endpoints;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using System.Security.Claims;
+using Kakeibo.Api.Common.Endpoints;
 
 namespace Kakeibo.Api.Features.Wallets.RevokeInvitation;
 
@@ -22,7 +20,9 @@ public sealed class RevokeInvitationEndpoint : IEndpoint
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
             return TypedResults.Unauthorized();
+        }
 
         var result = await handler.HandleAsync(id, code, userId, ct);
         return result.IsSuccess

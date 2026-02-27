@@ -1,7 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
 namespace Kakeibo.Api.Infrastructure.Events;
 
 // Background service that drains the ChannelEventBus and dispatches events to IEventHandler<T>.

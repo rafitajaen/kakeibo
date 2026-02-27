@@ -7,8 +7,6 @@ using Kakeibo.Api.Features.Transactions.UpdateTransaction;
 using Kakeibo.Api.Features.Wallets.CreateWallet;
 using Kakeibo.Api.Features.Wallets.GetWallet;
 using Kakeibo.Api.Infrastructure.Events;
-using NodaTime;
-using NodaTime.Testing;
 
 namespace Kakeibo.Tests.Integration.Transactions;
 

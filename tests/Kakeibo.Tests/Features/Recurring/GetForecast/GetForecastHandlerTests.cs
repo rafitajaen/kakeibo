@@ -1,6 +1,5 @@
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Recurring.GetForecast;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Recurring.GetForecast;
 
@@ -166,10 +165,16 @@ public sealed class GetForecastHandlerTests
         // UserA has a monthly pattern due in the window
         db.RecurringPatterns.Add(new RecurringPattern
         {
-            UserId = userA.Id, Name = "UserA Pattern", Amount = 500m, Description = "UserA",
-            TransactionType = TransactionType.Expense, Frequency = RecurrenceFrequency.Monthly,
-            CategoryId = categoryA.Id, WalletId = walletA.Id,
-            StartDate = new LocalDate(2026, 3, 1), NextOccurrence = new LocalDate(2026, 3, 1)
+            UserId = userA.Id,
+            Name = "UserA Pattern",
+            Amount = 500m,
+            Description = "UserA",
+            TransactionType = TransactionType.Expense,
+            Frequency = RecurrenceFrequency.Monthly,
+            CategoryId = categoryA.Id,
+            WalletId = walletA.Id,
+            StartDate = new LocalDate(2026, 3, 1),
+            NextOccurrence = new LocalDate(2026, 3, 1)
         });
         await db.SaveChangesAsync(ct);
 
@@ -325,17 +330,29 @@ public sealed class GetForecastHandlerTests
         // Weekly (Mar 1, 8, 15) + Monthly (Mar 15)
         db.RecurringPatterns.Add(new RecurringPattern
         {
-            UserId = user.Id, Name = "Weekly", Amount = 50m, Description = "Gym",
-            TransactionType = TransactionType.Expense, Frequency = RecurrenceFrequency.Weekly,
-            CategoryId = category.Id, WalletId = wallet.Id,
-            StartDate = new LocalDate(2026, 3, 1), NextOccurrence = new LocalDate(2026, 3, 1)
+            UserId = user.Id,
+            Name = "Weekly",
+            Amount = 50m,
+            Description = "Gym",
+            TransactionType = TransactionType.Expense,
+            Frequency = RecurrenceFrequency.Weekly,
+            CategoryId = category.Id,
+            WalletId = wallet.Id,
+            StartDate = new LocalDate(2026, 3, 1),
+            NextOccurrence = new LocalDate(2026, 3, 1)
         });
         db.RecurringPatterns.Add(new RecurringPattern
         {
-            UserId = user.Id, Name = "Monthly", Amount = 1000m, Description = "Rent",
-            TransactionType = TransactionType.Expense, Frequency = RecurrenceFrequency.Monthly,
-            CategoryId = category.Id, WalletId = wallet.Id,
-            StartDate = new LocalDate(2026, 3, 15), NextOccurrence = new LocalDate(2026, 3, 15)
+            UserId = user.Id,
+            Name = "Monthly",
+            Amount = 1000m,
+            Description = "Rent",
+            TransactionType = TransactionType.Expense,
+            Frequency = RecurrenceFrequency.Monthly,
+            CategoryId = category.Id,
+            WalletId = wallet.Id,
+            StartDate = new LocalDate(2026, 3, 15),
+            NextOccurrence = new LocalDate(2026, 3, 15)
         });
         await db.SaveChangesAsync(ct);
 

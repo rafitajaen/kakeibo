@@ -23,7 +23,9 @@ public sealed class TransactionRecordedGoalHandler(AppDbContext db, IEventBus ev
             .ToListAsync(cancellationToken);
 
         if (goals.Count == 0)
+        {
             return;
+        }
 
         // Read the current wallet balance (already updated atomically with the transaction)
         var balance = await db.WalletBalances
@@ -45,7 +47,9 @@ public sealed class TransactionRecordedGoalHandler(AppDbContext db, IEventBus ev
     private void CheckMilestones(Goal goal)
     {
         if (goal.TargetAmount <= 0)
+        {
             return;
+        }
 
         foreach (var milestone in Milestones)
         {

@@ -13,7 +13,9 @@ public sealed class MarkNotificationAsReadHandler(AppDbContext db)
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId, ct);
 
         if (notification is null)
+        {
             return Error.NotFound($"Notification {notificationId} not found.");
+        }
 
         if (!notification.IsRead)
         {

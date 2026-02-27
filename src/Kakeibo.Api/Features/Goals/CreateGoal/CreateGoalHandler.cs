@@ -1,5 +1,4 @@
 using Kakeibo.Api.Common.Abstractions;
-using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,14 +22,18 @@ public sealed class CreateGoalHandler(AppDbContext db, IClock clock)
         {
             var parseResult = LocalDatePattern.Iso.Parse(request.Deadline);
             if (!parseResult.Success)
+            {
                 return Error.Validation("Invalid Deadline format. Expected ISO 8601 (YYYY-MM-DD).");
+            }
 
             deadline = parseResult.Value;
 
             // Enforce 10-year maximum deadline as per business constraints
             var today = clock.GetCurrentInstant().InUtc().Date;
             if (deadline.Value > today.PlusYears(10))
+            {
                 return Error.Validation("Deadline cannot be more than 10 years in the future.");
+            }
         }
 
         // Verify the user has access to the specified wallet
@@ -38,14 +41,18 @@ public sealed class CreateGoalHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(w => w.Id == request.WalletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.Forbidden("You do not have access to the specified wallet.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == request.WalletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to the specified wallet.");
+        }
 
         // Seed CurrentProgress from the wallet's current balance
         var walletBalance = await db.WalletBalances

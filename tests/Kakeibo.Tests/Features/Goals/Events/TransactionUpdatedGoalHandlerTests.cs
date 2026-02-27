@@ -3,8 +3,6 @@ using Kakeibo.Api.Features.Goals.CreateGoal;
 using Kakeibo.Api.Features.Goals.Events;
 using Kakeibo.Api.Features.Transactions.Events;
 using Kakeibo.Api.Infrastructure.Events;
-using NodaTime;
-using NodaTime.Testing;
 
 namespace Kakeibo.Tests.Features.Goals.Events;
 

@@ -1,11 +1,10 @@
+using System.Security.Claims;
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Features.Identity.Events;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using System.Security.Claims;
 
 namespace Kakeibo.Api.Features.Identity.LogoutAllSessions;
 
@@ -18,7 +17,9 @@ public sealed class LogoutAllSessionsHandler(AppDbContext db, IEventBus eventBus
     {
         var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId))
+        {
             return Error.Unauthorized("User is not authenticated.");
+        }
 
         var now = clock.GetCurrentInstant();
 

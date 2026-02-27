@@ -3,7 +3,6 @@ using Kakeibo.Api.Persistence;
 using Lib.Net.Http.WebPush;
 using Lib.Net.Http.WebPush.Authentication;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Kakeibo.Api.Infrastructure.WebPush;
@@ -23,7 +22,9 @@ public sealed class WebPushService(
             .ToListAsync(ct);
 
         if (subscriptions.Count == 0)
+        {
             return;
+        }
 
         var payload = DefaultSerializer.Serialize(new { title, body });
 

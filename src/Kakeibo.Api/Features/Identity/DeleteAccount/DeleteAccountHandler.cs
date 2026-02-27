@@ -1,7 +1,6 @@
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Persistence;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -19,11 +18,15 @@ public sealed class DeleteAccountHandler(AppDbContext db, IClock clock)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null)
+        {
             return Error.NotFound("User not found.");
+        }
 
         // Require password confirmation to prevent accidental deletions
         if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
             return Error.Unauthorized("Password is incorrect.");
+        }
 
         var now = clock.GetCurrentInstant();
 

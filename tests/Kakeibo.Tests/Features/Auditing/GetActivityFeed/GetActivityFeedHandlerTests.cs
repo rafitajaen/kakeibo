@@ -1,6 +1,5 @@
 using Kakeibo.Api.Features.Auditing.GetActivityFeed;
 using Kakeibo.Api.Infrastructure.Audit;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Auditing.GetActivityFeed;
 

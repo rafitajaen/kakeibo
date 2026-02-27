@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -23,11 +22,15 @@ public sealed class MemberJoinedNotificationHandler(
             .FirstOrDefaultAsync(w => w.Id == @event.WalletId && w.DeletedAt == null, cancellationToken);
 
         if (wallet is null)
+        {
             return;
+        }
 
         var newMember = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.UserId, cancellationToken);
         if (newMember is null)
+        {
             return;
+        }
 
         // Notify all other members of the wallet
         var otherMemberIds = await db.WalletMembers
@@ -42,7 +45,9 @@ public sealed class MemberJoinedNotificationHandler(
         {
             var member = await db.Users.FirstOrDefaultAsync(u => u.Id == memberId, cancellationToken);
             if (member is null)
+            {
                 continue;
+            }
 
             // Create in-app notification
             db.Notifications.Add(new Notification

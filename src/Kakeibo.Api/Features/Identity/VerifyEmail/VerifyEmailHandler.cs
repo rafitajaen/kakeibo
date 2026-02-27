@@ -23,7 +23,9 @@ public sealed class VerifyEmailHandler(AppDbContext db, IClock clock)
                 !u.IsVerified, ct);
 
         if (user is null)
+        {
             return Error.NotFound("Invalid or expired verification token.");
+        }
 
         user.IsVerified = true;
         user.VerifiedAt = now;

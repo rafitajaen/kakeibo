@@ -25,18 +25,26 @@ public sealed class UpdatePatternHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(r => r.Id == id && r.DeletedAt == null, ct);
 
         if (pattern is null)
+        {
             return Error.NotFound("Recurring pattern not found.");
+        }
 
         if (pattern.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this recurring pattern.");
+        }
 
         // Parse TransactionType (case-insensitive)
         if (!Enum.TryParse<TransactionType>(request.TransactionType, ignoreCase: true, out var transactionType))
+        {
             return Error.Validation("Invalid transaction type. Must be Income, Expense, or Transfer.");
+        }
 
         // Parse RecurrenceFrequency (case-insensitive)
         if (!Enum.TryParse<RecurrenceFrequency>(request.Frequency, ignoreCase: true, out var frequency))
+        {
             return Error.Validation("Invalid frequency. Must be Daily, Weekly, Biweekly, Monthly, or Yearly.");
+        }
 
         // Parse optional EndDate
         LocalDate? endDate = null;
@@ -44,37 +52,51 @@ public sealed class UpdatePatternHandler(AppDbContext db, IClock clock)
         {
             var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
             if (!endParseResult.Success)
+            {
                 return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
+            }
 
             endDate = endParseResult.Value;
 
             // StartDate is immutable; validate EndDate against it
             if (endDate.Value < pattern.StartDate)
+            {
                 return Error.Validation("EndDate cannot be before StartDate.");
+            }
 
             var today = clock.GetCurrentInstant().InUtc().Date;
             if (endDate.Value > today.PlusYears(10))
+            {
                 return Error.Validation("EndDate cannot be more than 10 years in the future.");
+            }
         }
 
         // Verify source wallet access
         var sourceWallet = await GetAccessibleWalletAsync(request.WalletId, userId, ct);
         if (sourceWallet is null)
+        {
             return Error.Forbidden("You do not have access to the specified wallet.");
+        }
 
         // Transfer requires distinct destination wallet
         Wallet? destinationWallet = null;
         if (transactionType == TransactionType.Transfer)
         {
             if (request.DestinationWalletId is null)
+            {
                 return Error.Validation("Destination wallet is required for Transfer patterns.");
+            }
 
             if (request.DestinationWalletId == request.WalletId)
+            {
                 return Error.Validation("Source and destination wallets must be different.");
+            }
 
             destinationWallet = await GetAccessibleWalletAsync(request.DestinationWalletId.Value, userId, ct);
             if (destinationWallet is null)
+            {
                 return Error.Forbidden("You do not have access to the destination wallet.");
+            }
         }
 
         // Verify category access
@@ -85,7 +107,9 @@ public sealed class UpdatePatternHandler(AppDbContext db, IClock clock)
                 c.DeletedAt == null, ct);
 
         if (category is null)
+        {
             return Error.NotFound("Category not found or not accessible.");
+        }
 
         // If frequency changed, recalculate NextOccurrence from max(today, StartDate)
         var now = clock.GetCurrentInstant().InUtc().Date;
@@ -135,7 +159,9 @@ public sealed class UpdatePatternHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return null;
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers

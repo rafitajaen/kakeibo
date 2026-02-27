@@ -1,6 +1,5 @@
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Recurring.ListPatterns;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Recurring.ListPatterns;
 

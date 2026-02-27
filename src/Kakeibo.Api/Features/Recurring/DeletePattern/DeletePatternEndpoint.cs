@@ -25,7 +25,7 @@ public sealed class DeletePatternEndpoint : IEndpoint
             {
                 "not_found" => TypedResults.NotFound(result.Error),
                 "forbidden" => TypedResults.Forbid(),
-                _           => TypedResults.Problem(result.Error.Message, statusCode: 500)
+                _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }
 }

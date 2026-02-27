@@ -15,11 +15,11 @@ public static class RecurrenceCalculator
     {
         return frequency switch
         {
-            RecurrenceFrequency.Daily    => current.PlusDays(1),
-            RecurrenceFrequency.Weekly   => current.PlusDays(7),
+            RecurrenceFrequency.Daily => current.PlusDays(1),
+            RecurrenceFrequency.Weekly => current.PlusDays(7),
             RecurrenceFrequency.Biweekly => current.PlusDays(14),
-            RecurrenceFrequency.Monthly  => current.PlusMonths(1),
-            RecurrenceFrequency.Yearly   => current.PlusYears(1),
+            RecurrenceFrequency.Monthly => current.PlusMonths(1),
+            RecurrenceFrequency.Yearly => current.PlusYears(1),
             _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unknown recurrence frequency.")
         };
     }

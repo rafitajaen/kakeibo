@@ -1,12 +1,11 @@
+using System.Security.Claims;
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Features.Identity.Events;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using System.Security.Claims;
 
 namespace Kakeibo.Api.Features.Identity.LogoutUser;
 

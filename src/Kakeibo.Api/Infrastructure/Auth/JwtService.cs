@@ -1,10 +1,10 @@
+using System.Security.Claims;
+using System.Text;
 using Kakeibo.Api.Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
-using System.Security.Claims;
-using System.Text;
 
 namespace Kakeibo.Api.Infrastructure.Auth;
 
@@ -65,7 +65,9 @@ public sealed class JwtService(IOptions<JwtOptions> options, IClock clock)
         });
 
         if (!result.IsValid)
+        {
             return null;
+        }
 
         return new ClaimsPrincipal(result.ClaimsIdentity);
     }

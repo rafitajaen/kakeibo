@@ -18,13 +18,17 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
         // Load user to inherit their currency setting
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null)
+        {
             return Error.NotFound("User not found.");
+        }
 
         // Enforce unique wallet name per user (excluding archived wallets)
         var nameExists = await db.Wallets
             .AnyAsync(w => w.OwnerId == userId && w.Name == request.Name && w.DeletedAt == null, ct);
         if (nameExists)
+        {
             return Error.Conflict($"A wallet named '{request.Name}' already exists.");
+        }
 
         var walletType = Enum.Parse<WalletType>(request.Type, ignoreCase: true);
 

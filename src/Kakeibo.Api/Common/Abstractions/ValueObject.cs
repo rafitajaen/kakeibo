@@ -28,13 +28,7 @@ public abstract class ValueObject
             });
     }
 
-    public static bool operator ==(ValueObject? left, ValueObject? right)
-    {
-        return left?.Equals(right) ?? right is null;
-    }
+    public static bool operator ==(ValueObject? left, ValueObject? right) => left?.Equals(right) ?? right is null;
 
-    public static bool operator !=(ValueObject? left, ValueObject? right)
-    {
-        return !(left == right);
-    }
+    public static bool operator !=(ValueObject? left, ValueObject? right) => !(left == right);
 }

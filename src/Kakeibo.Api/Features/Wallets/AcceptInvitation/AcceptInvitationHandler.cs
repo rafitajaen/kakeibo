@@ -24,17 +24,25 @@ public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus,
             .FirstOrDefaultAsync(i => i.Code == code, ct);
 
         if (invitation is null)
+        {
             return Error.NotFound("Invitation not found.");
+        }
 
         if (invitation.IsRevoked)
+        {
             return Error.Validation("This invitation has been revoked.");
+        }
 
         // Use ExpiresAt directly — not the computed IsExpired property (TD-016 pattern)
         if (invitation.ExpiresAt <= now)
+        {
             return Error.Validation("This invitation has expired.");
+        }
 
         if (invitation.IsAccepted)
+        {
             return Error.Conflict("This invitation has already been accepted.");
+        }
 
         // Check requester is not already a member
         var alreadyMember = invitation.Wallet!.OwnerId == userId ||
@@ -42,7 +50,9 @@ public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus,
                 m => m.WalletId == invitation.WalletId && m.UserId == userId, ct);
 
         if (alreadyMember)
+        {
             return Error.Conflict("You are already a member of this wallet.");
+        }
 
         // Mark invitation accepted and create WalletMember in the same transaction
         invitation.AcceptedAt = now;

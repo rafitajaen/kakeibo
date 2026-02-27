@@ -1,9 +1,7 @@
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Infrastructure.Auth;
 using Kakeibo.Api.Persistence;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -25,7 +23,9 @@ public sealed class RefreshTokenHandler(
     {
         var rawToken = httpContext.Request.Cookies["refresh_token"];
         if (string.IsNullOrEmpty(rawToken))
+        {
             return Error.Unauthorized("Refresh token not found.");
+        }
 
         var tokenHash = TokenHasher.Hash(rawToken);
         var now = clock.GetCurrentInstant();
@@ -36,10 +36,14 @@ public sealed class RefreshTokenHandler(
 
         // Validate token exists, is not revoked, and is not expired
         if (storedToken is null || storedToken.IsRevoked || storedToken.ExpiresAt <= now)
+        {
             return Error.Unauthorized("Invalid or expired refresh token.");
+        }
 
         if (storedToken.User is null)
+        {
             return Error.Unauthorized("Associated user not found.");
+        }
 
         // Revoke old token — one-time use, rotate to new one
         storedToken.RevokedAt = now;

@@ -20,28 +20,36 @@ public sealed class DeleteTransactionHandler(AppDbContext db, IEventBus eventBus
             .FirstOrDefaultAsync(t => t.Id == transactionId && t.DeletedAt == null, ct);
 
         if (transaction is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         // Verify access through the source wallet
         var wallet = await db.Wallets
             .FirstOrDefaultAsync(w => w.Id == transaction.WalletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == transaction.WalletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to this transaction.");
+        }
 
         // Reverse the balance impact atomically
         var sourceBalance = await db.WalletBalances
             .FirstOrDefaultAsync(wb => wb.WalletId == transaction.WalletId, ct);
 
         if (sourceBalance is null)
+        {
             return Error.Internal("Wallet balance record not found.");
+        }
 
         switch (transaction.Type)
         {
@@ -63,7 +71,9 @@ public sealed class DeleteTransactionHandler(AppDbContext db, IEventBus eventBus
                     .FirstOrDefaultAsync(wb => wb.WalletId == transaction.DestinationWalletId!.Value, ct);
 
                 if (destBalance is null)
+                {
                     return Error.Internal("Destination wallet balance record not found.");
+                }
 
                 destBalance.Balance -= transaction.Amount;
                 destBalance.UpdatedAt = clock.GetCurrentInstant();

@@ -1,6 +1,5 @@
 using ClickHouse.Client.ADO;
 using ClickHouse.Client.Copy;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NodaTime;
 
@@ -26,7 +25,9 @@ public sealed class ClickHouseAuditService(
     private async Task EnsureTableCreatedAsync(CancellationToken cancellationToken)
     {
         if (_tableEnsured)
+        {
             return;
+        }
 
         const string createTableSql = """
             CREATE TABLE IF NOT EXISTS audit_events (
@@ -113,11 +114,19 @@ public sealed class ClickHouseAuditService(
             // Build WHERE clause dynamically
             var conditions = new System.Text.StringBuilder("user_id = {userId:UUID}");
             if (start.HasValue)
+            {
                 conditions.Append(" AND occurred_at >= {start:DateTime64}");
+            }
+
             if (end.HasValue)
+            {
                 conditions.Append(" AND occurred_at < {end:DateTime64}");
+            }
+
             if (!string.IsNullOrEmpty(actionType))
+            {
                 conditions.Append(" AND action = {actionType:String}");
+            }
 
             var countSql = $"SELECT count() FROM audit_events WHERE {conditions}";
             var dataSql = $"""

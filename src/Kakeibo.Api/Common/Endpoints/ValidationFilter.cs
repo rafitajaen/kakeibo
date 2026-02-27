@@ -1,6 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 
 namespace Kakeibo.Api.Common.Endpoints;
 

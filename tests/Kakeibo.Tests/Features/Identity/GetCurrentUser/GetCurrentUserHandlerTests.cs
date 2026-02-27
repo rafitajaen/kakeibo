@@ -1,9 +1,8 @@
+using System.Security.Claims;
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.GetCurrentUser;
 using Kakeibo.Api.Persistence;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 using UserEntity = Kakeibo.Api.Domain.Entities.User;
 
 namespace Kakeibo.Tests.Features.Identity.GetCurrentUser;

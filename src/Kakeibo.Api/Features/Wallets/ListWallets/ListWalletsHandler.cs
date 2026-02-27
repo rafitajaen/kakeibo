@@ -18,7 +18,9 @@ public sealed class ListWalletsHandler(AppDbContext db)
 
         // Exclude archived wallets unless explicitly requested
         if (!includeArchived)
+        {
             query = query.Where(w => w.DeletedAt == null);
+        }
 
         var wallets = await query
             .OrderBy(w => w.CreatedAt)

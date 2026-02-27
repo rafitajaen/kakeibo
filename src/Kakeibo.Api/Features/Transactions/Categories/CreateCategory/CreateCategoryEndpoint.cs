@@ -1,7 +1,5 @@
-using Kakeibo.Api.Common.Endpoints;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using System.Security.Claims;
+using Kakeibo.Api.Common.Endpoints;
 
 namespace Kakeibo.Api.Features.Transactions.Categories.CreateCategory;
 
@@ -30,7 +28,9 @@ public sealed class CreateCategoryEndpoint : IEndpoint
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
             return TypedResults.Unauthorized();
+        }
 
         var result = await handler.HandleAsync(request, userId, ct);
         return result.IsSuccess

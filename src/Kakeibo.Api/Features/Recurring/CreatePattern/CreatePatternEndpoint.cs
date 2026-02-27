@@ -55,10 +55,10 @@ public sealed class CreatePatternEndpoint : IEndpoint
             ? TypedResults.Created($"/api/recurring-patterns/{result.Value.Id}", result.Value)
             : result.Error.Code switch
             {
-                "not_found"  => TypedResults.NotFound(result.Error),
-                "forbidden"  => TypedResults.Forbid(),
+                "not_found" => TypedResults.NotFound(result.Error),
+                "forbidden" => TypedResults.Forbid(),
                 "validation" => TypedResults.BadRequest(result.Error),
-                _            => TypedResults.Problem(result.Error.Message, statusCode: 500)
+                _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }
 }

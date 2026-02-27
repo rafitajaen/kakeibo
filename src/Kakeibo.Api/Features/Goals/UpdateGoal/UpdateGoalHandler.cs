@@ -20,10 +20,14 @@ public sealed class UpdateGoalHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(g => g.Id == goalId && g.DeletedAt == null, ct);
 
         if (goal is null)
+        {
             return Error.NotFound("Goal not found.");
+        }
 
         if (goal.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this goal.");
+        }
 
         // Parse optional Deadline
         LocalDate? deadline = null;
@@ -31,13 +35,17 @@ public sealed class UpdateGoalHandler(AppDbContext db, IClock clock)
         {
             var parseResult = LocalDatePattern.Iso.Parse(request.Deadline);
             if (!parseResult.Success)
+            {
                 return Error.Validation("Invalid Deadline format. Expected ISO 8601 (YYYY-MM-DD).");
+            }
 
             deadline = parseResult.Value;
 
             var today = clock.GetCurrentInstant().InUtc().Date;
             if (deadline.Value > today.PlusYears(10))
+            {
                 return Error.Validation("Deadline cannot be more than 10 years in the future.");
+            }
         }
 
         // Verify user has access to the new wallet
@@ -45,14 +53,18 @@ public sealed class UpdateGoalHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(w => w.Id == request.WalletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.Forbidden("You do not have access to the specified wallet.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == request.WalletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to the specified wallet.");
+        }
 
         // If wallet changed, re-seed CurrentProgress from the new wallet's balance
         if (goal.WalletId != request.WalletId)

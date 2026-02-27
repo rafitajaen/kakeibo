@@ -28,7 +28,9 @@ public sealed class RegisterUserHandler(
             .AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);
 
         if (exists)
+        {
             return Error.Conflict($"An account with email '{request.Email}' already exists.");
+        }
 
         var now = clock.GetCurrentInstant();
 

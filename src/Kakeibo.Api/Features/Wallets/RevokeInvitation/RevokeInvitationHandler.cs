@@ -19,20 +19,28 @@ public sealed class RevokeInvitationHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(i => i.WalletId == walletId && i.Code == code, ct);
 
         if (invitation is null || invitation.Wallet is null || invitation.Wallet.DeletedAt != null)
+        {
             return Error.NotFound("Invitation not found.");
+        }
 
         // Only the wallet owner or the original inviter can revoke
         var isWalletOwner = invitation.Wallet.OwnerId == requesterId;
         var isInviter = invitation.InviterUserId == requesterId;
 
         if (!isWalletOwner && !isInviter)
+        {
             return Error.Forbidden("You do not have permission to revoke this invitation.");
+        }
 
         if (invitation.IsAccepted)
+        {
             return Error.Conflict("This invitation has already been accepted and cannot be revoked.");
+        }
 
         if (invitation.IsRevoked)
+        {
             return Error.Conflict("This invitation has already been revoked.");
+        }
 
         invitation.RevokedAt = clock.GetCurrentInstant();
 

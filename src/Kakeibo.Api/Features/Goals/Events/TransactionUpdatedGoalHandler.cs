@@ -21,7 +21,9 @@ public sealed class TransactionUpdatedGoalHandler(AppDbContext db, IEventBus eve
             .ToListAsync(cancellationToken);
 
         if (goals.Count == 0)
+        {
             return;
+        }
 
         // Recalculate from the current wallet balance for self-healing correctness
         var balance = await db.WalletBalances
@@ -43,7 +45,9 @@ public sealed class TransactionUpdatedGoalHandler(AppDbContext db, IEventBus eve
     private void CheckMilestones(Goal goal)
     {
         if (goal.TargetAmount <= 0)
+        {
             return;
+        }
 
         foreach (var milestone in Milestones)
         {

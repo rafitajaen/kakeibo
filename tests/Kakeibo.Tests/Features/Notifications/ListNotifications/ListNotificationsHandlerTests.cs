@@ -96,7 +96,9 @@ public sealed class ListNotificationsHandlerTests
 
         // Add 60 notifications
         for (var i = 0; i < 60; i++)
+        {
             db.Notifications.Add(MakeNotification(user.Id));
+        }
 
         await db.SaveChangesAsync(ct);
 
@@ -115,7 +117,9 @@ public sealed class ListNotificationsHandlerTests
         var user = await CreateUserAsync(db);
 
         for (var i = 0; i < 5; i++)
+        {
             db.Notifications.Add(MakeNotification(user.Id));
+        }
 
         await db.SaveChangesAsync(ct);
 

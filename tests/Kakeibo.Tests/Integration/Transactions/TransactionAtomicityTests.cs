@@ -4,8 +4,6 @@ using Kakeibo.Api.Features.Transactions.RecordTransaction;
 using Kakeibo.Api.Features.Transactions.UpdateTransaction;
 using Kakeibo.Api.Infrastructure.Events;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
-using NodaTime.Testing;
 
 namespace Kakeibo.Tests.Integration.Transactions;
 

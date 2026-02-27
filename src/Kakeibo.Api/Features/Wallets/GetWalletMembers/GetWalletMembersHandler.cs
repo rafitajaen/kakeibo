@@ -1,7 +1,6 @@
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.GetWalletMembers;
 
@@ -18,14 +17,18 @@ public sealed class GetWalletMembersHandler(AppDbContext db)
             .FirstOrDefaultAsync(w => w.Id == walletId, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         var isOwner = wallet.OwnerId == requesterId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == walletId && m.UserId == requesterId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You are not a member of this wallet.");
+        }
 
         // Build member list: owner first, then all WalletMembers with their User email
         var memberRecords = await db.WalletMembers

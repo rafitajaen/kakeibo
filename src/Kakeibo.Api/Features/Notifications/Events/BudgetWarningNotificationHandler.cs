@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -24,11 +23,15 @@ public sealed class BudgetWarningNotificationHandler(
             .FirstOrDefaultAsync(b => b.Id == @event.BudgetId && b.DeletedAt == null, cancellationToken);
 
         if (budget is null)
+        {
             return;
+        }
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.UserId, cancellationToken);
         if (user is null)
+        {
             return;
+        }
 
         var categoryName = budget.Category?.Name ?? "Unknown";
         var percentUsed = (int)@event.PercentUsed;

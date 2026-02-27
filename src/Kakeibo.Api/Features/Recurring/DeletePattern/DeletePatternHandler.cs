@@ -15,10 +15,14 @@ public sealed class DeletePatternHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(r => r.Id == id && r.DeletedAt == null, ct);
 
         if (pattern is null)
+        {
             return Error.NotFound("Recurring pattern not found.");
+        }
 
         if (pattern.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this recurring pattern.");
+        }
 
         var now = clock.GetCurrentInstant();
         pattern.DeletedAt = now;

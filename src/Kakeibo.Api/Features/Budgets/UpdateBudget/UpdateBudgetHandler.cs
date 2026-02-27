@@ -21,28 +21,40 @@ public sealed class UpdateBudgetHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(b => b.Id == budgetId && b.DeletedAt == null, ct);
 
         if (budget is null)
+        {
             return Error.NotFound("Budget not found.");
+        }
 
         if (budget.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this budget.");
+        }
 
         // Parse new dates
         var startParseResult = LocalDatePattern.Iso.Parse(request.StartDate);
         if (!startParseResult.Success)
+        {
             return Error.Validation("Invalid StartDate format. Expected ISO 8601 (YYYY-MM-DD).");
+        }
 
         var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
         if (!endParseResult.Success)
+        {
             return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
+        }
 
         var newStartDate = startParseResult.Value;
         var newEndDate = endParseResult.Value;
 
         if (newEndDate < newStartDate)
+        {
             return Error.Validation("EndDate must be on or after StartDate.");
+        }
 
         if (newEndDate > newStartDate.PlusYears(5))
+        {
             return Error.Validation("Budget period cannot exceed 5 years.");
+        }
 
         // Verify category accessibility
         var category = await db.Categories
@@ -52,7 +64,9 @@ public sealed class UpdateBudgetHandler(AppDbContext db, IClock clock)
                 c.DeletedAt == null, ct);
 
         if (category is null)
+        {
             return Error.NotFound("Category not found or not accessible.");
+        }
 
         // Verify wallet access if specified
         string? walletName = null;
@@ -62,14 +76,18 @@ public sealed class UpdateBudgetHandler(AppDbContext db, IClock clock)
                 .FirstOrDefaultAsync(w => w.Id == request.WalletId.Value && w.DeletedAt == null, ct);
 
             if (wallet is null)
+            {
                 return Error.Forbidden("You do not have access to the specified wallet.");
+            }
 
             var isOwner = wallet.OwnerId == userId;
             var isMember = await db.WalletMembers
                 .AnyAsync(m => m.WalletId == request.WalletId.Value && m.UserId == userId, ct);
 
             if (!isOwner && !isMember)
+            {
                 return Error.Forbidden("You do not have access to the specified wallet.");
+            }
 
             walletName = wallet.Name;
         }

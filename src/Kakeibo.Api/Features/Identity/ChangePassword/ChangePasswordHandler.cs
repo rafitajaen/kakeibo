@@ -16,15 +16,21 @@ public sealed class ChangePasswordHandler(AppDbContext db, IClock clock)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null)
+        {
             return Error.NotFound("User not found.");
+        }
 
         // Verify current password before allowing the change
         if (!PasswordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+        {
             return Error.Unauthorized("Current password is incorrect.");
+        }
 
         // Reject if new password is the same as the current one
         if (PasswordHasher.VerifyPassword(request.NewPassword, user.PasswordHash))
+        {
             return Error.Validation("New password must be different from the current password.");
+        }
 
         user.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
         user.UpdatedAt = clock.GetCurrentInstant();

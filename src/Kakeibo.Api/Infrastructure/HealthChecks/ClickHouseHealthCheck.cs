@@ -1,7 +1,7 @@
 using ClickHouse.Client.ADO;
+using Kakeibo.Api.Infrastructure.Audit;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using Kakeibo.Api.Infrastructure.Audit;
 
 namespace Kakeibo.Api.Infrastructure.HealthChecks;
 

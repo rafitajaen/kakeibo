@@ -1,8 +1,6 @@
-using Kakeibo.Api.Common.Endpoints;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using NodaTime;
 using System.Security.Claims;
+using Kakeibo.Api.Common.Endpoints;
+using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.ListWallets;
 
@@ -31,7 +29,9 @@ public sealed class ListWalletsEndpoint : IEndpoint
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
             return TypedResults.Unauthorized();
+        }
 
         var result = await handler.HandleAsync(userId, includeArchived ?? false, ct);
         return TypedResults.Ok(result);

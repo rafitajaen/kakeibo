@@ -1,9 +1,6 @@
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.Jobs;
 using Microsoft.Extensions.Logging.Abstractions;
-using NodaTime;
-using NSubstitute;
 using UserEntity = Kakeibo.Api.Domain.Entities.User;
 
 namespace Kakeibo.Tests.Features.Identity.Jobs;

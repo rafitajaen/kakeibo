@@ -1,8 +1,5 @@
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.UpdateProfile;
-using NodaTime;
-using NSubstitute;
 using UserEntity = Kakeibo.Api.Domain.Entities.User;
 
 namespace Kakeibo.Tests.Features.Identity.UpdateProfile;

@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Email;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Notifications.Events;
 

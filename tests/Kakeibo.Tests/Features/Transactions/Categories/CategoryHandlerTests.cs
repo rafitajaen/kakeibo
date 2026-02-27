@@ -3,8 +3,6 @@ using Kakeibo.Api.Features.Transactions.Categories.ArchiveCategory;
 using Kakeibo.Api.Features.Transactions.Categories.CreateCategory;
 using Kakeibo.Api.Features.Transactions.Categories.ListCategories;
 using Kakeibo.Api.Features.Transactions.Categories.UpdateCategory;
-using NodaTime;
-using NodaTime.Testing;
 
 namespace Kakeibo.Tests.Features.Transactions.Categories;
 

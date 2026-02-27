@@ -1,7 +1,5 @@
 using Kakeibo.Api.Common.Endpoints;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 
 namespace Kakeibo.Api.Features.Identity.UpdateProfile;
 

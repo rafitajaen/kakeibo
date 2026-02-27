@@ -1,11 +1,9 @@
 using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.Events;
 using Kakeibo.Api.Infrastructure.Auth;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -32,10 +30,14 @@ public sealed class LoginUserHandler(
 
         // Use constant-time comparison via VerifyPassword to prevent timing attacks
         if (user is null || !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
             return Error.Unauthorized("Invalid email or password.");
+        }
 
         if (!user.IsVerified)
+        {
             return Error.Validation("Email address has not been verified. Please check your inbox.");
+        }
 
         var now = clock.GetCurrentInstant();
 

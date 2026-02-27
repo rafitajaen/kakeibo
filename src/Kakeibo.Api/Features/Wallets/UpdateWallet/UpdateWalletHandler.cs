@@ -19,10 +19,14 @@ public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         if (wallet.OwnerId != userId)
+        {
             return Error.Forbidden("Only the owner can update this wallet.");
+        }
 
         // Check for duplicate name among the owner's active wallets (excluding current)
         var nameConflict = await db.Wallets
@@ -31,7 +35,9 @@ public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
                         && w.DeletedAt == null
                         && w.Id != walletId, ct);
         if (nameConflict)
+        {
             return Error.Conflict($"A wallet named '{request.Name}' already exists.");
+        }
 
         wallet.Name = request.Name;
         wallet.UpdatedAt = clock.GetCurrentInstant();

@@ -19,15 +19,19 @@ public sealed class GetBudgetStatusHandler(AppDbContext db)
             .FirstOrDefaultAsync(b => b.Id == budgetId && b.DeletedAt == null, ct);
 
         if (budget is null)
+        {
             return Error.NotFound("Budget not found.");
+        }
 
         if (budget.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this budget.");
+        }
 
         // Compute derived fields from current spending and limit
         var remaining = Math.Max(0m, budget.Limit - budget.CurrentSpending);
         var percentageUsed = budget.Limit > 0
-            ? (budget.CurrentSpending / budget.Limit) * 100m
+            ? budget.CurrentSpending / budget.Limit * 100m
             : 0m;
 
         // Determine status thresholds: Warning at 75%, Exceeded at 100%

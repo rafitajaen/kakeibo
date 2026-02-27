@@ -20,10 +20,14 @@ public sealed class ListBudgetsHandler(AppDbContext db)
 
         // Apply optional filters
         if (categoryId.HasValue)
+        {
             query = query.Where(b => b.CategoryId == categoryId.Value);
+        }
 
         if (walletId.HasValue)
+        {
             query = query.Where(b => b.WalletId == walletId.Value);
+        }
 
         var budgets = await query
             .OrderByDescending(b => b.CreatedAt)

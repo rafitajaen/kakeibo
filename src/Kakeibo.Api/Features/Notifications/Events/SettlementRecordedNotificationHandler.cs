@@ -17,13 +17,17 @@ public sealed class SettlementRecordedNotificationHandler(AppDbContext db)
             .FirstOrDefaultAsync(w => w.Id == @event.WalletId && w.DeletedAt == null, cancellationToken);
 
         if (wallet is null)
+        {
             return;
+        }
 
         var fromUser = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.FromUserId, cancellationToken);
         var toUser = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.ToUserId, cancellationToken);
 
         if (fromUser is null || toUser is null)
+        {
             return;
+        }
 
         // Notify the recipient of the payment
         db.Notifications.Add(new Notification

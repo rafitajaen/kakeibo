@@ -17,10 +17,14 @@ public sealed class DeleteGoalHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(g => g.Id == goalId && g.DeletedAt == null, ct);
 
         if (goal is null)
+        {
             return Error.NotFound("Goal not found.");
+        }
 
         if (goal.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this goal.");
+        }
 
         goal.DeletedAt = clock.GetCurrentInstant();
         goal.UpdatedAt = clock.GetCurrentInstant();

@@ -25,14 +25,18 @@ public sealed class ListTransactionsHandler(AppDbContext db)
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == walletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to this wallet.");
+        }
 
         // Base query: transactions in this wallet (source or destination) that are not deleted
         var query = db.Transactions
@@ -54,7 +58,9 @@ public sealed class ListTransactionsHandler(AppDbContext db)
         }
 
         if (categoryId.HasValue)
+        {
             query = query.Where(t => t.CategoryId == categoryId.Value);
+        }
 
         if (!string.IsNullOrEmpty(type) &&
             Enum.TryParse<TransactionType>(type, ignoreCase: true, out var parsedType))

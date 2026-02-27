@@ -18,21 +18,27 @@ public sealed class GetTransactionHandler(AppDbContext db)
             .FirstOrDefaultAsync(t => t.Id == transactionId && t.DeletedAt == null, ct);
 
         if (transaction is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         // Verify access through the source wallet
         var wallet = await db.Wallets
             .FirstOrDefaultAsync(w => w.Id == transaction.WalletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == transaction.WalletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to this transaction.");
+        }
 
         return new GetTransactionEndpoint.GetTransactionResponse(
             transaction.Id,

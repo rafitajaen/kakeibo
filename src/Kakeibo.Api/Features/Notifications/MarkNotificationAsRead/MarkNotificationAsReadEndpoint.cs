@@ -1,4 +1,3 @@
-using Kakeibo.Api.Common.Abstractions;
 using Kakeibo.Api.Common.Endpoints;
 using Microsoft.AspNetCore.Mvc;
 

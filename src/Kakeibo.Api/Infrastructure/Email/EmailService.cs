@@ -1,6 +1,5 @@
 using Kakeibo.Api.Common.Utils;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -60,7 +59,7 @@ public sealed class EmailService(
         decimal limit,
         CancellationToken cancellationToken = default)
     {
-        var percentage = (int)((spent / limit) * 100);
+        var percentage = (int)(spent / limit * 100);
         var html = await RenderTemplateAsync("BudgetAlert", new { budgetName, spent, limit, percentage }, cancellationToken);
         await SendEmailAsync(email, $"Budget Alert: {budgetName}", html, cancellationToken);
         logger.LogInformation("Budget alert email sent to {Email} for user {UserId}", email, userId);

@@ -1,7 +1,5 @@
-using Kakeibo.Api.Common.Endpoints;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using System.Security.Claims;
+using Kakeibo.Api.Common.Endpoints;
 
 namespace Kakeibo.Api.Features.Transactions.DeleteTransaction;
 
@@ -21,7 +19,9 @@ public sealed class DeleteTransactionEndpoint : IEndpoint
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
             return TypedResults.Unauthorized();
+        }
 
         var result = await handler.HandleAsync(id, userId, ct);
         return result.IsSuccess
@@ -30,7 +30,7 @@ public sealed class DeleteTransactionEndpoint : IEndpoint
             {
                 "not_found" => TypedResults.NotFound(result.Error),
                 "forbidden" => TypedResults.StatusCode(403),
-                _           => TypedResults.Problem(result.Error.Message, statusCode: 500)
+                _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }
 }

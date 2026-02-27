@@ -16,7 +16,9 @@ public sealed class GetWalletHandler(AppDbContext db)
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         // Allow owner or any WalletMember to access
         var isOwner = wallet.OwnerId == userId;
@@ -24,7 +26,9 @@ public sealed class GetWalletHandler(AppDbContext db)
             .AnyAsync(m => m.WalletId == walletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to this wallet.");
+        }
 
         // Read the current balance owned by the Transactions domain.
         var balance = await db.WalletBalances

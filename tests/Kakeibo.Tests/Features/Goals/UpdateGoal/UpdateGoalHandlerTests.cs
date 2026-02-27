@@ -1,8 +1,6 @@
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Goals.CreateGoal;
 using Kakeibo.Api.Features.Goals.UpdateGoal;
-using NodaTime;
-using NodaTime.Testing;
 
 namespace Kakeibo.Tests.Features.Goals.UpdateGoal;
 

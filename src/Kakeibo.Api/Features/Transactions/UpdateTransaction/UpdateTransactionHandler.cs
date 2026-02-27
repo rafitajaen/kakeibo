@@ -23,31 +23,41 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             .FirstOrDefaultAsync(t => t.Id == transactionId && t.DeletedAt == null, ct);
 
         if (transaction is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         // Verify access through the source wallet
         var wallet = await db.Wallets
             .FirstOrDefaultAsync(w => w.Id == transaction.WalletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Transaction not found.");
+        }
 
         var isOwner = wallet.OwnerId == userId;
         var isMember = await db.WalletMembers
             .AnyAsync(m => m.WalletId == transaction.WalletId && m.UserId == userId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You do not have access to this transaction.");
+        }
 
         // Parse new date
         var parseResult = LocalDatePattern.Iso.Parse(request.Date);
         if (!parseResult.Success)
+        {
             return Error.Validation("Invalid date format. Expected ISO 8601 (YYYY-MM-DD).");
+        }
 
         var newDate = parseResult.Value;
         var today = clock.GetCurrentInstant().InUtc().Date;
         if (newDate > today.PlusYears(1))
+        {
             return Error.Validation("Transaction date cannot be more than 1 year in the future.");
+        }
 
         // Verify category accessibility
         var category = await db.Categories
@@ -57,7 +67,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
                 c.DeletedAt == null, ct);
 
         if (category is null)
+        {
             return Error.NotFound("Category not found or not accessible.");
+        }
 
         // For Transfer: if destination is changing, verify access to new destination
         var oldDestinationWalletId = transaction.DestinationWalletId;
@@ -68,23 +80,31 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
         if (transaction.Type == TransactionType.Transfer && newDestinationWalletId != oldDestinationWalletId)
         {
             if (newDestinationWalletId is null)
+            {
                 return Error.Validation("Destination wallet is required for Transfer transactions.");
+            }
 
             if (newDestinationWalletId == transaction.WalletId)
+            {
                 return Error.Validation("Source and destination wallets must be different.");
+            }
 
             var newDestWallet = await db.Wallets
                 .FirstOrDefaultAsync(w => w.Id == newDestinationWalletId && w.DeletedAt == null, ct);
 
             if (newDestWallet is null)
+            {
                 return Error.NotFound("Destination wallet not found.");
+            }
 
             var newDestIsOwner = newDestWallet.OwnerId == userId;
             var newDestIsMember = await db.WalletMembers
                 .AnyAsync(m => m.WalletId == newDestinationWalletId && m.UserId == userId, ct);
 
             if (!newDestIsOwner && !newDestIsMember)
+            {
                 return Error.Forbidden("You do not have access to the destination wallet.");
+            }
         }
 
         var oldAmount = transaction.Amount;
@@ -95,7 +115,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             .FirstOrDefaultAsync(wb => wb.WalletId == transaction.WalletId, ct);
 
         if (sourceBalance is null)
+        {
             return Error.Internal("Wallet balance record not found.");
+        }
 
         switch (transaction.Type)
         {
@@ -119,7 +141,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
                     var destBalance = await db.WalletBalances
                         .FirstOrDefaultAsync(wb => wb.WalletId == oldDestinationWalletId!.Value, ct);
                     if (destBalance is null)
+                    {
                         return Error.Internal("Destination wallet balance record not found.");
+                    }
 
                     destBalance.Balance += delta;
                     destBalance.UpdatedAt = clock.GetCurrentInstant();
@@ -132,7 +156,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
                     var oldDestBalance = await db.WalletBalances
                         .FirstOrDefaultAsync(wb => wb.WalletId == oldDestinationWalletId!.Value, ct);
                     if (oldDestBalance is null)
+                    {
                         return Error.Internal("Old destination wallet balance record not found.");
+                    }
 
                     // Revert the amount that was credited to old destination
                     oldDestBalance.Balance -= oldAmount;
@@ -141,7 +167,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
                     var newDestBalance = await db.WalletBalances
                         .FirstOrDefaultAsync(wb => wb.WalletId == newDestinationWalletId!.Value, ct);
                     if (newDestBalance is null)
+                    {
                         return Error.Internal("New destination wallet balance record not found.");
+                    }
 
                     // Credit new destination
                     newDestBalance.Balance += newAmount;

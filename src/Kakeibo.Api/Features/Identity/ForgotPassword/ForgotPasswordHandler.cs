@@ -22,8 +22,10 @@ public sealed class ForgotPasswordHandler(AppDbContext db, IEmailService emailSe
 
         // Return success regardless — prevents email enumeration
         if (user is null)
+        {
             return new ForgotPasswordEndpoint.ForgotPasswordResponse(
                 "If that email exists, a reset link has been sent.");
+        }
 
         var now = clock.GetCurrentInstant();
 

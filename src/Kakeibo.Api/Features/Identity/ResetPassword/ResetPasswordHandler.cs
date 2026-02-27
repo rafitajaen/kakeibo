@@ -24,7 +24,9 @@ public sealed class ResetPasswordHandler(AppDbContext db, IClock clock)
                 prt.UsedAt == null, ct);
 
         if (resetToken is null || resetToken.User is null)
+        {
             return Error.NotFound("Invalid or expired password reset token.");
+        }
 
         // Mark token as used — single-use only
         resetToken.UsedAt = now;

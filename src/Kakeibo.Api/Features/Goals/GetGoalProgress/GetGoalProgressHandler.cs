@@ -18,15 +18,19 @@ public sealed class GetGoalProgressHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(g => g.Id == goalId && g.DeletedAt == null, ct);
 
         if (goal is null)
+        {
             return Error.NotFound("Goal not found.");
+        }
 
         if (goal.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this goal.");
+        }
 
         // Compute derived fields from current progress and target amount
         var remaining = Math.Max(0m, goal.TargetAmount - goal.CurrentProgress);
         var percentageComplete = goal.TargetAmount > 0
-            ? (goal.CurrentProgress / goal.TargetAmount) * 100m
+            ? goal.CurrentProgress / goal.TargetAmount * 100m
             : 0m;
 
         // Determine status: NotStarted → InProgress → NearTarget (≥75%) → Achieved (≥100%)

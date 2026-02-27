@@ -34,6 +34,8 @@ public sealed class AccountDeletionJob(AppDbContext db, IClock clock, ILogger<Ac
         }
 
         if (accounts.Count > 0)
+        {
             await db.SaveChangesAsync(ct);
+        }
     }
 }

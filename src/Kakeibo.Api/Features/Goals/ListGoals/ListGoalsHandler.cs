@@ -18,7 +18,9 @@ public sealed class ListGoalsHandler(AppDbContext db)
 
         // Apply optional wallet filter
         if (walletId.HasValue)
+        {
             query = query.Where(g => g.WalletId == walletId.Value);
+        }
 
         var goals = await query
             .OrderByDescending(g => g.CreatedAt)

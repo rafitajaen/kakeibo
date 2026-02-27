@@ -21,7 +21,9 @@ public sealed class CreateCategoryHandler(AppDbContext db)
                 (c.UserId == null || c.UserId == userId), ct);
 
         if (nameConflicts)
+        {
             return Error.Conflict($"A category named '{request.Name}' already exists.");
+        }
 
         var category = new Category
         {

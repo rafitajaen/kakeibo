@@ -1,12 +1,11 @@
+using System.Security.Claims;
 using Kakeibo.Api.Common.Utils;
-using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.Events;
 using Kakeibo.Api.Features.Identity.LogoutAllSessions;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using RefreshTokenEntity = Kakeibo.Api.Domain.Entities.RefreshToken;
 using UserEntity = Kakeibo.Api.Domain.Entities.User;
 

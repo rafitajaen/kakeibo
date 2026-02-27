@@ -17,10 +17,14 @@ public sealed class DeleteBudgetHandler(AppDbContext db, IClock clock)
             .FirstOrDefaultAsync(b => b.Id == budgetId && b.DeletedAt == null, ct);
 
         if (budget is null)
+        {
             return Error.NotFound("Budget not found.");
+        }
 
         if (budget.UserId != userId)
+        {
             return Error.Forbidden("You do not have access to this budget.");
+        }
 
         budget.DeletedAt = clock.GetCurrentInstant();
         budget.UpdatedAt = clock.GetCurrentInstant();

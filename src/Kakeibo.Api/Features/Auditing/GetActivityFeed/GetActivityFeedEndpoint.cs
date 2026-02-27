@@ -46,13 +46,17 @@ public sealed class GetActivityFeedEndpoint : IEndpoint
         {
             var parseResult = datePattern.Parse(start);
             if (parseResult.Success)
+            {
                 startDate = parseResult.Value;
+            }
         }
         if (!string.IsNullOrEmpty(end))
         {
             var parseResult = datePattern.Parse(end);
             if (parseResult.Success)
+            {
                 endDate = parseResult.Value;
+            }
         }
 
         var result = await handler.HandleAsync(userId, startDate, endDate, type, page, pageSize, ct);

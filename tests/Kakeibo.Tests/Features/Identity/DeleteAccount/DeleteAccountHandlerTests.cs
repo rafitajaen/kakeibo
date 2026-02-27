@@ -1,8 +1,6 @@
 using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Features.Identity.DeleteAccount;
 using Microsoft.AspNetCore.Http;
-using NodaTime;
-using NSubstitute;
 using RefreshTokenEntity = Kakeibo.Api.Domain.Entities.RefreshToken;
 using UserEntity = Kakeibo.Api.Domain.Entities.User;
 

@@ -4,7 +4,6 @@ using Kakeibo.Api.Features.Transactions.RecordTransaction;
 using Kakeibo.Api.Infrastructure.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Recurring.Jobs;
 

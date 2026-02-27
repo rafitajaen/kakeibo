@@ -6,7 +6,6 @@ using Kakeibo.Api.Infrastructure.Email;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.InviteToWallet;
@@ -32,11 +31,15 @@ public sealed class InviteToWalletHandler(
 
         var wallet = await db.Wallets.FirstOrDefaultAsync(w => w.Id == walletId, ct);
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         // Only shared wallets support invitations
         if (wallet.Type != WalletType.Shared)
+        {
             return Error.Forbidden("Only shared wallets can have invitations.");
+        }
 
         // Requester must be owner or existing WalletMember
         var isOwner = wallet.OwnerId == requesterId;
@@ -44,7 +47,9 @@ public sealed class InviteToWalletHandler(
             .AnyAsync(m => m.WalletId == walletId && m.UserId == requesterId, ct);
 
         if (!isOwner && !isMember)
+        {
             return Error.Forbidden("You are not a member of this wallet.");
+        }
 
         // Check invitee is not already a member or the owner
         var inviteeUser = await db.Users.FirstOrDefaultAsync(
@@ -57,7 +62,9 @@ public sealed class InviteToWalletHandler(
                     m => m.WalletId == walletId && m.UserId == inviteeUser.Id, ct);
 
             if (alreadyMember)
+            {
                 return Error.Conflict($"'{request.InviteeEmail}' is already a member of this wallet.");
+            }
         }
 
         // Check no active (non-expired, non-revoked, non-accepted) invitation exists for this email
@@ -69,7 +76,9 @@ public sealed class InviteToWalletHandler(
             i.ExpiresAt > now, ct);
 
         if (hasPending)
+        {
             return Error.Conflict($"An active invitation for '{request.InviteeEmail}' already exists.");
+        }
 
         // Enforce max pending invitations cap
         var pendingCount = await db.Invitations.CountAsync(i =>
@@ -79,7 +88,9 @@ public sealed class InviteToWalletHandler(
             i.ExpiresAt > now, ct);
 
         if (pendingCount >= MaxPendingInvitations)
+        {
             return Error.Conflict("This wallet has reached the maximum number of pending invitations.");
+        }
 
         var invitation = new Invitation
         {
@@ -115,8 +126,10 @@ public sealed class InviteToWalletHandler(
             .ContinueWith(t =>
             {
                 if (t.IsFaulted)
+                {
                     logger.LogError(t.Exception, "Failed to send wallet invitation email to {InviteeEmail} for wallet {WalletId}.",
                         request.InviteeEmail, walletId);
+                }
             }, TaskScheduler.Default);
 
         return new InviteToWalletEndpoint.InviteToWalletResponse(

@@ -3,7 +3,6 @@ using Kakeibo.Api.Features.Budgets.CreateBudget;
 using Kakeibo.Api.Features.Budgets.Events;
 using Kakeibo.Api.Features.Transactions.Events;
 using Kakeibo.Api.Infrastructure.Events;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Budgets.Events;
 

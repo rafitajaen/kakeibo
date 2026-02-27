@@ -1,7 +1,6 @@
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Recurring.DeletePattern;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 
 namespace Kakeibo.Tests.Features.Recurring.DeletePattern;
 

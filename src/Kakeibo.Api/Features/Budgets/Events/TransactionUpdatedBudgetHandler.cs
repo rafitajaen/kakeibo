@@ -15,7 +15,9 @@ public sealed class TransactionUpdatedBudgetHandler(AppDbContext db, IEventBus e
     public async Task HandleAsync(TransactionUpdatedEvent @event, CancellationToken cancellationToken = default)
     {
         if (@event.Type != "Expense")
+        {
             return;
+        }
 
         // Collect unique category IDs that may have affected budgets (old + new)
         var categoryIds = new HashSet<Guid> { @event.CategoryId, @event.OldCategoryId };
@@ -56,7 +58,7 @@ public sealed class TransactionUpdatedBudgetHandler(AppDbContext db, IEventBus e
                     CategoryId = budget.CategoryId,
                     Limit = budget.Limit,
                     CurrentSpending = newSpending,
-                    PercentUsed = budget.Limit > 0 ? (newSpending / budget.Limit) * 100m : 0m,
+                    PercentUsed = budget.Limit > 0 ? newSpending / budget.Limit * 100m : 0m,
                 });
             }
 

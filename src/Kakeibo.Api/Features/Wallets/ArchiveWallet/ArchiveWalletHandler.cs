@@ -20,10 +20,14 @@ public sealed class ArchiveWalletHandler(AppDbContext db, IEventBus eventBus, IC
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
+        {
             return Error.NotFound("Wallet not found.");
+        }
 
         if (wallet.OwnerId != userId)
+        {
             return Error.Forbidden("Only the owner can archive this wallet.");
+        }
 
         wallet.DeletedAt = clock.GetCurrentInstant();
         wallet.UpdatedAt = clock.GetCurrentInstant();

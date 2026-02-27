@@ -14,7 +14,9 @@ public sealed class TransactionDeletedBudgetHandler(AppDbContext db)
     public async Task HandleAsync(TransactionDeletedEvent @event, CancellationToken cancellationToken = default)
     {
         if (@event.Type != "Expense")
+        {
             return;
+        }
 
         var budgets = await db.Budgets
             .Where(b =>

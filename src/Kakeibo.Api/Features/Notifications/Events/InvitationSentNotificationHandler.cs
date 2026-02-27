@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -23,18 +22,24 @@ public sealed class InvitationSentNotificationHandler(
             .FirstOrDefaultAsync(w => w.Id == @event.WalletId && w.DeletedAt == null, cancellationToken);
 
         if (wallet is null)
+        {
             return;
+        }
 
         var inviter = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.InviterUserId, cancellationToken);
         if (inviter is null)
+        {
             return;
+        }
 
         // Load the invitation to get the token for the email link
         var invitation = await db.Invitations
             .FirstOrDefaultAsync(i => i.Id == @event.InvitationId, cancellationToken);
 
         if (invitation is null)
+        {
             return;
+        }
 
         var title = "Wallet Invitation";
         var body = $"{inviter.Email} invited you to join the wallet \"{wallet.Name}\".";

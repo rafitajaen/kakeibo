@@ -5,7 +5,6 @@ using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Infrastructure.WebPush;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Kakeibo.Api.Features.Notifications.Events;
 
@@ -23,11 +22,15 @@ public sealed class GoalAchievedNotificationHandler(
             .FirstOrDefaultAsync(g => g.Id == @event.GoalId && g.DeletedAt == null, cancellationToken);
 
         if (goal is null)
+        {
             return;
+        }
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == @event.UserId, cancellationToken);
         if (user is null)
+        {
             return;
+        }
 
         var title = "Goal Achieved!";
         var body = $"Congratulations! You've achieved your goal \"{goal.Name}\" ({@event.TargetAmount:F2}).";

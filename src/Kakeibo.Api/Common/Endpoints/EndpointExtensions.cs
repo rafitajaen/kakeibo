@@ -1,5 +1,4 @@
 using System.Reflection;
-using Microsoft.AspNetCore.Routing;
 
 namespace Kakeibo.Api.Common.Endpoints;
 
