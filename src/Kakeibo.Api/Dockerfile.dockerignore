@@ -1,0 +1,32 @@
+# Version control
+.git/
+
+# Test projects
+tests/
+
+# Other source projects (not needed for API build)
+src/Kakeibo.App/
+src/Kakeibo.Email/
+
+# Documentation and tooling
+*.md
+.claude/
+.github/
+scripts/
+
+# Docker configuration
+docker-compose.yml
+docker-compose*.yml
+
+# Environment files (secrets must never enter the build context)
+.env
+.env.*
+
+# Node.js
+node_modules/
+**/node_modules/
+
+# Build artifacts
+**/bin/
+**/obj/
+artifacts/

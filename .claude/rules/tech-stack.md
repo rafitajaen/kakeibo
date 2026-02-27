@@ -110,4 +110,3 @@
 | MinIO (server) | Archived project, no security patches. Use RustFS (Apache 2.0, S3-compatible). The Minio NuGet SDK is still the S3 client library — only the server is prohibited |
 | Newtonsoft.Json | Use System.Text.Json (built into .NET). Better performance, native integration, and actively maintained by Microsoft |
 | FluentAssertions | Use xUnit v3 native Assert.* methods manually |
-| `npx` | Use `bunx` (or `bunx --bun` when Bun runtime is required). See mandatory.md Rule 9 |

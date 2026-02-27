@@ -1,3 +1,10 @@
+name: kakeibo
+
+# Usage:
+#   docker compose up -d                  # Infrastructure only → use with dotnet run + bun dev
+#   docker compose --profile app up -d   # Full stack (infra + kakeibo-api, kakeibo-app)
+#   docker compose down                   # Stop everything
+
 services:
   # PostgreSQL 18 - Main relational database
   postgresdb:
@@ -27,7 +34,7 @@ services:
     container_name: kakeibo-redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "6379:6379"  ## REMOVE ON PRODUCTION — internal only, access via SSH tunnel
     volumes:
       - redis-data:/data
     networks:
@@ -40,7 +47,7 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  # Redis Insight - Redis GUI
+  # Redis Insight - Redis GUI (dev only, not needed in production)
   redis-insight:
     image: redis/redisinsight:3.0.2
     container_name: kakeibo-redis-insight
@@ -53,16 +60,17 @@ services:
     restart: unless-stopped
 
   # RustFS - S3-compatible storage (alpha.83)
+  # WARNING: SSE (Server-Side Encryption) is broken in alpha.83 — data stored in plaintext on disk
   rustfs:
-    image: rustfs/rustfs:1.0.0-alpha.83
+    image: rustfs/rustfs:latest
     container_name: kakeibo-rustfs
     command: server /data --console-address :9001
     environment:
       RUSTFS_ROOT_USER: ${STORAGE_ACCESS_KEY}
       RUSTFS_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
+      - "9000:9000"  # API — production traffic
+      - "9001:9001"  # Console UI — optional in production, disable if not needed
     volumes:
       - rustfs-data:/data
       - rustfs-logs:/logs
@@ -79,7 +87,7 @@ services:
     image: clickhouse/clickhouse-server:24.12-alpine
     container_name: kakeibo-clickhouse
     ports:
-      - "8123:8123"  # HTTP
+      - "8123:8123"  ## REMOVE ON PRODUCTION — internal only, access via SSH tunnel
     volumes:
       - clickhouse-data:/var/lib/clickhouse
       - clickhouse-logs:/var/log/clickhouse-server
@@ -100,7 +108,7 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # Mailpit - Development email capture
+  # Mailpit - Development email capture (dev only, not needed in production)
   mailpit:
     image: axllent/mailpit:latest
     container_name: kakeibo-mailpit
@@ -131,15 +139,77 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  # Aspire Dashboard - OpenTelemetry UI
+  # Aspire Dashboard - OpenTelemetry UI (optional in production)
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:10.0
     container_name: kakeibo-aspire-dashboard
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
     ports:
-      - "18888:18888"  # Dashboard UI
-      - "18889:18889"  # OTLP gRPC receiver
+      - "18888:18888"  # Dashboard UI — optional in production
+      - "18889:18889"  # OTLP gRPC receiver — required in production
+    restart: unless-stopped
+
+  # =============================================================================
+  # Application services — start with: docker compose --profile app up -d
+  # =============================================================================
+
+  # Kakeibo API - .NET 10 application
+  kakeibo-api:
+    build:
+      context: .
+      dockerfile: src/Kakeibo.Api/Dockerfile
+    container_name: kakeibo-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__PostgreSQL: "Host=postgresdb;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD}"
+      Storage__Endpoint: "rustfs:9000"
+      Storage__AccessKey: "${STORAGE_ACCESS_KEY}"
+      Storage__SecretKey: "${STORAGE_SECRET_KEY}"
+      Storage__UseSSL: "false"
+      ClickHouse__Host: "clickhouse"
+      ClickHouse__Port: "8123"
+      ClickHouse__Database: "kakeibo"
+      EmailRenderer__BaseUrl: "http://email-renderer:3050"
+      Smtp__Host: "mailpit"
+      Smtp__Port: "1025"
+      Smtp__From: "${SMTP_FROM}"
+      Jwt__SecretKey: "${JWT_SECRET_KEY}"
+      Jwt__Issuer: "${JWT_ISSUER}"
+      Jwt__Audience: "${JWT_AUDIENCE}"
+    ports:
+      - "5000:5000"
+    networks:
+      - postgres-network
+      - redis-network
+      - clickhouse-network
+      - default
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+      email-renderer:
+        condition: service_healthy
+    profiles:
+      - app
+    restart: unless-stopped
+
+  # Kakeibo App - Vue PWA served by Nginx
+  kakeibo-app:
+    build:
+      context: ./src/Kakeibo.App
+      dockerfile: Dockerfile
+    container_name: kakeibo-app
+    ports:
+      - "3000:80"
+    depends_on:
+      - kakeibo-api
+    profiles:
+      - app
     restart: unless-stopped
 
 networks:
