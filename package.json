@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "install:all": "bun install && bun run app:install && bun run email:install && bun run api:restore",
+
     "api:restore": "dotnet restore Kakeibo.slnx",
     "api:build": "dotnet build Kakeibo.slnx --configuration Release",
     "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
     "api:test": "dotnet test tests/Kakeibo.Tests/ --configuration Release",
+    "api:run": "dotnet run --project src/Kakeibo.Api",
 
     "email:install": "cd src/Kakeibo.Email && bun install",
     "email:typecheck": "cd src/Kakeibo.Email && bun run typecheck",
