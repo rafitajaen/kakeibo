@@ -17,7 +17,7 @@ public sealed class DeleteAccountEndpoint : IEndpoint
     }
 
     private static async Task<IResult> HandleAsync(
-        DeleteAccountRequest request,
+        [FromBody] DeleteAccountRequest request,
         [FromHeader(Name = "X-User-Id")] Guid userId,
         DeleteAccountHandler handler,
         HttpContext httpContext,

@@ -62,7 +62,7 @@ services:
   # RustFS - S3-compatible storage (alpha.83)
   # WARNING: SSE (Server-Side Encryption) is broken in alpha.83 — data stored in plaintext on disk
   rustfs:
-    image: rustfs/rustfs:latest
+    image: rustfs/rustfs:1.0.0-alpha.83
     container_name: kakeibo-rustfs
     command: server /data --console-address :9001
     environment:
@@ -82,9 +82,9 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # ClickHouse 24.12 - Analytical database
+  # ClickHouse - Analytical database
   clickhouse:
-    image: clickhouse/clickhouse-server:24.12-alpine
+    image: clickhouse/clickhouse-server:26.2-alpine
     container_name: kakeibo-clickhouse
     ports:
       - "8123:8123"  ## REMOVE ON PRODUCTION — internal only, access via SSH tunnel
@@ -141,7 +141,7 @@ services:
 
   # Aspire Dashboard - OpenTelemetry UI (optional in production)
   aspire-dashboard:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:10.0
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
     container_name: kakeibo-aspire-dashboard
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
