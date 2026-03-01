@@ -59,7 +59,7 @@ public sealed class RegisterUserHandler(
         await db.SaveChangesAsync(ct);
 
         // Send verification email asynchronously (non-blocking for the response)
-        _ = emailService.SendWelcomeEmailAsync(user.Id, user.Email, user.Email, CancellationToken.None);
+        _ = emailService.SendEmailVerificationAsync(user.Id, user.Email, rawToken, CancellationToken.None);
 
         return new RegisterUserEndpoint.RegisterUserResponse(user.Id, user.Email);
     }

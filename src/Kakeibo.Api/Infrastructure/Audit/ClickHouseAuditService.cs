@@ -14,6 +14,10 @@ public sealed class ClickHouseAuditService(
     private readonly ClickHouseOptions _options = options.Value;
     private bool _tableEnsured;
 
+    // Set to true after the first connection failure — prevents spamming logs on every audit call
+    // when ClickHouse is not running (e.g. local dev without docker compose).
+    private bool _unavailable;
+
     // Builds the ClickHouse connection string from options.
     private string BuildConnectionString()
     {
@@ -57,6 +61,13 @@ public sealed class ClickHouseAuditService(
 
     public async Task RecordAsync(AuditEntry entry, CancellationToken cancellationToken = default)
     {
+        if (_unavailable)
+        {
+            logger.LogDebug("ClickHouse unavailable — skipping audit event: Action={Action}, UserId={UserId}",
+                entry.Action, entry.UserId);
+            return;
+        }
+
         try
         {
             await EnsureTableCreatedAsync(cancellationToken);
@@ -91,8 +102,10 @@ public sealed class ClickHouseAuditService(
         }
         catch (Exception ex)
         {
-            // Audit failures must not affect the main request flow
-            logger.LogError(ex, "Failed to record audit event: Action={Action}, UserId={UserId}",
+            // Audit failures must not affect the main request flow.
+            // Mark as unavailable to avoid retrying (and spamming logs) on every subsequent call.
+            _unavailable = true;
+            logger.LogWarning(ex, "ClickHouse unavailable — audit events will be skipped until restart. Action={Action}, UserId={UserId}",
                 entry.Action, entry.UserId);
         }
     }
@@ -107,6 +120,12 @@ public sealed class ClickHouseAuditService(
         int limit,
         CancellationToken cancellationToken = default)
     {
+        if (_unavailable)
+        {
+            logger.LogDebug("ClickHouse unavailable — returning empty activity feed for user {UserId}", userId);
+            return ([], 0);
+        }
+
         try
         {
             await EnsureTableCreatedAsync(cancellationToken);
@@ -172,7 +191,8 @@ public sealed class ClickHouseAuditService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to query activity feed for user {UserId}", userId);
+            _unavailable = true;
+            logger.LogWarning(ex, "ClickHouse unavailable — activity feed will return empty until restart. UserId={UserId}", userId);
             return ([], 0);
         }
     }

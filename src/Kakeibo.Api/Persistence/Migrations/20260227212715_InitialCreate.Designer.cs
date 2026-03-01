@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Kakeibo.Api.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260225111115_AddRecurringPatternsTable")]
-    partial class AddRecurringPatternsTable
+    [Migration("20260227212715_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -353,6 +353,113 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.ToTable("invitations", (string)null);
                 });
 
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("body");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Instant?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("metadata");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("type");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("ix_notifications_user_id_is_read");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.NotificationPreferences", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("EmailBudgetAlerts")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_budget_alerts");
+
+                    b.Property<bool>("EmailGoalMilestones")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_goal_milestones");
+
+                    b.Property<bool>("EmailInvitations")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_invitations");
+
+                    b.Property<bool>("EmailRecurringUpdates")
+                        .HasColumnType("boolean")
+                        .HasColumnName("email_recurring_updates");
+
+                    b.Property<bool>("PushBudgetAlerts")
+                        .HasColumnType("boolean")
+                        .HasColumnName("push_budget_alerts");
+
+                    b.Property<bool>("PushGoalMilestones")
+                        .HasColumnType("boolean")
+                        .HasColumnName("push_goal_milestones");
+
+                    b.Property<bool>("PushInvitations")
+                        .HasColumnType("boolean")
+                        .HasColumnName("push_invitations");
+
+                    b.Property<bool>("PushRecurringUpdates")
+                        .HasColumnType("boolean")
+                        .HasColumnName("push_recurring_updates");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_notification_preferences");
+
+                    b.ToTable("notification_preferences", (string)null);
+                });
+
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -401,6 +508,56 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasDatabaseName("ix_password_reset_tokens_user_id");
 
                     b.ToTable("password_reset_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PushSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("auth");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Instant?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("endpoint");
+
+                    b.Property<string>("P256dh")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("p256dh");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_push_subscriptions");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_push_subscriptions_user_id");
+
+                    b.ToTable("push_subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.RecurringPattern", b =>
@@ -565,6 +722,65 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Instant?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid>("FromUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_user_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("ToUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_user_id");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wallet_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_settlements");
+
+                    b.HasIndex("FromUserId")
+                        .HasDatabaseName("ix_settlements_from_user_id");
+
+                    b.HasIndex("ToUserId")
+                        .HasDatabaseName("ix_settlements_to_user_id");
+
+                    b.HasIndex("WalletId")
+                        .HasDatabaseName("ix_settlements_wallet_id");
+
+                    b.HasIndex("WalletId", "FromUserId", "ToUserId")
+                        .HasDatabaseName("ix_settlements_wallet_id_from_user_id_to_user_id");
+
+                    b.ToTable("settlements", (string)null);
+                });
+
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -666,6 +882,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<Instant?>("DeletionRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_requested_at");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -684,6 +904,11 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Property<bool>("IsVerified")
                         .HasColumnType("boolean")
                         .HasColumnName("is_verified");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -907,6 +1132,30 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Navigation("Wallet");
                 });
 
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notifications_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.NotificationPreferences", b =>
+                {
+                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("Kakeibo.Api.Domain.Entities.NotificationPreferences", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notification_preferences_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("Kakeibo.Api.Domain.Entities.User", "User")
@@ -915,6 +1164,18 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_password_reset_tokens_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PushSubscription", b =>
+                {
+                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_push_subscriptions_users_user_id");
 
                     b.Navigation("User");
                 });
@@ -967,6 +1228,36 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Settlement", b =>
+                {
+                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "FromUser")
+                        .WithMany()
+                        .HasForeignKey("FromUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_users_from_user_id");
+
+                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "ToUser")
+                        .WithMany()
+                        .HasForeignKey("ToUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_users_to_user_id");
+
+                    b.HasOne("Kakeibo.Api.Domain.Entities.Wallet", "Wallet")
+                        .WithMany()
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_settlements_wallets_wallet_id");
+
+                    b.Navigation("FromUser");
+
+                    b.Navigation("ToUser");
+
+                    b.Navigation("Wallet");
                 });
 
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Transaction", b =>

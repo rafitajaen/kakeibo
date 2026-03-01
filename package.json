@@ -11,6 +11,7 @@
     "api:format:check": "dotnet format Kakeibo.slnx --verify-no-changes",
     "api:test": "dotnet test tests/Kakeibo.Tests/ --configuration Release",
     "api:run": "dotnet run --project src/Kakeibo.Api",
+    "api:migrate": "dotnet ef database update --project src/Kakeibo.Api --startup-project src/Kakeibo.Api --context AppDbContext",
 
     "email:install": "cd src/Kakeibo.Email && bun install",
     "email:typecheck": "cd src/Kakeibo.Email && bun run typecheck",

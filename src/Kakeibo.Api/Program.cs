@@ -166,6 +166,13 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+// --- Database migration: creates the database if it does not exist and applies all pending migrations ---
+using (var migrateScope = app.Services.CreateScope())
+{
+    var db = migrateScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 // --- Admin seeding: creates the first admin account if none exists ---
 // Reads ADMIN_EMAIL and ADMIN_PASSWORD from environment variables (set in .env for dev, secrets for prod).
 // Silently skipped if either variable is missing — safe to deploy without pre-seeding.

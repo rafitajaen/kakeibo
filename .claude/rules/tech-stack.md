@@ -1,13 +1,5 @@
 # Tech Stack
 
-## Infrastructure
-
-| Component | Description |
-|-----------|-------------|
-| PostgreSQL 18 | Main relational database |
-| Redis | Distributed cache (used by FusionCache) |
-| RustFS | S3-compatible storage server (Apache 2.0, alpha) ⚠️ **Known limitation**: SSE (Server-Side Encryption) broken in alpha.83. Data stored in plaintext on disk. Client-side encryption or filesystem-level encryption required for sensitive documents. |
-| ClickHouse | Analytical database for events and logs |
 
 ## Project Configuration
 

@@ -34,7 +34,7 @@ const onSubmit = form.handleSubmit(async (values) => {
         const status = (err as { response?: { status?: number } })?.response?.status;
         if (status === 401) {
             apiError.value = t("auth.errors.invalidCredentials");
-        } else if (status === 422) {
+        } else if (status === 400) {
             apiError.value = t("auth.errors.emailNotVerified");
         } else {
             apiError.value = t("auth.errors.unexpected");

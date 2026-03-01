@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Kakeibo.Api.Common.Utils;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
@@ -15,15 +16,40 @@ public sealed class EmailService(
     private readonly SmtpOptions _smtpOptions = smtpOptions.Value;
     private readonly EmailRendererOptions _rendererOptions = rendererOptions.Value;
 
+    public async Task SendEmailVerificationAsync(
+        Guid userId,
+        string email,
+        string token,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var html = await RenderTemplateAsync("EmailVerification", new { token }, cancellationToken);
+            await SendEmailAsync(email, "Verify your email address", html, cancellationToken);
+            logger.LogInformation("Verification email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send verification email to {Email} for user {UserId}", email, userId);
+        }
+    }
+
     public async Task SendWelcomeEmailAsync(
         Guid userId,
         string email,
         string firstName,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("Welcome", new { firstName }, cancellationToken);
-        await SendEmailAsync(email, "Welcome to Kakeibo!", html, cancellationToken);
-        logger.LogInformation("Welcome email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("Welcome", new { firstName }, cancellationToken);
+            await SendEmailAsync(email, "Welcome to Kakeibo!", html, cancellationToken);
+            logger.LogInformation("Welcome email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send welcome email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendPasswordResetEmailAsync(
@@ -33,9 +59,16 @@ public sealed class EmailService(
         string token,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("PasswordReset", new { firstName, token }, cancellationToken);
-        await SendEmailAsync(email, "Reset Your Password", html, cancellationToken);
-        logger.LogInformation("Password reset email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("PasswordReset", new { firstName, token }, cancellationToken);
+            await SendEmailAsync(email, "Reset Your Password", html, cancellationToken);
+            logger.LogInformation("Password reset email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send password reset email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendWalletInvitationEmailAsync(
@@ -46,9 +79,16 @@ public sealed class EmailService(
         string token,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("WalletInvitation", new { walletName, inviterName, token }, cancellationToken);
-        await SendEmailAsync(email, $"You're invited to {walletName}", html, cancellationToken);
-        logger.LogInformation("Wallet invitation email sent to {Email} for invitation {InvitationId}", email, invitationId);
+        try
+        {
+            var html = await RenderTemplateAsync("WalletInvitation", new { walletName, inviterName, token }, cancellationToken);
+            await SendEmailAsync(email, $"You're invited to {walletName}", html, cancellationToken);
+            logger.LogInformation("Wallet invitation email sent to {Email} for invitation {InvitationId}", email, invitationId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send wallet invitation email to {Email} for invitation {InvitationId}", email, invitationId);
+        }
     }
 
     public async Task SendBudgetAlertEmailAsync(
@@ -59,10 +99,17 @@ public sealed class EmailService(
         decimal limit,
         CancellationToken cancellationToken = default)
     {
-        var percentage = (int)(spent / limit * 100);
-        var html = await RenderTemplateAsync("BudgetAlert", new { budgetName, spent, limit, percentage }, cancellationToken);
-        await SendEmailAsync(email, $"Budget Alert: {budgetName}", html, cancellationToken);
-        logger.LogInformation("Budget alert email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var percentage = (int)(spent / limit * 100);
+            var html = await RenderTemplateAsync("BudgetAlert", new { budgetName, spent, limit, percentage }, cancellationToken);
+            await SendEmailAsync(email, $"Budget Alert: {budgetName}", html, cancellationToken);
+            logger.LogInformation("Budget alert email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send budget alert email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendGoalMilestoneEmailAsync(
@@ -74,9 +121,16 @@ public sealed class EmailService(
         int percentage,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("GoalMilestone", new { goalName, current, target, percentage }, cancellationToken);
-        await SendEmailAsync(email, $"Goal Milestone: {goalName}", html, cancellationToken);
-        logger.LogInformation("Goal milestone email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("GoalMilestone", new { goalName, current, target, percentage }, cancellationToken);
+            await SendEmailAsync(email, $"Goal Milestone: {goalName}", html, cancellationToken);
+            logger.LogInformation("Goal milestone email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send goal milestone email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendGoalAchievedEmailAsync(
@@ -86,9 +140,16 @@ public sealed class EmailService(
         decimal target,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("GoalAchieved", new { goalName, target }, cancellationToken);
-        await SendEmailAsync(email, $"Goal Achieved: {goalName}!", html, cancellationToken);
-        logger.LogInformation("Goal achieved email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("GoalAchieved", new { goalName, target }, cancellationToken);
+            await SendEmailAsync(email, $"Goal Achieved: {goalName}!", html, cancellationToken);
+            logger.LogInformation("Goal achieved email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send goal achieved email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendMemberJoinedEmailAsync(
@@ -98,9 +159,16 @@ public sealed class EmailService(
         string newMemberName,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("MemberJoined", new { walletName, newMemberName }, cancellationToken);
-        await SendEmailAsync(email, $"New member joined {walletName}", html, cancellationToken);
-        logger.LogInformation("Member joined email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("MemberJoined", new { walletName, newMemberName }, cancellationToken);
+            await SendEmailAsync(email, $"New member joined {walletName}", html, cancellationToken);
+            logger.LogInformation("Member joined email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send member joined email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     public async Task SendRecurringTransactionGeneratedEmailAsync(
@@ -110,9 +178,16 @@ public sealed class EmailService(
         decimal amount,
         CancellationToken cancellationToken = default)
     {
-        var html = await RenderTemplateAsync("RecurringGenerated", new { patternName, amount }, cancellationToken);
-        await SendEmailAsync(email, $"Recurring transaction generated: {patternName}", html, cancellationToken);
-        logger.LogInformation("Recurring generated email sent to {Email} for user {UserId}", email, userId);
+        try
+        {
+            var html = await RenderTemplateAsync("RecurringGenerated", new { patternName, amount }, cancellationToken);
+            await SendEmailAsync(email, $"Recurring transaction generated: {patternName}", html, cancellationToken);
+            logger.LogInformation("Recurring generated email sent to {Email} for user {UserId}", email, userId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send recurring generated email to {Email} for user {UserId}", email, userId);
+        }
     }
 
     // Renders an email template via the external email-renderer service.
@@ -130,7 +205,11 @@ public sealed class EmailService(
         var response = await httpClient.PostAsync("/render", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsStringAsync(cancellationToken);
+        // The renderer returns {"html":"<html>..."} — extract the html property
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        using var doc = JsonDocument.Parse(json);
+        return doc.RootElement.GetProperty("html").GetString()
+            ?? throw new InvalidOperationException("Email renderer returned empty HTML.");
     }
 
     // Sends a plain HTML email via SMTP.

@@ -3,7 +3,7 @@ import axios from "axios";
 // Axios instance with HttpOnly-cookie-based auth.
 // Tokens travel automatically via cookies — no Authorization header needed.
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000",
+    baseURL: import.meta.env.VITE_API_URL ?? "",
     withCredentials: true,
 });
 
@@ -16,6 +16,14 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+
+        // Never attempt refresh for auth-check or refresh endpoints — let callers handle 401s directly.
+        // Without this guard, GET /api/auth/me (called on every page load to restore session)
+        // would trigger a refresh attempt and redirect to /login even on public routes like /register.
+        const skipRefreshUrls = ["/api/auth/me", "/api/auth/refresh"];
+        if (skipRefreshUrls.some((url) => originalRequest.url?.includes(url))) {
+            return Promise.reject(error);
+        }
 
         // Only attempt refresh once per request (_retry flag) and only on 401.
         if (error.response?.status === 401 && !originalRequest._retry) {

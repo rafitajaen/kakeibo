@@ -42,7 +42,10 @@ const schema = toTypedSchema(
         }),
 );
 
-const form = useForm({ validationSchema: schema });
+const form = useForm({
+    validationSchema: schema,
+    initialValues: { currency: "EUR" },
+});
 
 const onSubmit = form.handleSubmit(async (values) => {
     apiError.value = null;
