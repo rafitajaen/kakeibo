@@ -554,25 +554,23 @@ import { helper } from './utils';
 
 ## Category 10: Icon Library Consistency
 
-### TD-018: Mixed Icon Libraries in the Same Project (INFO)
+### TD-018: Non-Canonical Icon Library Usage (INFO)
 
-When two icon libraries are declared simultaneously (e.g., `lucide-vue-next` and `@hugeicons/vue`),
-the project must document which library is canonical for application-level components and plan to
-consolidate. The coexistence state should be temporary.
+`lucide-vue-next` is the canonical icon library. Any icon library other than `lucide-vue-next`
+declared in `package.json` or imported in source files must be removed and replaced.
 
-**Context:** shadcn-vue primitive components under `components/ui/` embed icon imports
-directly in their copied source files (see KB-006). Until those primitives are migrated,
-the embedded icon library must remain as a dependency even if another library is the primary choice for
-new components.
+**Context:** When adding new shadcn-vue components via `bunx --bun shadcn-vue@latest add`,
+the generated files under `components/ui/` may embed imports from a different icon library.
+Migrate those imports to `lucide-vue-next` before committing.
 
-**Resolution:** Migrate the affected `components/ui/` files to the canonical icon library,
-then remove the legacy dependency from `package.json`.
+**Resolution:** Replace non-canonical icon imports with the equivalent `lucide-vue-next` named
+component, then remove the legacy dependency from `package.json`.
 
 **Applies to:** `src/Kakeibo.App/package.json`, `src/Kakeibo.App/components/ui/`
 
 **Detection patterns:**
-- Two icon library packages declared simultaneously in `package.json`
-- Files under `components/ui/` importing from a different icon library than files under `components/`
+- Any icon library package other than `lucide-vue-next` declared in `package.json`
+- Files under `components/ui/` importing icons from a library other than `lucide-vue-next`
 
 ---
 

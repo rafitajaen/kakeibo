@@ -47,7 +47,7 @@ Bun, xUnit v3 + Testcontainers / Vitest + Playwright.
 | Moq | NSubstitute |
 | Newtonsoft.Json | System.Text.Json (native .NET) |
 | Quartz.NET | Hangfire + Hangfire.PostgreSql |
-| `lucide-vue-next` | `@hugeicons/vue` + `@hugeicons/core-free-icons` |
+| `@hugeicons/vue` / `@hugeicons/core-free-icons` | `lucide-vue-next` |
 | `FluentAssertions` | Use xUnit v3 native `Assert.*` methods manually |
 | `npx` | `bunx` (or `bunx --bun` when Bun runtime is required) |
 | Outbox Pattern / IModuleEventBus | `IEventBus` + `ChannelEventBus` (System.Threading.Channels) |
@@ -181,7 +181,7 @@ Each feature lives in `src/Kakeibo.Api/Features/{Domain}/{Operation}/` with up t
 
 **Components:** `<script setup lang="ts">` always. SFC order: script → template → style scoped. PascalCase filenames.
 **Pinia:** Setup function style (`defineStore('name', () => {...})`). `ref()` for state, `computed()` for getters, functions for actions.
-**UI:** shadcn-vue first — check registry before building custom components (`bunx --bun shadcn-vue@latest add <component>` from the project folder). Icons: `HugeiconsIcon` wrapper + `@hugeicons/core-free-icons`. Forms: VeeValidate + Zod. Dates: date-fns.
+**UI:** shadcn-vue first — check registry before building custom components (`bunx --bun shadcn-vue@latest add <component>` from the project folder). Icons: `lucide-vue-next` (import named icon components directly). Forms: VeeValidate + Zod. Dates: date-fns.
 **i18n:** Every user-visible string must use `t('key')`. Keys must exist in both `locales/en.json` and `locales/es.json`. See mandatory.md Rule 5.
 **Imports:** `@/` for cross-directory. Only `./file` (same dir) may use relative paths.
 **Testing:** Unit → Vitest (`test/components/{Name}.spec.ts`). E2E → Playwright (`e2e/{feature}.spec.ts`).

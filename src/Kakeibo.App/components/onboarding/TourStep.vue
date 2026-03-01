@@ -2,13 +2,7 @@
 import { useI18n } from "vue-i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HugeiconsIcon } from "@hugeicons/vue";
-import {
-    Wallet01Icon,
-    MoneyExchange01Icon,
-    ChartBreakoutCircleIcon,
-    Target01Icon,
-} from "@hugeicons/core-free-icons";
+import { Wallet, ArrowLeftRight, TrendingUp, Target } from "lucide-vue-next";
 
 const { t } = useI18n();
 
@@ -18,10 +12,10 @@ const emit = defineEmits<{
 }>();
 
 const features = [
-    { icon: Wallet01Icon, key: "wallets" },
-    { icon: MoneyExchange01Icon, key: "transactions" },
-    { icon: ChartBreakoutCircleIcon, key: "budgets" },
-    { icon: Target01Icon, key: "goals" },
+    { icon: Wallet, key: "wallets" },
+    { icon: ArrowLeftRight, key: "transactions" },
+    { icon: TrendingUp, key: "budgets" },
+    { icon: Target, key: "goals" },
 ];
 </script>
 
@@ -34,7 +28,7 @@ const features = [
             <Card v-for="feature in features" :key="feature.key" class="text-center">
                 <CardHeader class="pb-2">
                     <div class="flex justify-center mb-2">
-                        <HugeiconsIcon :icon="feature.icon" class="w-8 h-8 text-primary" />
+                        <component :is="feature.icon" class="w-8 h-8 text-primary" />
                     </div>
                     <CardTitle class="text-sm">
                         {{ t(`onboarding.tour.${feature.key}.title`) }}

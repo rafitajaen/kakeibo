@@ -58,7 +58,7 @@
 | Vue Router | Routing |
 | shadcn-vue | Accessible UI components |
 | Tailwind CSS v4 | Utility-first styles, no configuration file |
-| @hugeicons/vue + @hugeicons/core-free-icons | Icons (4,600+ free, tree-shakeable) |
+| lucide-vue-next | Icons |
 | VeeValidate + Zod | Form validation |
 | date-fns | Date manipulation |
 | Axios (interceptors) + Pinia | Authentication state management and automatic token refresh |
@@ -102,3 +102,4 @@
 | MinIO (server) | Archived project, no security patches. Use RustFS (Apache 2.0, S3-compatible). The Minio NuGet SDK is still the S3 client library — only the server is prohibited |
 | Newtonsoft.Json | Use System.Text.Json (built into .NET). Better performance, native integration, and actively maintained by Microsoft |
 | FluentAssertions | Use xUnit v3 native Assert.* methods manually |
+| @hugeicons/vue / @hugeicons/core-free-icons | Use lucide-vue-next instead |

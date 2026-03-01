@@ -124,7 +124,7 @@ Kakeibo uses a **simple monolith** with vertical slices and screaming architectu
 - **Routing:** Vue Router
 - **UI Components:** shadcn-vue (accessible, customizable)
 - **Styling:** Tailwind CSS v4 (utility-first, no config file)
-- **Icons:** @hugeicons/vue (4,600+ free icons, tree-shakeable)
+- **Icons:** lucide-vue-next
 - **Forms:** VeeValidate + Zod
 - **Dates:** date-fns
 - **Charts:** Radix UI

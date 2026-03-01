@@ -2,8 +2,7 @@
 import type { SelectScrollDownButtonProps } from "reka-ui";
 import type { HTMLAttributes } from "vue";
 import { reactiveOmit } from "@vueuse/core";
-import { HugeiconsIcon } from "@hugeicons/vue";
-import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { ChevronDown } from "lucide-vue-next";
 import { SelectScrollDownButton, useForwardProps } from "reka-ui";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +20,7 @@ const forwardedProps = useForwardProps(delegatedProps);
         :class="cn('flex cursor-default items-center justify-center py-1', props.class)"
     >
         <slot>
-            <HugeiconsIcon :icon="ArrowDown01Icon" class="size-4" />
+            <ChevronDown class="size-4" />
         </slot>
     </SelectScrollDownButton>
 </template>
