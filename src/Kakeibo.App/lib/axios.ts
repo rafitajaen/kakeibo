@@ -1,10 +1,22 @@
 import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
 
 // Axios instance with HttpOnly-cookie-based auth.
 // Tokens travel automatically via cookies — no Authorization header needed.
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL ?? "",
     withCredentials: true,
+});
+
+// Attach X-User-Id on every request so backend [FromHeader] parameters receive it.
+// useAuthStore() is called inside the interceptor callback (not at module init time)
+// so Pinia is already initialized by the time the first request fires.
+api.interceptors.request.use((config) => {
+    const auth = useAuthStore();
+    if (auth.user?.id) {
+        config.headers["X-User-Id"] = auth.user.id;
+    }
+    return config;
 });
 
 // Tracks whether a token refresh is currently in flight to avoid
