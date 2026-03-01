@@ -63,8 +63,7 @@ public sealed class ClickHouseAuditService(
     {
         if (_unavailable)
         {
-            logger.LogDebug("ClickHouse unavailable — skipping audit event: Action={Action}, UserId={UserId}",
-                entry.Action, entry.UserId);
+            ClickHouseAuditServiceLogs.ClickHouseUnavailableSkipping(logger, entry.Action, entry.UserId);
             return;
         }
 
@@ -105,8 +104,7 @@ public sealed class ClickHouseAuditService(
             // Audit failures must not affect the main request flow.
             // Mark as unavailable to avoid retrying (and spamming logs) on every subsequent call.
             _unavailable = true;
-            logger.LogWarning(ex, "ClickHouse unavailable — audit events will be skipped until restart. Action={Action}, UserId={UserId}",
-                entry.Action, entry.UserId);
+            ClickHouseAuditServiceLogs.ClickHouseUnavailableAuditFailed(logger, entry.Action, entry.UserId, ex);
         }
     }
 
@@ -122,7 +120,7 @@ public sealed class ClickHouseAuditService(
     {
         if (_unavailable)
         {
-            logger.LogDebug("ClickHouse unavailable — returning empty activity feed for user {UserId}", userId);
+            ClickHouseAuditServiceLogs.ClickHouseUnavailableActivityFeed(logger, userId);
             return ([], 0);
         }
 
@@ -192,7 +190,7 @@ public sealed class ClickHouseAuditService(
         catch (Exception ex)
         {
             _unavailable = true;
-            logger.LogWarning(ex, "ClickHouse unavailable — activity feed will return empty until restart. UserId={UserId}", userId);
+            ClickHouseAuditServiceLogs.ClickHouseUnavailableActivityFeedFailed(logger, userId, ex);
             return ([], 0);
         }
     }

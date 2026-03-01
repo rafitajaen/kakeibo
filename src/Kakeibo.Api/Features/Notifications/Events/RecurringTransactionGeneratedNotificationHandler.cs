@@ -61,7 +61,7 @@ public sealed class RecurringTransactionGeneratedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send recurring generated email to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.RecurringGeneratedEmailFailed(logger, @event.UserId, ex);
             }
         }
 
@@ -73,7 +73,7 @@ public sealed class RecurringTransactionGeneratedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send recurring generated push to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.RecurringGeneratedPushFailed(logger, @event.UserId, ex);
             }
         }
     }

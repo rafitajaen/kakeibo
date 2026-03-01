@@ -72,7 +72,7 @@ public sealed class InvitationSentNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to send invitation push to user {UserId}", inviteeUser.Id);
+                    NotificationHandlerLogs.InvitationSentPushFailed(logger, inviteeUser.Id, ex);
                 }
             }
         }
@@ -90,7 +90,7 @@ public sealed class InvitationSentNotificationHandler(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to send invitation email for invitation {InvitationId}", @event.InvitationId);
+            NotificationHandlerLogs.InvitationSentEmailFailed(logger, @event.InvitationId, ex);
         }
     }
 }

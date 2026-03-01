@@ -31,7 +31,7 @@ public sealed class StorageService(IOptions<StorageOptions> options, ILogger<Sto
 
         await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
 
-        logger.LogInformation("File uploaded to bucket {BucketName} with name {ObjectName}", bucketName, objectName);
+        StorageServiceLogs.FileUploaded(logger, bucketName, objectName);
 
         return $"{bucketName}/{objectName}";
     }
@@ -65,7 +65,7 @@ public sealed class StorageService(IOptions<StorageOptions> options, ILogger<Sto
 
         await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
 
-        logger.LogInformation("File deleted from bucket {BucketName} with name {ObjectName}", bucketName, objectName);
+        StorageServiceLogs.FileDeleted(logger, bucketName, objectName);
     }
 
     public async Task<bool> FileExistsAsync(
@@ -99,7 +99,7 @@ public sealed class StorageService(IOptions<StorageOptions> options, ILogger<Sto
         {
             var makeBucketArgs = new MakeBucketArgs().WithBucket(bucketName);
             await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
-            logger.LogInformation("Bucket {BucketName} created", bucketName);
+            StorageServiceLogs.BucketCreated(logger, bucketName);
         }
     }
 }

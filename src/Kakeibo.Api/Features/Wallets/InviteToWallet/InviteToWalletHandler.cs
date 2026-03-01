@@ -127,8 +127,7 @@ public sealed class InviteToWalletHandler(
             {
                 if (t.IsFaulted)
                 {
-                    logger.LogError(t.Exception, "Failed to send wallet invitation email to {InviteeEmail} for wallet {WalletId}.",
-                        request.InviteeEmail, walletId);
+                    InviteToWalletLogs.InvitationEmailFailed(logger, request.InviteeEmail, walletId, t.Exception!);
                 }
             }, TaskScheduler.Default);
 

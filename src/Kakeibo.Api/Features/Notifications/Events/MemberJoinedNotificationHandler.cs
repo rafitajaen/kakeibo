@@ -72,7 +72,7 @@ public sealed class MemberJoinedNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to send member joined email to user {UserId}", memberId);
+                    NotificationHandlerLogs.MemberJoinedEmailFailed(logger, memberId, ex);
                 }
             }
 
@@ -84,7 +84,7 @@ public sealed class MemberJoinedNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to send member joined push to user {UserId}", memberId);
+                    NotificationHandlerLogs.MemberJoinedPushFailed(logger, memberId, ex);
                 }
             }
         }

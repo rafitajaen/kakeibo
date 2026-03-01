@@ -63,7 +63,7 @@ public sealed class BudgetWarningNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send budget warning email to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.BudgetWarningEmailFailed(logger, @event.UserId, ex);
             }
         }
 
@@ -75,7 +75,7 @@ public sealed class BudgetWarningNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send budget warning push to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.BudgetWarningPushFailed(logger, @event.UserId, ex);
             }
         }
     }

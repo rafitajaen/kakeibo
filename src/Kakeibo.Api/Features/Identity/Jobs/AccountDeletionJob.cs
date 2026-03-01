@@ -24,7 +24,7 @@ public sealed class AccountDeletionJob(AppDbContext db, IClock clock, ILogger<Ac
             .Where(u => u.DeletionRequestedAt != null && u.DeletionRequestedAt <= cutoff && u.DeletedAt == null)
             .ToListAsync(ct);
 
-        logger.LogInformation("AccountDeletionJob: {Count} account(s) pending permanent deletion", accounts.Count);
+        AccountDeletionJobLogs.PendingDeletionAccounts(logger, accounts.Count);
 
         var now = clock.GetCurrentInstant();
         foreach (var user in accounts)

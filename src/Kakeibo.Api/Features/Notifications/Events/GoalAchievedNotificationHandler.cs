@@ -59,7 +59,7 @@ public sealed class GoalAchievedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send goal achieved email to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.GoalAchievedEmailFailed(logger, @event.UserId, ex);
             }
         }
 
@@ -71,7 +71,7 @@ public sealed class GoalAchievedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send goal achieved push to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.GoalAchievedPushFailed(logger, @event.UserId, ex);
             }
         }
     }

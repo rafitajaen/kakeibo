@@ -26,11 +26,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("EmailVerification", new { token }, cancellationToken);
             await SendEmailAsync(email, "Verify your email address", html, cancellationToken);
-            logger.LogInformation("Verification email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.VerificationEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send verification email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.VerificationEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -44,11 +44,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("Welcome", new { firstName }, cancellationToken);
             await SendEmailAsync(email, "Welcome to Kakeibo!", html, cancellationToken);
-            logger.LogInformation("Welcome email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.WelcomeEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send welcome email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.WelcomeEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -63,11 +63,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("PasswordReset", new { firstName, token }, cancellationToken);
             await SendEmailAsync(email, "Reset Your Password", html, cancellationToken);
-            logger.LogInformation("Password reset email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.PasswordResetEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send password reset email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.PasswordResetEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -83,11 +83,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("WalletInvitation", new { walletName, inviterName, token }, cancellationToken);
             await SendEmailAsync(email, $"You're invited to {walletName}", html, cancellationToken);
-            logger.LogInformation("Wallet invitation email sent to {Email} for invitation {InvitationId}", email, invitationId);
+            EmailServiceLogs.WalletInvitationEmailSent(logger, email, invitationId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send wallet invitation email to {Email} for invitation {InvitationId}", email, invitationId);
+            EmailServiceLogs.WalletInvitationEmailFailed(logger, email, invitationId, ex);
         }
     }
 
@@ -104,11 +104,11 @@ public sealed class EmailService(
             var percentage = (int)(spent / limit * 100);
             var html = await RenderTemplateAsync("BudgetAlert", new { budgetName, spent, limit, percentage }, cancellationToken);
             await SendEmailAsync(email, $"Budget Alert: {budgetName}", html, cancellationToken);
-            logger.LogInformation("Budget alert email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.BudgetAlertEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send budget alert email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.BudgetAlertEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -125,11 +125,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("GoalMilestone", new { goalName, current, target, percentage }, cancellationToken);
             await SendEmailAsync(email, $"Goal Milestone: {goalName}", html, cancellationToken);
-            logger.LogInformation("Goal milestone email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.GoalMilestoneEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send goal milestone email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.GoalMilestoneEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -144,11 +144,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("GoalAchieved", new { goalName, target }, cancellationToken);
             await SendEmailAsync(email, $"Goal Achieved: {goalName}!", html, cancellationToken);
-            logger.LogInformation("Goal achieved email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.GoalAchievedEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send goal achieved email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.GoalAchievedEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -163,11 +163,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("MemberJoined", new { walletName, newMemberName }, cancellationToken);
             await SendEmailAsync(email, $"New member joined {walletName}", html, cancellationToken);
-            logger.LogInformation("Member joined email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.MemberJoinedEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send member joined email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.MemberJoinedEmailFailed(logger, email, userId, ex);
         }
     }
 
@@ -182,11 +182,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("RecurringGenerated", new { patternName, amount }, cancellationToken);
             await SendEmailAsync(email, $"Recurring transaction generated: {patternName}", html, cancellationToken);
-            logger.LogInformation("Recurring generated email sent to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.RecurringGeneratedEmailSent(logger, email, userId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send recurring generated email to {Email} for user {UserId}", email, userId);
+            EmailServiceLogs.RecurringGeneratedEmailFailed(logger, email, userId, ex);
         }
     }
 

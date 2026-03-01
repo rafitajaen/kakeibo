@@ -35,8 +35,7 @@ public sealed class GenerateRecurringTransactionsJob(
                 (r.EndDate == null || r.NextOccurrence <= r.EndDate))
             .ToListAsync(ct);
 
-        logger.LogInformation("GenerateRecurringTransactionsJob: {Count} pattern(s) due on {Today}",
-            patterns.Count, today);
+        GenerateRecurringTransactionsJobLogs.PatternsDue(logger, patterns.Count, today);
 
         foreach (var pattern in patterns)
         {
@@ -47,9 +46,7 @@ public sealed class GenerateRecurringTransactionsJob(
             catch (Exception ex)
             {
                 // Isolate failures — log and continue processing remaining patterns.
-                logger.LogError(ex,
-                    "GenerateRecurringTransactionsJob: unhandled error processing pattern {PatternId}",
-                    pattern.Id);
+                GenerateRecurringTransactionsJobLogs.PatternProcessingFailed(logger, pattern.Id, ex);
             }
         }
     }
@@ -83,16 +80,12 @@ public sealed class GenerateRecurringTransactionsJob(
                     UserId = pattern.UserId
                 });
 
-                logger.LogDebug(
-                    "Generated transaction {TransactionId} for pattern {PatternId} on {Date}",
-                    result.Value.Id, pattern.Id, pattern.NextOccurrence);
+                GenerateRecurringTransactionsJobLogs.TransactionGenerated(logger, result.Value.Id, pattern.Id, pattern.NextOccurrence);
             }
             else
             {
                 // Log the handler failure but still advance NextOccurrence to avoid stuck patterns.
-                logger.LogWarning(
-                    "Failed to generate transaction for pattern {PatternId} on {Date}: {Error}",
-                    pattern.Id, pattern.NextOccurrence, result.Error.Message);
+                GenerateRecurringTransactionsJobLogs.TransactionGenerationFailed(logger, pattern.Id, pattern.NextOccurrence, result.Error.Message);
             }
 
             // Advance NextOccurrence regardless of generation success

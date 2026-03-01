@@ -60,12 +60,12 @@ public sealed class WebPushService(
                 // Subscription expired — remove it so we don't keep sending to stale endpoints
                 db.PushSubscriptions.Remove(sub);
                 await db.SaveChangesAsync(ct);
-                logger.LogInformation("Removed expired push subscription for user {UserId}", userId);
+                WebPushServiceLogs.ExpiredSubscriptionRemoved(logger, userId);
             }
             catch (Exception ex)
             {
                 // Push delivery failure must not break the notification handler
-                logger.LogWarning(ex, "Failed to send push notification to user {UserId}", userId);
+                WebPushServiceLogs.PushNotificationFailed(logger, userId, ex);
             }
         }
     }

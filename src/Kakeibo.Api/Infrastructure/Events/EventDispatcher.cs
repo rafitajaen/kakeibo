@@ -37,8 +37,7 @@ public sealed class EventDispatcher(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error dispatching event {EventType} to handler {HandlerType}",
-                    eventType.Name, handler?.GetType().Name);
+                EventDispatcherLogs.EventDispatchFailed(logger, eventType.Name, handler?.GetType().Name, ex);
             }
         }
     }

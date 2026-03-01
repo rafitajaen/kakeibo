@@ -60,7 +60,7 @@ public sealed class GoalMilestoneReachedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send goal milestone email to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.GoalMilestoneEmailFailed(logger, @event.UserId, ex);
             }
         }
 
@@ -72,7 +72,7 @@ public sealed class GoalMilestoneReachedNotificationHandler(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Failed to send goal milestone push to user {UserId}", @event.UserId);
+                NotificationHandlerLogs.GoalMilestonePushFailed(logger, @event.UserId, ex);
             }
         }
     }

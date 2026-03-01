@@ -351,7 +351,7 @@ dotnet_diagnostic.CA1819.severity = none
 dotnet_diagnostic.CA1822.severity = none
 
 # CA1848: Use the LoggerMessage delegates
-dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1848.severity = error
 
 # CA1860: Avoid using 'Enumerable.Any()' extension method
 dotnet_diagnostic.CA1860.severity = none
