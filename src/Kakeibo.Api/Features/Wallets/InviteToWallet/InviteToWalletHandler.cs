@@ -127,7 +127,7 @@ public sealed class InviteToWalletHandler(
             {
                 if (t.IsFaulted)
                 {
-                    InviteToWalletLogs.InvitationEmailFailed(logger, request.InviteeEmail, walletId, t.Exception!);
+                    logger.InvitationEmailFailed(request.InviteeEmail, walletId, t.Exception!);
                 }
             }, TaskScheduler.Default);
 

@@ -26,11 +26,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("EmailVerification", new { token }, cancellationToken);
             await SendEmailAsync(email, "Verify your email address", html, cancellationToken);
-            EmailServiceLogs.VerificationEmailSent(logger, email, userId);
+            logger.VerificationEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.VerificationEmailFailed(logger, email, userId, ex);
+            logger.VerificationEmailFailed(email, userId, ex);
         }
     }
 
@@ -44,11 +44,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("Welcome", new { firstName }, cancellationToken);
             await SendEmailAsync(email, "Welcome to Kakeibo!", html, cancellationToken);
-            EmailServiceLogs.WelcomeEmailSent(logger, email, userId);
+            logger.WelcomeEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.WelcomeEmailFailed(logger, email, userId, ex);
+            logger.WelcomeEmailFailed(email, userId, ex);
         }
     }
 
@@ -63,11 +63,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("PasswordReset", new { firstName, token }, cancellationToken);
             await SendEmailAsync(email, "Reset Your Password", html, cancellationToken);
-            EmailServiceLogs.PasswordResetEmailSent(logger, email, userId);
+            logger.PasswordResetEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.PasswordResetEmailFailed(logger, email, userId, ex);
+            logger.PasswordResetEmailFailed(email, userId, ex);
         }
     }
 
@@ -83,11 +83,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("WalletInvitation", new { walletName, inviterName, token }, cancellationToken);
             await SendEmailAsync(email, $"You're invited to {walletName}", html, cancellationToken);
-            EmailServiceLogs.WalletInvitationEmailSent(logger, email, invitationId);
+            logger.WalletInvitationEmailSent(email, invitationId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.WalletInvitationEmailFailed(logger, email, invitationId, ex);
+            logger.WalletInvitationEmailFailed(email, invitationId, ex);
         }
     }
 
@@ -104,11 +104,11 @@ public sealed class EmailService(
             var percentage = (int)(spent / limit * 100);
             var html = await RenderTemplateAsync("BudgetAlert", new { budgetName, spent, limit, percentage }, cancellationToken);
             await SendEmailAsync(email, $"Budget Alert: {budgetName}", html, cancellationToken);
-            EmailServiceLogs.BudgetAlertEmailSent(logger, email, userId);
+            logger.BudgetAlertEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.BudgetAlertEmailFailed(logger, email, userId, ex);
+            logger.BudgetAlertEmailFailed(email, userId, ex);
         }
     }
 
@@ -125,11 +125,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("GoalMilestone", new { goalName, current, target, percentage }, cancellationToken);
             await SendEmailAsync(email, $"Goal Milestone: {goalName}", html, cancellationToken);
-            EmailServiceLogs.GoalMilestoneEmailSent(logger, email, userId);
+            logger.GoalMilestoneEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.GoalMilestoneEmailFailed(logger, email, userId, ex);
+            logger.GoalMilestoneEmailFailed(email, userId, ex);
         }
     }
 
@@ -144,11 +144,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("GoalAchieved", new { goalName, target }, cancellationToken);
             await SendEmailAsync(email, $"Goal Achieved: {goalName}!", html, cancellationToken);
-            EmailServiceLogs.GoalAchievedEmailSent(logger, email, userId);
+            logger.GoalAchievedEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.GoalAchievedEmailFailed(logger, email, userId, ex);
+            logger.GoalAchievedEmailFailed(email, userId, ex);
         }
     }
 
@@ -163,11 +163,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("MemberJoined", new { walletName, newMemberName }, cancellationToken);
             await SendEmailAsync(email, $"New member joined {walletName}", html, cancellationToken);
-            EmailServiceLogs.MemberJoinedEmailSent(logger, email, userId);
+            logger.MemberJoinedEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.MemberJoinedEmailFailed(logger, email, userId, ex);
+            logger.MemberJoinedEmailFailed(email, userId, ex);
         }
     }
 
@@ -182,11 +182,11 @@ public sealed class EmailService(
         {
             var html = await RenderTemplateAsync("RecurringGenerated", new { patternName, amount }, cancellationToken);
             await SendEmailAsync(email, $"Recurring transaction generated: {patternName}", html, cancellationToken);
-            EmailServiceLogs.RecurringGeneratedEmailSent(logger, email, userId);
+            logger.RecurringGeneratedEmailSent(email, userId);
         }
         catch (Exception ex)
         {
-            EmailServiceLogs.RecurringGeneratedEmailFailed(logger, email, userId, ex);
+            logger.RecurringGeneratedEmailFailed(email, userId, ex);
         }
     }
 

@@ -60,7 +60,7 @@ public sealed class GoalMilestoneReachedNotificationHandler(
             }
             catch (Exception ex)
             {
-                NotificationHandlerLogs.GoalMilestoneEmailFailed(logger, @event.UserId, ex);
+                logger.GoalMilestoneEmailFailed(@event.UserId, ex);
             }
         }
 
@@ -72,7 +72,7 @@ public sealed class GoalMilestoneReachedNotificationHandler(
             }
             catch (Exception ex)
             {
-                NotificationHandlerLogs.GoalMilestonePushFailed(logger, @event.UserId, ex);
+                logger.GoalMilestonePushFailed(@event.UserId, ex);
             }
         }
     }

@@ -72,7 +72,7 @@ public sealed class MemberJoinedNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    NotificationHandlerLogs.MemberJoinedEmailFailed(logger, memberId, ex);
+                    logger.MemberJoinedEmailFailed(memberId, ex);
                 }
             }
 
@@ -84,7 +84,7 @@ public sealed class MemberJoinedNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    NotificationHandlerLogs.MemberJoinedPushFailed(logger, memberId, ex);
+                    logger.MemberJoinedPushFailed(memberId, ex);
                 }
             }
         }

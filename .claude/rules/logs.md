@@ -10,9 +10,9 @@ are prohibited and will fail the build (CA1848 is set to `error` in `.editorconf
 2. **Naming**: File and class named `{ServiceOrFeature}Logs` (e.g., `EmailServiceLogs`,
    `NotificationHandlerLogs`).
 3. **Class signature**: `internal static partial class` in the same namespace as the consumer.
-4. **Method signature**: `internal static partial void`. The compiler generates the
-   implementation. Pass the `ILogger` as the first parameter, then structured log properties,
-   and `Exception exception` last (if applicable).
+4. **Method signature**: `internal static partial void`. Use `this ILogger logger` as the
+   first parameter (extension method syntax) — this enables the fluent `logger.Method(...)`
+   call site. Then structured log properties, and `Exception exception` last (if applicable).
 5. **No allocations**: The source generator emits an `IsEnabled` check automatically.
    Do not call `IsEnabled` manually.
 
@@ -26,16 +26,16 @@ internal static partial class EmailServiceLogs
 {
     [LoggerMessage(1201, LogLevel.Information,
         "Verification email sent to {Email} for user {UserId}")]
-    internal static partial void VerificationEmailSent(ILogger logger, string email, Guid userId);
+    internal static partial void VerificationEmailSent(this ILogger logger, string email, Guid userId);
 
     [LoggerMessage(1202, LogLevel.Error,
         "Failed to send verification email to {Email} for user {UserId}")]
-    internal static partial void VerificationEmailFailed(ILogger logger, string email, Guid userId, Exception exception);
+    internal static partial void VerificationEmailFailed(this ILogger logger, string email, Guid userId, Exception exception);
 }
 
 // Call site in EmailService.cs
-EmailServiceLogs.VerificationEmailSent(logger, email, userId);
-EmailServiceLogs.VerificationEmailFailed(logger, email, userId, ex);
+logger.VerificationEmailSent(email, userId);
+logger.VerificationEmailFailed(email, userId, ex);
 ```
 
 ## EventId Ranges

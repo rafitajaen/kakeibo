@@ -63,7 +63,7 @@ public sealed class ClickHouseAuditService(
     {
         if (_unavailable)
         {
-            ClickHouseAuditServiceLogs.ClickHouseUnavailableSkipping(logger, entry.Action, entry.UserId);
+            logger.ClickHouseUnavailableSkipping(entry.Action, entry.UserId);
             return;
         }
 
@@ -104,7 +104,7 @@ public sealed class ClickHouseAuditService(
             // Audit failures must not affect the main request flow.
             // Mark as unavailable to avoid retrying (and spamming logs) on every subsequent call.
             _unavailable = true;
-            ClickHouseAuditServiceLogs.ClickHouseUnavailableAuditFailed(logger, entry.Action, entry.UserId, ex);
+            logger.ClickHouseUnavailableAuditFailed(entry.Action, entry.UserId, ex);
         }
     }
 
@@ -120,7 +120,7 @@ public sealed class ClickHouseAuditService(
     {
         if (_unavailable)
         {
-            ClickHouseAuditServiceLogs.ClickHouseUnavailableActivityFeed(logger, userId);
+            logger.ClickHouseUnavailableActivityFeed(userId);
             return ([], 0);
         }
 
@@ -190,7 +190,7 @@ public sealed class ClickHouseAuditService(
         catch (Exception ex)
         {
             _unavailable = true;
-            ClickHouseAuditServiceLogs.ClickHouseUnavailableActivityFeedFailed(logger, userId, ex);
+            logger.ClickHouseUnavailableActivityFeedFailed(userId, ex);
             return ([], 0);
         }
     }

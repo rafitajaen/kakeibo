@@ -61,7 +61,7 @@ public sealed class RecurringTransactionGeneratedNotificationHandler(
             }
             catch (Exception ex)
             {
-                NotificationHandlerLogs.RecurringGeneratedEmailFailed(logger, @event.UserId, ex);
+                logger.RecurringGeneratedEmailFailed(@event.UserId, ex);
             }
         }
 
@@ -73,7 +73,7 @@ public sealed class RecurringTransactionGeneratedNotificationHandler(
             }
             catch (Exception ex)
             {
-                NotificationHandlerLogs.RecurringGeneratedPushFailed(logger, @event.UserId, ex);
+                logger.RecurringGeneratedPushFailed(@event.UserId, ex);
             }
         }
     }

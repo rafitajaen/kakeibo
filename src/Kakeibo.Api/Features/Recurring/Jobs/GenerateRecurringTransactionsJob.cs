@@ -35,7 +35,7 @@ public sealed class GenerateRecurringTransactionsJob(
                 (r.EndDate == null || r.NextOccurrence <= r.EndDate))
             .ToListAsync(ct);
 
-        GenerateRecurringTransactionsJobLogs.PatternsDue(logger, patterns.Count, today);
+        logger.PatternsDue(patterns.Count, today);
 
         foreach (var pattern in patterns)
         {
@@ -46,7 +46,7 @@ public sealed class GenerateRecurringTransactionsJob(
             catch (Exception ex)
             {
                 // Isolate failures — log and continue processing remaining patterns.
-                GenerateRecurringTransactionsJobLogs.PatternProcessingFailed(logger, pattern.Id, ex);
+                logger.PatternProcessingFailed(pattern.Id, ex);
             }
         }
     }
@@ -80,12 +80,12 @@ public sealed class GenerateRecurringTransactionsJob(
                     UserId = pattern.UserId
                 });
 
-                GenerateRecurringTransactionsJobLogs.TransactionGenerated(logger, result.Value.Id, pattern.Id, pattern.NextOccurrence);
+                logger.TransactionGenerated(result.Value.Id, pattern.Id, pattern.NextOccurrence);
             }
             else
             {
                 // Log the handler failure but still advance NextOccurrence to avoid stuck patterns.
-                GenerateRecurringTransactionsJobLogs.TransactionGenerationFailed(logger, pattern.Id, pattern.NextOccurrence, result.Error.Message);
+                logger.TransactionGenerationFailed(pattern.Id, pattern.NextOccurrence, result.Error.Message);
             }
 
             // Advance NextOccurrence regardless of generation success

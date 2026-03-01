@@ -37,7 +37,7 @@ public sealed class EventDispatcher(
             }
             catch (Exception ex)
             {
-                EventDispatcherLogs.EventDispatchFailed(logger, eventType.Name, handler?.GetType().Name, ex);
+                logger.EventDispatchFailed(eventType.Name, handler?.GetType().Name, ex);
             }
         }
     }

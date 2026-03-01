@@ -72,7 +72,7 @@ public sealed class InvitationSentNotificationHandler(
                 }
                 catch (Exception ex)
                 {
-                    NotificationHandlerLogs.InvitationSentPushFailed(logger, inviteeUser.Id, ex);
+                    logger.InvitationSentPushFailed(inviteeUser.Id, ex);
                 }
             }
         }
@@ -90,7 +90,7 @@ public sealed class InvitationSentNotificationHandler(
         }
         catch (Exception ex)
         {
-            NotificationHandlerLogs.InvitationSentEmailFailed(logger, @event.InvitationId, ex);
+            logger.InvitationSentEmailFailed(@event.InvitationId, ex);
         }
     }
 }
