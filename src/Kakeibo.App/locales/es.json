@@ -440,6 +440,25 @@
       "title": "Acciones rápidas",
       "recordTransaction": "Registrar transacción",
       "createWallet": "Crear cartera"
+    },
+    "sectionCards": {
+      "incomeThisMonth": "Ingresos este mes",
+      "expensesThisMonth": "Gastos este mes",
+      "netSavings": "Ahorro neto",
+      "trendUp": "Tendencia al alza este mes",
+      "trendDown": "Tendencia a la baja este mes",
+      "vsLastMonth": "Comparado con el mes anterior",
+      "noData": "Sin datos disponibles"
+    },
+    "chart": {
+      "title": "Ingresos vs Gastos",
+      "description": "Totales diarios en todas las carteras",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "total": "Total",
+      "range7d": "Últimos 7 días",
+      "range30d": "Últimos 30 días",
+      "range90d": "Últimos 3 meses"
     }
   },
   "activity": {

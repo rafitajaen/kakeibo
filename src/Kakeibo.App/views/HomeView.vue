@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useI18n } from "vue-i18n";
 import { useWalletsStore } from "@/stores/wallets";
 import { useTransactionsStore } from "@/stores/transactions";
 import { useBudgetsStore } from "@/stores/budgets";
 import { useGoalsStore } from "@/stores/goals";
+import { useDashboardData } from "@/composables/useDashboardData";
 import type { Transaction } from "@/stores/transactions";
-import BalanceOverview from "@/components/dashboard/BalanceOverview.vue";
+import SectionCards from "@/components/dashboard/SectionCards.vue";
+import ChartAreaInteractive from "@/components/dashboard/ChartAreaInteractive.vue";
 import RecentTransactions from "@/components/dashboard/RecentTransactions.vue";
 import BudgetSummary from "@/components/dashboard/BudgetSummary.vue";
 import GoalSummary from "@/components/dashboard/GoalSummary.vue";
-import QuickActions from "@/components/dashboard/QuickActions.vue";
 
 const router = useRouter();
-const { t } = useI18n();
 const walletsStore = useWalletsStore();
 const transactionsStore = useTransactionsStore();
 const budgetsStore = useBudgetsStore();
 const goalsStore = useGoalsStore();
+const { sectionMetrics, chartData, fetchAll, isLoading: isDashboardLoading } = useDashboardData();
 
 const recentTransactions = ref<Transaction[]>([]);
 const isLoading = ref(true);
@@ -39,7 +39,12 @@ onMounted(async () => {
             return;
         }
         const walletIds = walletsStore.activeWallets.map((w) => w.id);
-        recentTransactions.value = await transactionsStore.fetchRecentForDashboard(walletIds);
+        await Promise.all([
+            fetchAll(walletIds),
+            transactionsStore
+                .fetchRecentForDashboard(walletIds)
+                .then((t) => (recentTransactions.value = t)),
+        ]);
     } finally {
         isLoading.value = false;
         isLoadingTransactions.value = false;
@@ -48,27 +53,27 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-6">{{ t("dashboard.title") }}</h1>
+    <div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        <!-- Metric cards -->
+        <SectionCards :metrics="sectionMetrics" :is-loading="isLoading || isDashboardLoading" />
 
-        <div class="grid gap-6">
-            <!-- Balance Overview — full width -->
-            <BalanceOverview :wallets="walletsStore.activeWallets" :is-loading="isLoading" />
+        <!-- Area chart -->
+        <div class="px-4 lg:px-6">
+            <ChartAreaInteractive :data="chartData" />
+        </div>
 
-            <!-- Budgets + Goals — side by side on medium screens -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <BudgetSummary :budgets="budgetsStore.budgets" :is-loading="isLoading" />
-                <GoalSummary :goals="goalsStore.goals" :is-loading="isLoading" />
-            </div>
+        <!-- Budgets + Goals -->
+        <div class="grid gap-4 px-4 md:grid-cols-2 lg:px-6">
+            <BudgetSummary :budgets="budgetsStore.budgets" :is-loading="isLoading" />
+            <GoalSummary :goals="goalsStore.goals" :is-loading="isLoading" />
+        </div>
 
-            <!-- Recent Transactions + Quick Actions -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <RecentTransactions
-                    :transactions="recentTransactions"
-                    :is-loading="isLoadingTransactions"
-                />
-                <QuickActions :wallets="walletsStore.activeWallets" />
-            </div>
+        <!-- Recent Transactions -->
+        <div class="px-4 lg:px-6">
+            <RecentTransactions
+                :transactions="recentTransactions"
+                :is-loading="isLoadingTransactions"
+            />
         </div>
     </div>
 </template>

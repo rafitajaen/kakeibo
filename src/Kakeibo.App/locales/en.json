@@ -440,6 +440,25 @@
       "title": "Quick Actions",
       "recordTransaction": "Record Transaction",
       "createWallet": "Create Wallet"
+    },
+    "sectionCards": {
+      "incomeThisMonth": "Income This Month",
+      "expensesThisMonth": "Expenses This Month",
+      "netSavings": "Net Savings",
+      "trendUp": "Trending up this month",
+      "trendDown": "Trending down this month",
+      "vsLastMonth": "Compared to last month",
+      "noData": "No data available"
+    },
+    "chart": {
+      "title": "Income vs Expenses",
+      "description": "Daily totals across all wallets",
+      "income": "Income",
+      "expenses": "Expenses",
+      "total": "Total",
+      "range7d": "Last 7 days",
+      "range30d": "Last 30 days",
+      "range90d": "Last 3 months"
     }
   },
   "activity": {

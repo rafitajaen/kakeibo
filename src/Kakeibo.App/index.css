@@ -117,4 +117,13 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Unovis tooltip overrides — use shadcn theme tokens */
+    :root {
+        --vis-tooltip-background-color: none !important;
+        --vis-tooltip-border-color: transparent !important;
+        --vis-tooltip-text-color: none !important;
+        --vis-tooltip-shadow-color: none !important;
+        --vis-tooltip-backdrop-filter: none !important;
+    }
 }
