@@ -142,6 +142,13 @@ builder.Services.Scan(scan => scan
     .AsSelf()
     .WithScopedLifetime());
 
+// --- Data importers: auto-scanned by Scrutor ---
+builder.Services.Scan(scan => scan
+    .FromAssemblyOf<Program>()
+    .AddClasses(classes => classes.AssignableTo<Kakeibo.Api.Features.Identity.ImportData.IDataImporter>())
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
+
 // --- Event handlers: auto-scanned by Scrutor ---
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()

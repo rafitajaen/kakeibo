@@ -19,6 +19,7 @@ import ProfileForm from "@/components/settings/ProfileForm.vue";
 import PasswordChangeForm from "@/components/settings/PasswordChangeForm.vue";
 import SessionsList from "@/components/settings/SessionsList.vue";
 import DeleteAccountSection from "@/components/settings/DeleteAccountSection.vue";
+import ImportExportSection from "@/components/settings/ImportExportSection.vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -78,6 +79,9 @@ async function deleteSeedData() {
                 <TabsTrigger value="security">{{ t("settings.security.title") }}</TabsTrigger>
                 <TabsTrigger value="sessions">{{ t("settings.sessions.title") }}</TabsTrigger>
                 <TabsTrigger value="data">{{ t("settings.data.title") }}</TabsTrigger>
+                <TabsTrigger value="import-export">{{
+                    t("settings.importExport.tabTitle")
+                }}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
@@ -143,6 +147,17 @@ async function deleteSeedData() {
                                 {{ t("settings.data.delete") }}
                             </Button>
                         </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="import-export">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{{ t("settings.importExport.tabTitle") }}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ImportExportSection />
                     </CardContent>
                 </Card>
             </TabsContent>

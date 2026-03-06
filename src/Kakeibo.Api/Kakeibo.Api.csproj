@@ -52,6 +52,9 @@
     <PackageReference Include="Serilog.Sinks.ClickHouse" />
     <!-- Web Push -->
     <PackageReference Include="Lib.Net.Http.WebPush" />
+    <!-- Import/Export -->
+    <PackageReference Include="CsvHelper" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
     <!-- Utilities -->
     <PackageReference Include="Medo.Uuid7" />
     <PackageReference Include="Scrutor" />

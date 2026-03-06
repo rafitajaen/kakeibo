@@ -49,6 +49,7 @@ logger.VerificationEmailFailed(email, userId, ex);
 | 1500–1599 | Infrastructure/Events |
 | 2100–2199 | Features/Identity/Jobs |
 | 2200–2299 | Features/Recurring/Jobs |
+| 2300–2399 | Features/Identity/ImportData + ExportData |
 | 3000–3099 | Features/Wallets |
 | 3100–3199 | Features/Notifications/Events |
 

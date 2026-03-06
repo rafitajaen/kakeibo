@@ -625,6 +625,23 @@
       "seedCreated": "Test data loaded successfully.",
       "seedAlreadyExists": "Test data is already active.",
       "seedDeleted": "Test data deleted."
+    },
+    "importExport": {
+      "tabTitle": "Import / Export",
+      "exportTitle": "Export Data",
+      "exportDescription": "Download all your financial data as a file. Use SQLite for Kakeibo backups.",
+      "exportSqlite": "SQLite (.db)",
+      "exportCsv": "CSV (.zip)",
+      "importTitle": "Import Data",
+      "importDescription": "Import data from a backup. This adds records without deleting existing data.",
+      "importSource": "Source",
+      "importSourceKakeibo": "Kakeibo backup",
+      "importSourceOnemoney": "OneMoney",
+      "importFile": "Select file",
+      "importButton": "Import",
+      "importSuccess": "Import successful",
+      "importSkippedMembers": "{count} shared wallet members were skipped.",
+      "error": "Operation failed. Please try again."
     }
   },
   "nav": {

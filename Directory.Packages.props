@@ -13,6 +13,8 @@
     <PackageVersion Include="ClickHouse.Client" Version="7.14.0" />
     <!-- CSV/Excel Export -->
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <!-- SQLite (import/export) -->
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.5" />
     <PackageVersion Include="MiniExcel" Version="1.42.0" />
     <!-- Caching -->
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.3" />
@@ -21,8 +23,8 @@
     <PackageVersion Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.5.0" />
     <PackageVersion Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.5.0" />
     <!-- Emails -->
-    <PackageVersion Include="MailKit" Version="4.15.0" />
-    <PackageVersion Include="MimeKit" Version="4.15.0" />
+    <PackageVersion Include="MailKit" Version="4.15.1" />
+    <PackageVersion Include="MimeKit" Version="4.15.1" />
     <!-- Entity Framework -->
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
