@@ -34,7 +34,7 @@
 | Hangfire + Hangfire.PostgreSql | Scheduled background jobs with PostgreSQL storage |
 | xUnit v3 | Testing |
 | Testcontainers | Docker containers for integration tests |
-| Minio NuGet SDK | S3-compatible client library (works with RustFS) |
+| Minio NuGet SDK | S3-compatible client library (used with MinIO server) |
 
 ## Email Rendering
 
@@ -78,8 +78,8 @@
 | Chart.js | Prefer Radix UI for charts |
 | Python | Unified stack on .NET and JS/TS. Scripts must be sh or TypeScript only |
 | Webpack | Use Vite instead |
-| Firebase | Custom solution with RustFS, PostgreSQL and Redis |
-| Supabase | Custom solution with RustFS, PostgreSQL and Redis |
+| Firebase | Custom solution with MinIO, PostgreSQL and Redis |
+| Supabase | Custom solution with MinIO, PostgreSQL and Redis |
 | BCrypt | Use more modern algorithms (PBKDF2-SHA512) |
 | Argon2id | Use more modern algorithms (PBKDF2-SHA512) |
 | Kubernetes (K8s) | Unnecessary complexity for the project |
@@ -99,7 +99,7 @@
 | dayjs | Frontend only. Use date-fns instead |
 | datejs | Frontend only. Use date-fns instead |
 | frappe-ui | Use shadcn-vue instead |
-| MinIO (server) | Archived project, no security patches. Use RustFS (Apache 2.0, S3-compatible). The Minio NuGet SDK is still the S3 client library — only the server is prohibited |
+| RustFS | Abandoned alpha project (no security patches). Use MinIO server instead. The Minio NuGet SDK is still the S3 client library — only the RustFS server is prohibited |
 | Newtonsoft.Json | Use System.Text.Json (built into .NET). Better performance, native integration, and actively maintained by Microsoft |
 | FluentAssertions | Use xUnit v3 native Assert.* methods manually |
 | @hugeicons/vue / @hugeicons/core-free-icons | Use lucide-vue-next instead |

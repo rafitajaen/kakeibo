@@ -59,21 +59,19 @@ services:
       - redis-network
     restart: unless-stopped
 
-  # RustFS - S3-compatible storage (alpha.83)
-  # WARNING: SSE (Server-Side Encryption) is broken in alpha.83 — data stored in plaintext on disk
-  rustfs:
-    image: rustfs/rustfs:1.0.0-alpha.83
-    container_name: kakeibo-rustfs
+  # MinIO - S3-compatible object storage (internal only, never exposed to the internet)
+  minio:
+    image: minio/minio:latest
+    container_name: kakeibo-minio
     command: server /data --console-address :9001
     environment:
-      RUSTFS_ROOT_USER: ${STORAGE_ACCESS_KEY}
-      RUSTFS_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY}
     ports:
-      - "9000:9000"  # API — production traffic
-      - "9001:9001"  # Console UI — optional in production, disable if not needed
+      - "9000:9000"  ## REMOVE ON PRODUCTION
+      - "9001:9001"  ## REMOVE ON PRODUCTION
     volumes:
-      - rustfs-data:/data
-      - rustfs-logs:/logs
+      - minio-data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -164,7 +162,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__PostgreSQL: "Host=postgresdb;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       Redis__ConnectionString: "redis:6379,password=${REDIS_PASSWORD}"
-      Storage__Endpoint: "rustfs:9000"
+      Storage__Endpoint: "minio:9000"
       Storage__AccessKey: "${STORAGE_ACCESS_KEY}"
       Storage__SecretKey: "${STORAGE_SECRET_KEY}"
       Storage__UseSSL: "false"
@@ -190,7 +188,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rustfs:
+      minio:
         condition: service_healthy
       email-renderer:
         condition: service_healthy
@@ -227,10 +225,8 @@ volumes:
     name: kakeibo-redis-data
   redis-insight-data:
     name: kakeibo-redis-insight-data
-  rustfs-data:
-    name: kakeibo-rustfs-data
-  rustfs-logs:
-    name: kakeibo-rustfs-logs
+  minio-data:
+    name: kakeibo-minio-data
   clickhouse-data:
     name: kakeibo-clickhouse-data
   clickhouse-logs:

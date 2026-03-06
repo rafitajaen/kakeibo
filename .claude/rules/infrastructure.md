@@ -23,7 +23,7 @@ docker compose down                   # Stop everything
 | `postgresdb` | `postgres:18-alpine` | `5432:5432` ⚠️ |
 | `redis` | `redis:8-alpine` | `6379:6379` |
 | `redis-insight` | `redis/redisinsight:latest` | `5540:5540` |
-| `rustfs` | `rustfs/rustfs:1.0.0-alpha.83` | `9000:9000`, `9001:9001` |
+| `minio` | `minio/minio:latest` | `9000:9000` ⚠️, `9001:9001` ⚠️ |
 | `clickhouse` | `clickhouse/clickhouse-server:24-alpine` | `8123:8123` |
 | `mailpit` | `axllent/mailpit:latest` | `1025:1025`, `8025:8025` |
 | `kakeibo-email` | Built from `src/Kakeibo.Email/Dockerfile` | `3050:3050` |
@@ -80,8 +80,8 @@ Each deployable app owns its Dockerfile inside its project directory — never a
 | `POSTGRES_PASSWORD` | PostgreSQL password (secret) |
 | `POSTGRES_DB` | PostgreSQL database name |
 | `REDIS_PASSWORD` | Redis password (secret) |
-| `STORAGE_ACCESS_KEY` | RustFS access key |
-| `STORAGE_SECRET_KEY` | RustFS secret key (secret) |
+| `STORAGE_ACCESS_KEY` | MinIO access key |
+| `STORAGE_SECRET_KEY` | MinIO secret key (secret) |
 | `JWT_SECRET_KEY` | JWT signing key — min 32 chars (secret) |
 | `JWT_ISSUER` | JWT issuer claim |
 | `JWT_AUDIENCE` | JWT audience claim |
@@ -106,8 +106,8 @@ JWT_SECRET_KEY=
 | PostgreSQL | 5432 | Relational DB | — | ⚠️ Remove |
 | Redis | 6379 | Distributed cache | — | Internal only |
 | Redis Insight | 5540 | Redis GUI | http://localhost:5540 | ❌ |
-| RustFS API | 9000 | Object storage | — | ✅ |
-| RustFS Console | 9001 | Object storage UI | http://localhost:9001 | Optional |
+| MinIO API | 9000 | Object storage | — | Internal only |
+| MinIO Console | 9001 | Object storage UI | http://localhost:9001 | ❌ |
 | ClickHouse HTTP | 8123 | Analytical DB | — | Internal only |
 | Mailpit SMTP | 1025 | Dev email capture | — | ❌ |
 | Mailpit Web | 8025 | Dev email UI | http://localhost:8025 | ❌ |
