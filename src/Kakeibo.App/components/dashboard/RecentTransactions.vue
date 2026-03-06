@@ -3,6 +3,7 @@ import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Transaction } from "@/stores/transactions";
+import { useCurrencyFormat } from "@/composables/useCurrencyFormat";
 
 defineProps<{
     transactions: Transaction[];
@@ -10,6 +11,7 @@ defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatCurrency } = useCurrencyFormat();
 
 function typeColorClass(type: string): string {
     if (type === "Income") return "text-green-600";
@@ -19,7 +21,7 @@ function typeColorClass(type: string): string {
 
 function formatAmount(tx: Transaction): string {
     const prefix = tx.type === "Income" ? "+" : tx.type === "Expense" ? "-" : "";
-    return `${prefix}${tx.amount.toFixed(2)}`;
+    return `${prefix}${formatCurrency.value(tx.amount)}`;
 }
 </script>
 

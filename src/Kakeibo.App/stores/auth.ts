@@ -10,6 +10,13 @@ export interface User {
     isVerified: boolean;
     name: string | null;
     avatarUrl: string | null;
+    // Display preferences
+    weekStartDay: number;
+    monthStartDay: number;
+    currencyDecimalSeparator: string;
+    currencyGroupSeparator: string;
+    currencySymbolPosition: string;
+    currencyDisplay: string;
 }
 
 export interface RegisterData {

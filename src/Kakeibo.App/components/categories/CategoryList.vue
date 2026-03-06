@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import * as LucideIcons from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import type { Category } from "@/stores/categories";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,12 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+// Resolves a lucide icon component by name, returns null if not found.
+function getIcon(name: string | null | undefined) {
+    if (!name) return null;
+    return (LucideIcons as Record<string, unknown>)[name] ?? null;
+}
 </script>
 
 <template>
@@ -30,7 +37,26 @@ const { t } = useI18n();
             class="flex items-center justify-between rounded-md border px-4 py-2"
         >
             <div class="flex items-center gap-2">
-                <span class="text-sm font-medium">{{ category.name }}</span>
+                <!-- Category badge with icon and colors when available -->
+                <span
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                    :style="
+                        category.backgroundColor
+                            ? {
+                                  backgroundColor: category.backgroundColor,
+                                  color: category.textColor ?? undefined,
+                              }
+                            : {}
+                    "
+                    :class="!category.backgroundColor ? 'bg-muted text-muted-foreground' : ''"
+                >
+                    <component
+                        v-if="getIcon(category.icon)"
+                        :is="getIcon(category.icon)"
+                        class="size-3 shrink-0"
+                    />
+                    {{ category.name }}
+                </span>
                 <Badge v-if="category.isArchived" variant="secondary" class="text-xs">
                     {{ t("wallets.archived") }}
                 </Badge>

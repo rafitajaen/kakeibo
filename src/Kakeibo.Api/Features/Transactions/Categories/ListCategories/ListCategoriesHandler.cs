@@ -20,7 +20,10 @@ public sealed class ListCategoriesHandler(AppDbContext db)
                 c.Id,
                 c.Name,
                 c.UserId == null,      // IsSystem
-                c.DeletedAt != null))  // IsArchived
+                c.DeletedAt != null,   // IsArchived
+                c.BackgroundColor,
+                c.TextColor,
+                c.Icon))
             .ToListAsync(ct);
 
         return categories;

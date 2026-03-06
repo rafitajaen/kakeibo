@@ -20,6 +20,15 @@ export interface ChangePasswordData {
     confirmPassword: string;
 }
 
+export interface UpdateDisplayPreferencesData {
+    weekStartDay?: number | null;
+    monthStartDay?: number | null;
+    currencyDecimalSeparator?: string | null;
+    currencyGroupSeparator?: string | null;
+    currencySymbolPosition?: string | null;
+    currencyDisplay?: string | null;
+}
+
 export const useSettingsStore = defineStore("settings", () => {
     const sessions = ref<Session[]>([]);
     const isLoading = ref(false);
@@ -56,6 +65,11 @@ export const useSettingsStore = defineStore("settings", () => {
         sessions.value = sessions.value.filter((s) => s.id !== sessionId);
     }
 
+    // Updates the user's display preferences (week/month start, currency format).
+    async function updateDisplayPreferences(data: UpdateDisplayPreferencesData): Promise<void> {
+        await api.put("/api/users/me/display-preferences", data);
+    }
+
     return {
         sessions,
         isLoading,
@@ -64,5 +78,6 @@ export const useSettingsStore = defineStore("settings", () => {
         changePassword,
         deleteAccount,
         revokeSession,
+        updateDisplayPreferences,
     };
 });

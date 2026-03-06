@@ -20,6 +20,7 @@ import PasswordChangeForm from "@/components/settings/PasswordChangeForm.vue";
 import SessionsList from "@/components/settings/SessionsList.vue";
 import DeleteAccountSection from "@/components/settings/DeleteAccountSection.vue";
 import ImportExportSection from "@/components/settings/ImportExportSection.vue";
+import DisplayPreferencesForm from "@/components/settings/DisplayPreferencesForm.vue";
 import { useSettingsStore } from "@/stores/settings";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -76,6 +77,7 @@ async function deleteSeedData() {
         <Tabs default-value="profile">
             <TabsList class="mb-6">
                 <TabsTrigger value="profile">{{ t("settings.profile.title") }}</TabsTrigger>
+                <TabsTrigger value="display">{{ t("settings.display.title") }}</TabsTrigger>
                 <TabsTrigger value="security">{{ t("settings.security.title") }}</TabsTrigger>
                 <TabsTrigger value="sessions">{{ t("settings.sessions.title") }}</TabsTrigger>
                 <TabsTrigger value="data">{{ t("settings.data.title") }}</TabsTrigger>
@@ -91,6 +93,17 @@ async function deleteSeedData() {
                     </CardHeader>
                     <CardContent>
                         <ProfileForm />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="display">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{{ t("settings.display.title") }}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <DisplayPreferencesForm />
                     </CardContent>
                 </Card>
             </TabsContent>

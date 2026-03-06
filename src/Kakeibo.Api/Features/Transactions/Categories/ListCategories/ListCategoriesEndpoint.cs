@@ -9,7 +9,10 @@ public sealed class ListCategoriesEndpoint : IEndpoint
         Guid Id,
         string Name,
         bool IsSystem,
-        bool IsArchived);
+        bool IsArchived,
+        string? BackgroundColor,
+        string? TextColor,
+        string? Icon);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

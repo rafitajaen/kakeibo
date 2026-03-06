@@ -61,6 +61,32 @@ public sealed class CategoryHandlerTests
     }
 
     [Fact]
+    public async Task SystemCategories_SeedData_HaveColorAndIconDefaults()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var user = await CreateUserAsync(db);
+        var handler = new ListCategoriesHandler(db);
+
+        var result = await handler.HandleAsync(user.Id, includeArchived: false, ct);
+
+        // All 12 system categories must have icon, background color, and text color seeded.
+        var systemCategories = result.Where(c => c.IsSystem).ToList();
+        foreach (var cat in systemCategories)
+        {
+            Assert.False(string.IsNullOrEmpty(cat.Icon),            $"Category '{cat.Name}' is missing Icon.");
+            Assert.False(string.IsNullOrEmpty(cat.BackgroundColor), $"Category '{cat.Name}' is missing BackgroundColor.");
+            Assert.False(string.IsNullOrEmpty(cat.TextColor),       $"Category '{cat.Name}' is missing TextColor.");
+        }
+
+        // Spot-check Housing category defaults.
+        var housing = systemCategories.First(c => c.Name == "Housing");
+        Assert.Equal("Home",     housing.Icon);
+        Assert.Equal("#EFF6FF",  housing.BackgroundColor);
+        Assert.Equal("#1D4ED8",  housing.TextColor);
+    }
+
+    [Fact]
     public async Task ListCategories_ReturnsSystemAndUserCustom_ExcludesOtherUsersCategories()
     {
         await using var db = await TestDbContextFactory.CreateAsync();

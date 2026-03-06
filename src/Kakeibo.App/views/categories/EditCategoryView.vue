@@ -28,7 +28,12 @@ const category = computed(() =>
     categoriesStore.categories.find((c) => c.id === (route.params.id as string)),
 );
 
-async function handleSubmit(values: { name: string }) {
+async function handleSubmit(values: {
+    name: string;
+    icon: string | null;
+    backgroundColor: string | null;
+    textColor: string | null;
+}) {
     apiError.value = null;
     isSubmitting.value = true;
     try {
@@ -63,6 +68,10 @@ async function handleSubmit(values: { name: string }) {
                 <CardContent>
                     <CategoryForm
                         :initial-name="category.name"
+                        :initial-icon="category.icon"
+                        :initial-background-color="category.backgroundColor"
+                        :initial-text-color="category.textColor"
+                        :is-system="category.isSystem"
                         :is-submitting="isSubmitting"
                         @submit="handleSubmit"
                     />

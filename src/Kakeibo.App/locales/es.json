@@ -103,7 +103,13 @@
       "name": "Nombre",
       "namePlaceholder": "p. ej. Aficiones",
       "submit": "Crear categoría",
-      "submitEdit": "Guardar cambios"
+      "submitEdit": "Guardar cambios",
+      "icon": "Icono",
+      "iconPlaceholder": "Seleccionar icono",
+      "backgroundColor": "Color de fondo",
+      "textColor": "Color de texto",
+      "preview": "Vista previa",
+      "previewPlaceholder": "Nombre de categoría"
     },
     "actions": {
       "edit": "Editar",
@@ -625,6 +631,44 @@
       "seedCreated": "Datos de prueba activados correctamente.",
       "seedAlreadyExists": "Los datos de prueba ya estaban activos.",
       "seedDeleted": "Datos de prueba eliminados correctamente."
+    },
+    "display": {
+      "title": "Preferencias de visualización",
+      "weekMonth": "Semana y mes",
+      "weekStartDay": "La semana empieza el",
+      "monthStartDay": "Día de inicio del mes",
+      "currencyFormat": "Formato de moneda",
+      "decimalSeparator": "Separador decimal",
+      "groupSeparator": "Separador de miles",
+      "symbolPosition": "Posición del símbolo",
+      "currencyDisplayMode": "Mostrar moneda como",
+      "preview": "Vista previa",
+      "save": "Guardar preferencias",
+      "saved": "¡Guardado!",
+      "days": {
+        "monday": "Lunes",
+        "tuesday": "Martes",
+        "wednesday": "Miércoles",
+        "thursday": "Jueves",
+        "friday": "Viernes",
+        "saturday": "Sábado",
+        "sunday": "Domingo"
+      },
+      "separators": {
+        "dot": "Punto",
+        "comma": "Coma",
+        "space": "Espacio",
+        "none": "Ninguno"
+      },
+      "positions": {
+        "before": "Antes del importe ($1.234)",
+        "after": "Después del importe (1.234 $)"
+      },
+      "displayModes": {
+        "symbol": "Símbolo ($)",
+        "code": "Código (USD)",
+        "none": "Ninguno"
+      }
     },
     "importExport": {
       "tabTitle": "Importar / Exportar",

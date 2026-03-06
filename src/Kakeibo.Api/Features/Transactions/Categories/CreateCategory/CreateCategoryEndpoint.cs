@@ -5,13 +5,20 @@ namespace Kakeibo.Api.Features.Transactions.Categories.CreateCategory;
 
 public sealed class CreateCategoryEndpoint : IEndpoint
 {
-    public sealed record CreateCategoryRequest(string Name);
+    public sealed record CreateCategoryRequest(
+        string Name,
+        string? BackgroundColor = null,
+        string? TextColor = null,
+        string? Icon = null);
 
     public sealed record CreateCategoryResponse(
         Guid Id,
         string Name,
         bool IsSystem,
-        bool IsArchived);
+        bool IsArchived,
+        string? BackgroundColor,
+        string? TextColor,
+        string? Icon);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

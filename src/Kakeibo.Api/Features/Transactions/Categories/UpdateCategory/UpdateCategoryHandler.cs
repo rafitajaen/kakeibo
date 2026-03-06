@@ -48,6 +48,10 @@ public sealed class UpdateCategoryHandler(AppDbContext db, IClock clock)
         }
 
         category.Name = request.Name;
+        // Visual customization is only allowed on custom categories (system guard already passed above).
+        if (request.BackgroundColor is not null) category.BackgroundColor = request.BackgroundColor;
+        if (request.TextColor is not null) category.TextColor = request.TextColor;
+        if (request.Icon is not null) category.Icon = request.Icon;
         category.UpdatedAt = clock.GetCurrentInstant();
 
         await db.SaveChangesAsync(ct);
@@ -56,6 +60,9 @@ public sealed class UpdateCategoryHandler(AppDbContext db, IClock clock)
             category.Id,
             category.Name,
             IsSystem: false,
-            IsArchived: false);
+            IsArchived: false,
+            category.BackgroundColor,
+            category.TextColor,
+            category.Icon);
     }
 }

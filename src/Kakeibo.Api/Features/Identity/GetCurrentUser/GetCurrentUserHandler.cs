@@ -30,6 +30,12 @@ public sealed class GetCurrentUserHandler(AppDbContext db)
             user.Role.ToString(),
             user.IsVerified,
             user.Currency,
-            user.Name);
+            user.Name,
+            user.WeekStartDay,
+            user.MonthStartDay,
+            user.CurrencyDecimalSeparator,
+            user.CurrencyGroupSeparator,
+            user.CurrencySymbolPosition,
+            user.CurrencyDisplay);
     }
 }

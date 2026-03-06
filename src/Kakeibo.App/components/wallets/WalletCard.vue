@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import EditWalletDialog from "@/components/wallets/EditWalletDialog.vue";
+import { useCurrencyFormat } from "@/composables/useCurrencyFormat";
 
 const props = defineProps<{
     wallet: WalletType;
@@ -16,6 +17,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const router = useRouter();
 const walletsStore = useWalletsStore();
+const { formatCurrency } = useCurrencyFormat();
 
 function getIcon(name: string | null) {
     if (!name) return Wallet;
@@ -60,10 +62,7 @@ async function handleUpdated() {
 
         <CardContent class="flex-1 pt-3">
             <p class="text-2xl font-semibold tabular-nums">
-                {{ wallet.balance.toFixed(2) }}
-                <span class="text-sm font-normal text-muted-foreground ml-1">{{
-                    wallet.currency
-                }}</span>
+                {{ formatCurrency(wallet.balance) }}
             </p>
         </CardContent>
 

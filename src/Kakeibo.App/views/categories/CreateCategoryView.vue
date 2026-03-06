@@ -13,7 +13,12 @@ const categoriesStore = useCategoriesStore();
 const apiError = ref<string | null>(null);
 const isSubmitting = ref(false);
 
-async function handleSubmit(values: { name: string }) {
+async function handleSubmit(values: {
+    name: string;
+    icon: string | null;
+    backgroundColor: string | null;
+    textColor: string | null;
+}) {
     apiError.value = null;
     isSubmitting.value = true;
     try {

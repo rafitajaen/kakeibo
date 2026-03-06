@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWalletsStore } from "@/stores/wallets";
+import { useCurrencyFormat } from "@/composables/useCurrencyFormat";
 
 interface SectionMetrics {
     incomeThisMonth: number;
@@ -31,17 +32,10 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const walletsStore = useWalletsStore();
+const { formatCurrency } = useCurrencyFormat();
 
-// Use the currency of the first active wallet, falling back to USD.
-const currency = computed(() => walletsStore.activeWallets[0]?.currency ?? "USD");
-
-// Format a number using the wallet currency via Intl.NumberFormat.
 function formatAmount(amount: number): string {
-    return new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: currency.value,
-        minimumFractionDigits: 2,
-    }).format(amount);
+    return formatCurrency.value(amount);
 }
 
 const trendPercent = (trend: number) => `${trend >= 0 ? "+" : ""}${trend.toFixed(1)}%`;

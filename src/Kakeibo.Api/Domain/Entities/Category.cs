@@ -19,5 +19,10 @@ public sealed class Category : Entity
     // True when the category was created by the seed-data endpoint (never set manually).
     public bool IsSeedData { get; set; }
 
+    // Visual customization — only settable on custom categories; system categories use seeded defaults.
+    public string? BackgroundColor { get; set; }  // hex color, e.g. "#EFF6FF"
+    public string? TextColor { get; set; }         // hex color, e.g. "#1D4ED8"
+    public string? Icon { get; set; }              // lucide icon name, e.g. "Home"
+
     public User? User { get; set; }
 }

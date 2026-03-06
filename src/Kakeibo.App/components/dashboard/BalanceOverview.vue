@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Wallet } from "@/stores/wallets";
+import { useCurrencyFormat } from "@/composables/useCurrencyFormat";
 
 const props = defineProps<{
     wallets: Wallet[];
@@ -10,13 +11,12 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const { formatCurrency } = useCurrencyFormat();
 
 const totalBalance = computed(() => props.wallets.reduce((sum, w) => sum + w.balance, 0));
 
-const currency = computed(() => props.wallets[0]?.currency ?? "");
-
-function formatAmount(amount: number, curr: string): string {
-    return `${curr} ${amount.toFixed(2)}`;
+function formatAmount(amount: number): string {
+    return formatCurrency.value(amount);
 }
 </script>
 
@@ -32,7 +32,7 @@ function formatAmount(amount: number, curr: string): string {
             </div>
             <div v-else>
                 <p class="text-3xl font-bold mb-4">
-                    {{ formatAmount(totalBalance, currency) }}
+                    {{ formatAmount(totalBalance) }}
                 </p>
                 <div class="space-y-2">
                     <div
@@ -41,9 +41,7 @@ function formatAmount(amount: number, curr: string): string {
                         class="flex justify-between items-center text-sm"
                     >
                         <span class="text-muted-foreground">{{ wallet.name }}</span>
-                        <span class="font-medium">{{
-                            formatAmount(wallet.balance, wallet.currency)
-                        }}</span>
+                        <span class="font-medium">{{ formatAmount(wallet.balance) }}</span>
                     </div>
                 </div>
             </div>

@@ -103,7 +103,13 @@
       "name": "Name",
       "namePlaceholder": "e.g. Hobbies",
       "submit": "Create category",
-      "submitEdit": "Save changes"
+      "submitEdit": "Save changes",
+      "icon": "Icon",
+      "iconPlaceholder": "Select an icon",
+      "backgroundColor": "Background color",
+      "textColor": "Text color",
+      "preview": "Preview",
+      "previewPlaceholder": "Category name"
     },
     "actions": {
       "edit": "Edit",
@@ -625,6 +631,44 @@
       "seedCreated": "Test data loaded successfully.",
       "seedAlreadyExists": "Test data is already active.",
       "seedDeleted": "Test data deleted."
+    },
+    "display": {
+      "title": "Display Preferences",
+      "weekMonth": "Week & Month",
+      "weekStartDay": "Week starts on",
+      "monthStartDay": "Month start day",
+      "currencyFormat": "Currency Format",
+      "decimalSeparator": "Decimal separator",
+      "groupSeparator": "Thousands separator",
+      "symbolPosition": "Symbol position",
+      "currencyDisplayMode": "Show currency as",
+      "preview": "Preview",
+      "save": "Save preferences",
+      "saved": "Saved!",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      },
+      "separators": {
+        "dot": "Period",
+        "comma": "Comma",
+        "space": "Space",
+        "none": "None"
+      },
+      "positions": {
+        "before": "Before amount ($1,234)",
+        "after": "After amount (1,234 $)"
+      },
+      "displayModes": {
+        "symbol": "Symbol ($)",
+        "code": "Code (USD)",
+        "none": "None"
+      }
     },
     "importExport": {
       "tabTitle": "Import / Export",

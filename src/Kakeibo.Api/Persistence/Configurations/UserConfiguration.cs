@@ -39,6 +39,28 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.AvatarUrl)
             .HasMaxLength(500);
 
+        builder.Property(u => u.WeekStartDay)
+            .HasDefaultValue(1);
+
+        builder.Property(u => u.MonthStartDay)
+            .HasDefaultValue(1);
+
+        builder.Property(u => u.CurrencyDecimalSeparator)
+            .HasMaxLength(1)
+            .HasDefaultValue(".");
+
+        builder.Property(u => u.CurrencyGroupSeparator)
+            .HasMaxLength(1)
+            .HasDefaultValue(",");
+
+        builder.Property(u => u.CurrencySymbolPosition)
+            .HasMaxLength(6)
+            .HasDefaultValue("before");
+
+        builder.Property(u => u.CurrencyDisplay)
+            .HasMaxLength(6)
+            .HasDefaultValue("symbol");
+
         builder.HasQueryFilter(u => u.DeletedAt == null);
     }
 }

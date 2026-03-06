@@ -10,7 +10,13 @@ public sealed class GetCurrentUserEndpoint : IEndpoint
         string Role,
         bool IsVerified,
         string Currency,
-        string? Name);
+        string? Name,
+        int WeekStartDay,
+        int MonthStartDay,
+        string CurrencyDecimalSeparator,
+        string CurrencyGroupSeparator,
+        string CurrencySymbolPosition,
+        string CurrencyDisplay);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

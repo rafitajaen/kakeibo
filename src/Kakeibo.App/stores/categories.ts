@@ -7,14 +7,23 @@ export interface Category {
     name: string;
     isSystem: boolean;
     isArchived: boolean;
+    backgroundColor: string | null;
+    textColor: string | null;
+    icon: string | null;
 }
 
 export interface CreateCategoryData {
     name: string;
+    backgroundColor?: string | null;
+    textColor?: string | null;
+    icon?: string | null;
 }
 
 export interface UpdateCategoryData {
     name: string;
+    backgroundColor?: string | null;
+    textColor?: string | null;
+    icon?: string | null;
 }
 
 export const useCategoriesStore = defineStore("categories", () => {
