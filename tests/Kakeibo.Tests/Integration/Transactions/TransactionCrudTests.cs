@@ -356,7 +356,7 @@ public sealed class TransactionCrudTests
         var user = await CreateUserAsync(db, ct);
 
         // Use CreateWalletHandler so that WalletBalance is created atomically
-        var createWalletHandler = new CreateWalletHandler(db, eventBus);
+        var createWalletHandler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var createdWallet = await createWalletHandler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("My Wallet", "Personal"),
             user.Id, ct);

@@ -38,6 +38,9 @@ public sealed class RecurringPattern : Entity
     // Timestamp of the most recent successful generation run; null if never generated.
     public Instant? LastGeneratedAt { get; set; }
 
+    // True when the pattern was created by the seed-data endpoint (never set manually).
+    public bool IsSeedData { get; set; }
+
     // Active when not soft-deleted and NextOccurrence is still within the EndDate window.
     public bool IsActive => DeletedAt is null && (EndDate is null || NextOccurrence <= EndDate);
 

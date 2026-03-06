@@ -20,6 +20,9 @@ public sealed class Budget : Entity
     // Updated incrementally by TransactionRecordedBudgetHandler, recalculated on update/delete.
     public decimal CurrentSpending { get; set; }
 
+    // True when the budget was created by the seed-data endpoint (never set manually).
+    public bool IsSeedData { get; set; }
+
     public User? User { get; set; }
     public Category? Category { get; set; }
     public Wallet? Wallet { get; set; }

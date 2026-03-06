@@ -122,6 +122,7 @@
     "title": "Transactions",
     "empty": "No transactions yet",
     "createNew": "New transaction",
+    "selectWallet": "Select a wallet",
     "viewAll": "View transactions",
     "type": {
       "income": "Income",
@@ -169,11 +170,16 @@
       "personal": "Personal",
       "shared": "Shared"
     },
+    "dangerZone": "Danger zone",
     "form": {
       "name": "Name",
       "namePlaceholder": "e.g. Checking Account",
       "type": "Type",
       "typePlaceholder": "Select a type",
+      "initialBalance": "Initial balance",
+      "customize": "Customize appearance",
+      "icon": "Icon",
+      "colors": "Colors",
       "submit": "Create wallet",
       "submitEdit": "Save changes"
     },
@@ -553,6 +559,12 @@
       "description": "Your workspace is ready. Start tracking your finances with Kakeibo.",
       "goToDashboard": "Go to Dashboard"
     },
+    "seedData": {
+      "title": "Want to explore with sample data?",
+      "description": "We can load sample wallets, transactions, budgets, and goals so you can explore the app right away. You can delete them later from Settings.",
+      "yes": "Yes, load sample data",
+      "no": "No thanks, start fresh"
+    },
     "progress": {
       "step": "Step {current} of {total}"
     }
@@ -566,7 +578,13 @@
       "currency": "Currency",
       "currencyPlaceholder": "Select currency",
       "save": "Save changes",
-      "saved": "Saved!"
+      "saved": "Saved!",
+      "avatar": "Profile photo",
+      "avatarHint": "Click to upload a JPG, PNG or WebP (max 5 MB)",
+      "changeAvatar": "Change",
+      "avatarTypeError": "Only JPEG, PNG and WebP images are allowed.",
+      "avatarSizeError": "File must be 5 MB or smaller.",
+      "avatarUploadError": "Failed to upload avatar. Please try again."
     },
     "security": {
       "title": "Security",
@@ -596,6 +614,23 @@
       "passwordPlaceholder": "Enter your password",
       "warning": "This action cannot be undone after 30 days.",
       "success": "Account deletion requested."
+    },
+    "data": {
+      "title": "Test Data",
+      "description": "Load sample wallets, transactions, budgets, goals and recurring patterns to explore the app.",
+      "activate": "Load test data",
+      "delete": "Delete test data",
+      "deleteTitle": "Delete test data",
+      "deleteConfirm": "This will soft-delete all seed wallets, transactions, budgets, goals and recurring patterns. Your own data will not be affected.",
+      "seedCreated": "Test data loaded successfully.",
+      "seedAlreadyExists": "Test data is already active.",
+      "seedDeleted": "Test data deleted."
     }
+  },
+  "nav": {
+    "preferences": "Preferences",
+    "language": "Language",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
   }
 }

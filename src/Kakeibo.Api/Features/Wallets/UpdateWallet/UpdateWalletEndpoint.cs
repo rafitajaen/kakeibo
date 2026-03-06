@@ -6,7 +6,11 @@ namespace Kakeibo.Api.Features.Wallets.UpdateWallet;
 
 public sealed class UpdateWalletEndpoint : IEndpoint
 {
-    public sealed record UpdateWalletRequest(string Name);
+    public sealed record UpdateWalletRequest(
+        string Name,
+        string? Icon = null,
+        string? BackgroundColor = null,
+        string? TextColor = null);
 
     public sealed record UpdateWalletResponse(
         Guid Id,
@@ -15,6 +19,9 @@ public sealed class UpdateWalletEndpoint : IEndpoint
         string Currency,
         decimal Balance,
         bool IsArchived,
+        string? Icon,
+        string? BackgroundColor,
+        string? TextColor,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)

@@ -18,5 +18,21 @@ public sealed class CreateWalletValidator : AbstractValidator<CreateWalletEndpoi
             .NotEmpty()
             .Must(t => ValidTypes.Contains(t, StringComparer.OrdinalIgnoreCase))
             .WithMessage($"Type must be one of: {string.Join(", ", ValidTypes)}.");
+
+        RuleFor(x => x.InitialBalance)
+            .GreaterThanOrEqualTo(0m)
+            .LessThanOrEqualTo(999_999_999.99m);
+
+        RuleFor(x => x.Icon)
+            .MaximumLength(100)
+            .When(x => x.Icon is not null);
+
+        RuleFor(x => x.BackgroundColor)
+            .MaximumLength(20)
+            .When(x => x.BackgroundColor is not null);
+
+        RuleFor(x => x.TextColor)
+            .MaximumLength(20)
+            .When(x => x.TextColor is not null);
     }
 }

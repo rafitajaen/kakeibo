@@ -48,7 +48,7 @@ public sealed class InvitationFlowIntegrationTests
         var invitee = await CreateUserAsync(db, "invitee@example.com");
 
         // --- CREATE shared wallet (owner is auto-added as WalletMember) ---
-        var createResult = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var createResult = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Apartment Expenses", "Shared"),
             owner.Id, ct);
 
@@ -126,7 +126,7 @@ public sealed class InvitationFlowIntegrationTests
         var invitee = await CreateUserAsync(db, "invitee2@example.com");
         var stranger = await CreateUserAsync(db, "stranger@example.com");
 
-        var wallet = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var wallet = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Trip Fund", "Shared"), owner.Id, ct);
 
         var invite = await new InviteToWalletHandler(db, eventBus, emailService, clock, logger)
@@ -158,7 +158,7 @@ public sealed class InvitationFlowIntegrationTests
         var owner = await CreateUserAsync(db, "owner3@example.com");
         var invitee = await CreateUserAsync(db, "invitee3@example.com");
 
-        var wallet = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var wallet = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Revoke Test Wallet", "Shared"), owner.Id, ct);
 
         var invite = await new InviteToWalletHandler(db, eventBus, emailService, clock, logger)
@@ -190,7 +190,7 @@ public sealed class InvitationFlowIntegrationTests
         var owner = await CreateUserAsync(db, "owner4@example.com");
         var member = await CreateUserAsync(db, "member4@example.com");
 
-        var wallet = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var wallet = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Last Member Wallet", "Shared"), owner.Id, ct);
 
         var invite = await new InviteToWalletHandler(db, eventBus, emailService, clock, logger)

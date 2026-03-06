@@ -122,6 +122,7 @@
     "title": "Transacciones",
     "empty": "Aún no hay transacciones",
     "createNew": "Nueva transacción",
+    "selectWallet": "Selecciona una cartera",
     "viewAll": "Ver transacciones",
     "type": {
       "income": "Ingreso",
@@ -169,11 +170,16 @@
       "personal": "Personal",
       "shared": "Compartida"
     },
+    "dangerZone": "Zona de peligro",
     "form": {
       "name": "Nombre",
       "namePlaceholder": "p. ej. Cuenta corriente",
       "type": "Tipo",
       "typePlaceholder": "Selecciona un tipo",
+      "initialBalance": "Saldo inicial",
+      "customize": "Personalizar apariencia",
+      "icon": "Icono",
+      "colors": "Colores",
       "submit": "Crear cartera",
       "submitEdit": "Guardar cambios"
     },
@@ -553,6 +559,12 @@
       "description": "Tu espacio de trabajo está listo. Comienza a gestionar tus finanzas con Kakeibo.",
       "goToDashboard": "Ir al Dashboard"
     },
+    "seedData": {
+      "title": "¿Quieres explorar con datos de prueba?",
+      "description": "Podemos cargar carteras, transacciones, presupuestos y metas de ejemplo para que explores la app de inmediato. Puedes eliminarlos desde Configuración.",
+      "yes": "Sí, cargar datos de prueba",
+      "no": "No, empezar desde cero"
+    },
     "progress": {
       "step": "Paso {current} de {total}"
     }
@@ -566,7 +578,13 @@
       "currency": "Moneda",
       "currencyPlaceholder": "Seleccionar moneda",
       "save": "Guardar cambios",
-      "saved": "¡Guardado!"
+      "saved": "¡Guardado!",
+      "avatar": "Foto de perfil",
+      "avatarHint": "JPG, PNG o WebP. Máximo 5 MB.",
+      "changeAvatar": "Cambiar",
+      "avatarTypeError": "Tipo de archivo no permitido. Usa JPG, PNG o WebP.",
+      "avatarSizeError": "El archivo supera el límite de 5 MB.",
+      "avatarUploadError": "Error al subir la imagen. Inténtalo de nuevo."
     },
     "security": {
       "title": "Seguridad",
@@ -596,6 +614,23 @@
       "passwordPlaceholder": "Ingresa tu contraseña",
       "warning": "Esta acción no se puede deshacer después de 30 días.",
       "success": "Eliminación de cuenta solicitada."
+    },
+    "data": {
+      "title": "Datos de Prueba",
+      "description": "Activa datos de prueba para explorar la plataforma con transacciones, presupuestos y objetivos de ejemplo.",
+      "activate": "Activar datos de prueba",
+      "delete": "Eliminar datos de prueba",
+      "deleteTitle": "¿Eliminar datos de prueba?",
+      "deleteConfirm": "Se eliminarán todas las wallets, transacciones, presupuestos, objetivos y patrones recurrentes de prueba. Tus propios datos no se verán afectados.",
+      "seedCreated": "Datos de prueba activados correctamente.",
+      "seedAlreadyExists": "Los datos de prueba ya estaban activos.",
+      "seedDeleted": "Datos de prueba eliminados correctamente."
     }
+  },
+  "nav": {
+    "preferences": "Preferencias",
+    "language": "Idioma",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro"
   }
 }

@@ -9,6 +9,9 @@ export interface Wallet {
     currency: string;
     balance: number;
     isArchived: boolean;
+    icon: string | null;
+    backgroundColor: string | null;
+    textColor: string | null;
     createdAt: string;
 }
 
@@ -22,10 +25,17 @@ export interface WalletMember {
 export interface CreateWalletData {
     name: string;
     type: string;
+    initialBalance?: number;
+    icon?: string | null;
+    backgroundColor?: string | null;
+    textColor?: string | null;
 }
 
 export interface UpdateWalletData {
     name: string;
+    icon?: string | null;
+    backgroundColor?: string | null;
+    textColor?: string | null;
 }
 
 export const useWalletsStore = defineStore("wallets", () => {

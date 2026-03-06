@@ -36,7 +36,7 @@ public sealed class ArchiveWalletHandlerTests
         var eventBus = Substitute.For<IEventBus>();
 
         var user = await CreateTestUserAsync(db);
-        var createHandler = new CreateWalletHandler(db, eventBus);
+        var createHandler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var createResult = await createHandler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("My Wallet", "Personal"), user.Id, ct);
 
@@ -67,7 +67,7 @@ public sealed class ArchiveWalletHandlerTests
         var owner = await CreateTestUserAsync(db, "owner@example.com");
         var other = await CreateTestUserAsync(db, "other@example.com");
 
-        var createHandler = new CreateWalletHandler(db, eventBus);
+        var createHandler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var createResult = await createHandler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Owner Wallet", "Personal"), owner.Id, ct);
 
@@ -87,7 +87,7 @@ public sealed class ArchiveWalletHandlerTests
         var eventBus = Substitute.For<IEventBus>();
 
         var user = await CreateTestUserAsync(db);
-        var createHandler = new CreateWalletHandler(db, eventBus);
+        var createHandler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var createResult = await createHandler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("My Wallet", "Personal"), user.Id, ct);
 

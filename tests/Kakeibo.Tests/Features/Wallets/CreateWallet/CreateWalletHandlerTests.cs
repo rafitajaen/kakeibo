@@ -32,7 +32,7 @@ public sealed class CreateWalletHandlerTests
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
         var eventBus = Substitute.For<IEventBus>();
-        var handler = new CreateWalletHandler(db, eventBus);
+        var handler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
 
         var user = await CreateTestUserAsync(db);
         var request = new CreateWalletEndpoint.CreateWalletRequest("Checking Account", "Personal");
@@ -65,7 +65,7 @@ public sealed class CreateWalletHandlerTests
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>());
+        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), NodaTime.SystemClock.Instance);
 
         var user = await CreateTestUserAsync(db);
         await handler.HandleAsync(new CreateWalletEndpoint.CreateWalletRequest("Savings", "Personal"), user.Id, ct);
@@ -84,7 +84,7 @@ public sealed class CreateWalletHandlerTests
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>());
+        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), NodaTime.SystemClock.Instance);
 
         var user1 = await CreateTestUserAsync(db, "alice@example.com");
         var user2 = await CreateTestUserAsync(db, "bob@example.com");
@@ -103,7 +103,7 @@ public sealed class CreateWalletHandlerTests
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
-        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>());
+        var handler = new CreateWalletHandler(db, Substitute.For<IEventBus>(), NodaTime.SystemClock.Instance);
 
         var unknownUserId = Guid.NewGuid();
         var result = await handler.HandleAsync(
@@ -121,7 +121,7 @@ public sealed class CreateWalletHandlerTests
         var ct = TestContext.Current.CancellationToken;
         var clock = new NodaTime.Testing.FakeClock(Instant.FromUtc(2026, 3, 1, 12, 0));
         var eventBus = Substitute.For<IEventBus>();
-        var handler = new CreateWalletHandler(db, eventBus);
+        var handler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var archiveHandler = new ArchiveWalletHandler(db, eventBus, clock);
 
         var user = await CreateTestUserAsync(db);

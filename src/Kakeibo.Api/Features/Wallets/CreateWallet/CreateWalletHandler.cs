@@ -1,15 +1,20 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Wallets.Events;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.CreateWallet;
 
 // Creates a new personal or shared wallet for the authenticated user.
-public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
+public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus, IClock clock)
 {
+    // "Other" system category ID (seeded in CategoryConfiguration).
+    private static readonly Guid OtherCategoryId = Guid.Parse("10000000-0000-0000-0000-00000000000c");
+
     public async Task<Result<CreateWalletEndpoint.CreateWalletResponse>> HandleAsync(
         CreateWalletEndpoint.CreateWalletRequest request,
         Guid userId,
@@ -37,18 +42,40 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
             Name = request.Name,
             Type = walletType,
             OwnerId = userId,
-            Currency = user.Currency
+            Currency = user.Currency,
+            Icon = request.Icon,
+            BackgroundColor = request.BackgroundColor,
+            TextColor = request.TextColor
         };
 
         db.Wallets.Add(wallet);
 
-        // Create WalletBalance atomically alongside the wallet — always starts at zero.
-        db.WalletBalances.Add(new Domain.Entities.WalletBalance { WalletId = wallet.Id, Balance = 0m });
+        // Create WalletBalance atomically alongside the wallet — starts at zero (or InitialBalance).
+        var balance = request.InitialBalance > 0m ? request.InitialBalance : 0m;
+        db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = balance });
+
+        // If an initial balance is provided, record it as an Income transaction in the same DB transaction.
+        if (request.InitialBalance > 0m)
+        {
+            db.Transactions.Add(new Transaction
+            {
+                Id = Guid7.NewGuid(),
+                Type = TransactionType.Income,
+                Amount = request.InitialBalance,
+                Description = "Initial balance",
+                Date = clock.GetCurrentInstant().InUtc().Date,
+                CategoryId = OtherCategoryId,
+                WalletId = wallet.Id,
+                UserId = userId,
+                CreatedAt = clock.GetCurrentInstant(),
+                UpdatedAt = clock.GetCurrentInstant()
+            });
+        }
 
         // For shared wallets, auto-add the creator as a WalletMember in the same transaction
         if (walletType == WalletType.Shared)
         {
-            db.WalletMembers.Add(new Domain.Entities.WalletMember
+            db.WalletMembers.Add(new WalletMember
             {
                 WalletId = wallet.Id,
                 UserId = userId
@@ -71,8 +98,11 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus)
             wallet.Name,
             wallet.Type.ToString(),
             wallet.Currency,
-            Balance: 0m,
+            Balance: balance,
             IsArchived: false,
+            Icon: wallet.Icon,
+            BackgroundColor: wallet.BackgroundColor,
+            TextColor: wallet.TextColor,
             wallet.CreatedAt);
     }
 }

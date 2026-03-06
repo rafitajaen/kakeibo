@@ -7,6 +7,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from "@/components/ui/sidebar";
 
 interface NavItem {
@@ -20,6 +21,13 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const { isMobile, setOpenMobile } = useSidebar();
+
+function handleClick() {
+    if (isMobile.value) {
+        setOpenMobile(false);
+    }
+}
 </script>
 
 <template>
@@ -28,7 +36,7 @@ const route = useRoute();
             <SidebarMenu>
                 <SidebarMenuItem v-for="item in props.items" :key="item.routeName">
                     <SidebarMenuButton as-child :is-active="route.name === item.routeName">
-                        <router-link :to="{ name: item.routeName }">
+                        <router-link :to="{ name: item.routeName }" @click="handleClick">
                             <component :is="item.icon" class="size-4" />
                             <span>{{ item.title }}</span>
                         </router-link>

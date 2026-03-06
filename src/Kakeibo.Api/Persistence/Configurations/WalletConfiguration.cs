@@ -26,6 +26,15 @@ public sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .HasMaxLength(3)
             .IsRequired();
 
+        builder.Property(w => w.Icon)
+            .HasMaxLength(100);
+
+        builder.Property(w => w.BackgroundColor)
+            .HasMaxLength(20);
+
+        builder.Property(w => w.TextColor)
+            .HasMaxLength(20);
+
         // Restrict delete: prevents accidental cascade from User delete
         builder.HasOne(w => w.Owner)
             .WithMany()

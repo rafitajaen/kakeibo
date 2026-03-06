@@ -16,5 +16,8 @@ public sealed class Category : Entity
     // Computed from UserId — not mapped to the database (see CategoryConfiguration.Ignore).
     public bool IsSystem => UserId is null;
 
+    // True when the category was created by the seed-data endpoint (never set manually).
+    public bool IsSeedData { get; set; }
+
     public User? User { get; set; }
 }

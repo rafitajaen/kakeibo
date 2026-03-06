@@ -76,9 +76,8 @@ describe("WalletCard", () => {
         expect(wrapper.text()).toContain("Personal");
     });
 
-    it("renders archive and edit action buttons", () => {
+    it("renders edit action button", () => {
         const wrapper = mountCard(personalWallet);
         expect(wrapper.text()).toContain("Edit");
-        expect(wrapper.text()).toContain("Archive");
     });
 });

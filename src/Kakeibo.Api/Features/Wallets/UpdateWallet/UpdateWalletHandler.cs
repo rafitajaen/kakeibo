@@ -5,7 +5,7 @@ using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.UpdateWallet;
 
-// Renames a wallet. Only the owner can update. Type and currency are immutable.
+// Updates a wallet's name and visual customization. Only the owner can update. Type and currency are immutable.
 public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
 {
     public async Task<Result<UpdateWalletEndpoint.UpdateWalletResponse>> HandleAsync(
@@ -40,7 +40,16 @@ public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
         }
 
         wallet.Name = request.Name;
+        wallet.Icon = request.Icon;
+        wallet.BackgroundColor = request.BackgroundColor;
+        wallet.TextColor = request.TextColor;
         wallet.UpdatedAt = clock.GetCurrentInstant();
+
+        // Read current balance for the response
+        var balance = await db.WalletBalances
+            .Where(wb => wb.WalletId == walletId)
+            .Select(wb => wb.Balance)
+            .FirstOrDefaultAsync(ct);
 
         await db.SaveChangesAsync(ct);
 
@@ -49,8 +58,11 @@ public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
             wallet.Name,
             wallet.Type.ToString(),
             wallet.Currency,
-            Balance: 0m,
+            Balance: balance,
             IsArchived: false,
+            Icon: wallet.Icon,
+            BackgroundColor: wallet.BackgroundColor,
+            TextColor: wallet.TextColor,
             wallet.CreatedAt);
     }
 }

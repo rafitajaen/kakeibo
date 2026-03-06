@@ -25,6 +25,9 @@ public sealed class User : Entity
     public required string Currency { get; set; }
     public string? Name { get; set; }
 
+    // URL of the uploaded avatar image (stored in RustFS).
+    public string? AvatarUrl { get; set; }
+
     // GDPR account deletion — 30-day grace period before permanent deletion.
     public Instant? DeletionRequestedAt { get; set; }
 }

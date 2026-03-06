@@ -6,7 +6,13 @@ namespace Kakeibo.Api.Features.Wallets.CreateWallet;
 
 public sealed class CreateWalletEndpoint : IEndpoint
 {
-    public sealed record CreateWalletRequest(string Name, string Type);
+    public sealed record CreateWalletRequest(
+        string Name,
+        string Type,
+        decimal InitialBalance = 0m,
+        string? Icon = null,
+        string? BackgroundColor = null,
+        string? TextColor = null);
 
     public sealed record CreateWalletResponse(
         Guid Id,
@@ -15,6 +21,9 @@ public sealed class CreateWalletEndpoint : IEndpoint
         string Currency,
         decimal Balance,
         bool IsArchived,
+        string? Icon,
+        string? BackgroundColor,
+        string? TextColor,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)

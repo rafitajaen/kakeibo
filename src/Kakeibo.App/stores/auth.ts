@@ -9,6 +9,7 @@ export interface User {
     currency: string;
     isVerified: boolean;
     name: string | null;
+    avatarUrl: string | null;
 }
 
 export interface RegisterData {

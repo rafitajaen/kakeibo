@@ -51,6 +51,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("end_date");
 
+                    b.Property<bool>("IsSeedData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_seed_data");
+
                     b.Property<decimal>("Limit")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
@@ -111,6 +115,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<bool>("IsSeedData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_seed_data");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -138,6 +146,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000001"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Housing",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -145,6 +154,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000002"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Transportation",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -152,6 +162,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000003"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Food & Dining",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -159,6 +170,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000004"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Health & Wellness",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -166,6 +178,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000005"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Entertainment & Leisure",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -173,6 +186,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000006"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Shopping & Personal",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -180,6 +194,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000007"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Education",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -187,6 +202,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000008"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Subscriptions & Bills",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -194,6 +210,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000009"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Savings & Investments",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -201,6 +218,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-00000000000a"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Debt & Loans",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -208,6 +226,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-00000000000b"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Gifts & Donations",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         },
@@ -215,6 +234,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-00000000000c"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
+                            IsSeedData = false,
                             Name = "Other",
                             UpdatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L)
                         });
@@ -243,6 +263,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Property<Instant?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
+
+                    b.Property<bool>("IsSeedData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_seed_data");
 
                     b.Property<int>("LastMilestone")
                         .HasColumnType("integer")
@@ -600,6 +624,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("frequency");
 
+                    b.Property<bool>("IsSeedData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_seed_data");
+
                     b.Property<Instant?>("LastGeneratedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_generated_at");
@@ -865,6 +893,11 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("avatar_url");
+
                     b.Property<Instant>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -943,6 +976,11 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("BackgroundColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("background_color");
+
                     b.Property<Instant>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -957,6 +995,15 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("icon");
+
+                    b.Property<bool>("IsSeedData")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_seed_data");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -966,6 +1013,11 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_id");
+
+                    b.Property<string>("TextColor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("text_color");
 
                     b.Property<string>("Type")
                         .IsRequired()

@@ -22,6 +22,9 @@ public sealed class Goal : Entity
     // Prevents duplicate milestone events when progress temporarily drops and re-crosses.
     public int LastMilestone { get; set; }
 
+    // True when the goal was created by the seed-data endpoint (never set manually).
+    public bool IsSeedData { get; set; }
+
     public User? User { get; set; }
     public Wallet? Wallet { get; set; }
 }

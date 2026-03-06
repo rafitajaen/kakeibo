@@ -4,9 +4,11 @@ import { useI18n } from "vue-i18n";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
+import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Select,
     SelectContent,
@@ -23,6 +25,8 @@ const settingsStore = useSettingsStore();
 
 const isSaving = ref(false);
 const saved = ref(false);
+const isUploadingAvatar = ref(false);
+const avatarError = ref<string | null>(null);
 
 const SUPPORTED_CURRENCIES = [
     "USD",
@@ -37,6 +41,20 @@ const SUPPORTED_CURRENCIES = [
     "BRL",
     "MXN",
 ];
+
+const initials = computed(() => {
+    const user = authStore.user;
+    if (!user) return "?";
+    if (user.name) {
+        return user.name
+            .split(" ")
+            .map((s) => s[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    }
+    return user.email[0].toUpperCase();
+});
 
 const schema = toTypedSchema(
     z.object({
@@ -78,36 +96,101 @@ const onSubmit = handleSubmit(async (values) => {
         isSaving.value = false;
     }
 });
+
+// Validates and uploads avatar via FormData
+async function handleAvatarChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+        avatarError.value = t("settings.profile.avatarTypeError");
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        avatarError.value = t("settings.profile.avatarSizeError");
+        return;
+    }
+
+    avatarError.value = null;
+    isUploadingAvatar.value = true;
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await api.post<{ avatarUrl: string }>("/api/users/me/avatar", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (authStore.user) {
+            authStore.user.avatarUrl = res.data.avatarUrl;
+        }
+    } catch {
+        avatarError.value = t("settings.profile.avatarUploadError");
+    } finally {
+        isUploadingAvatar.value = false;
+    }
+}
 </script>
 
 <template>
-    <form class="space-y-4" @submit="onSubmit">
-        <div class="space-y-2">
-            <Label for="profile-name">{{ t("settings.profile.name") }}</Label>
-            <Input
-                id="profile-name"
-                v-model="name"
-                v-bind="nameAttrs"
-                :placeholder="t('settings.profile.namePlaceholder')"
-                :disabled="isSaving"
-            />
-            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+    <div class="space-y-6">
+        <!-- Avatar upload -->
+        <div class="flex items-center gap-4">
+            <label class="cursor-pointer group relative">
+                <Avatar class="size-16 rounded-full">
+                    <AvatarImage v-if="authStore.user?.avatarUrl" :src="authStore.user.avatarUrl" />
+                    <AvatarFallback class="text-lg">{{ initials }}</AvatarFallback>
+                </Avatar>
+                <div
+                    class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    <span class="text-white text-xs font-medium">{{
+                        isUploadingAvatar ? "..." : t("settings.profile.changeAvatar")
+                    }}</span>
+                </div>
+                <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="hidden"
+                    :disabled="isUploadingAvatar"
+                    @change="handleAvatarChange"
+                />
+            </label>
+            <div>
+                <p class="text-sm font-medium">{{ t("settings.profile.avatar") }}</p>
+                <p class="text-xs text-muted-foreground">{{ t("settings.profile.avatarHint") }}</p>
+                <p v-if="avatarError" class="text-xs text-destructive">{{ avatarError }}</p>
+            </div>
         </div>
-        <div class="space-y-2">
-            <Label for="profile-currency">{{ t("settings.profile.currency") }}</Label>
-            <Select v-model="currency" v-bind="currencyAttrs" :disabled="isSaving">
-                <SelectTrigger id="profile-currency">
-                    <SelectValue :placeholder="t('settings.profile.currencyPlaceholder')" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem v-for="c in SUPPORTED_CURRENCIES" :key="c" :value="c">
-                        {{ c }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
-        <Button type="submit" :disabled="isSaving">
-            {{ saved ? t("settings.profile.saved") : t("settings.profile.save") }}
-        </Button>
-    </form>
+
+        <!-- Profile form -->
+        <form class="space-y-4" @submit="onSubmit">
+            <div class="space-y-2">
+                <Label for="profile-name">{{ t("settings.profile.name") }}</Label>
+                <Input
+                    id="profile-name"
+                    v-model="name"
+                    v-bind="nameAttrs"
+                    :placeholder="t('settings.profile.namePlaceholder')"
+                    :disabled="isSaving"
+                />
+                <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+            </div>
+            <div class="space-y-2">
+                <Label for="profile-currency">{{ t("settings.profile.currency") }}</Label>
+                <Select v-model="currency" v-bind="currencyAttrs" :disabled="isSaving">
+                    <SelectTrigger id="profile-currency">
+                        <SelectValue :placeholder="t('settings.profile.currencyPlaceholder')" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem v-for="c in SUPPORTED_CURRENCIES" :key="c" :value="c">
+                            {{ c }}
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <Button type="submit" :disabled="isSaving">
+                {{ saved ? t("settings.profile.saved") : t("settings.profile.save") }}
+            </Button>
+        </form>
+    </div>
 </template>

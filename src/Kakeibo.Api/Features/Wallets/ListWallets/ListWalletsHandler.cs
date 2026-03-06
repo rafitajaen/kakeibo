@@ -31,6 +31,9 @@ public sealed class ListWalletsHandler(AppDbContext db)
                 w.Currency,
                 Balance: w.WalletBalance != null ? w.WalletBalance.Balance : 0m,
                 IsArchived: w.DeletedAt != null,
+                Icon: w.Icon,
+                BackgroundColor: w.BackgroundColor,
+                TextColor: w.TextColor,
                 w.CreatedAt))
             .ToListAsync(ct);
 

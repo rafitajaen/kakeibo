@@ -7,41 +7,62 @@ import { Separator } from "@/components/ui/separator";
 import {
     Breadcrumb,
     BreadcrumbItem,
+    BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbPage,
+    BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useWalletsStore } from "@/stores/wallets";
+import { BREADCRUMB_MAP } from "@/lib/breadcrumbs";
 
 const { t } = useI18n();
 const route = useRoute();
+const walletsStore = useWalletsStore();
 
-const routeTitleMap: Record<string, string> = {
-    home: "dashboard.title",
-    wallets: "wallets.title",
-    "wallets-create": "wallets.createNew",
-    "wallet-detail": "wallets.title",
-    "wallet-edit": "wallets.form.submitEdit",
-    "wallet-members": "wallets.members.title",
-    "wallet-invite": "wallets.invitation.title",
-    budgets: "app.budgets",
-    "budget-create": "wallets.budgets.createNew",
-    "budget-edit": "wallets.budgets.actions.edit",
-    goals: "app.goals",
-    "goal-create": "wallets.goals.createNew",
-    "goal-edit": "wallets.goals.actions.edit",
-    recurring: "app.recurring",
-    "recurring-create": "wallets.recurring.createNew",
-    "recurring-edit": "wallets.recurring.actions.edit",
-    categories: "categories.title",
-    "category-create": "categories.createNew",
-    "category-edit": "categories.actions.edit",
-    "notification-preferences": "notifications.prefs.title",
-    activity: "activity.title",
-    settings: "settings.title",
-};
+interface ResolvedSegment {
+    label: string;
+    routeName?: string;
+    routeParams?: Record<string, string>;
+    isLast: boolean;
+}
 
-const pageTitle = computed(() => {
-    const key = routeTitleMap[route.name as string];
-    return key ? t(key) : t("app.name");
+// Resolves the dynamic wallet name from the current route params.
+function resolveWalletName(params: Record<string, string | string[]>): string {
+    const id = params.id ?? params.walletId;
+    if (!id) return "";
+    const walletId = Array.isArray(id) ? id[0] : id;
+    const wallet =
+        walletsStore.wallets.find((w) => w.id === walletId) ?? walletsStore.currentWallet ?? null;
+    return wallet?.name ?? walletId;
+}
+
+const segments = computed((): ResolvedSegment[] => {
+    const name = route.name as string;
+    const defs = BREADCRUMB_MAP[name];
+    if (!defs || !defs.length) {
+        return [{ label: t("app.name"), isLast: true }];
+    }
+
+    const params = route.params as Record<string, string | string[]>;
+    const walletName = resolveWalletName(params);
+    const walletId = Array.isArray(params.walletId)
+        ? params.walletId[0]
+        : (params.walletId ?? (Array.isArray(params.id) ? params.id[0] : params.id));
+
+    return defs.map((seg, idx) => {
+        const isLast = idx === defs.length - 1;
+        const label = seg.dynamic ? walletName : t(seg.labelKey);
+
+        // For the dynamic wallet segment, build correct route params
+        let routeParams: Record<string, string> | undefined;
+        if (seg.dynamic && seg.routeName) {
+            routeParams = { id: walletId ?? "" };
+        } else if (seg.routeName === "transactions" && walletId) {
+            routeParams = { walletId };
+        }
+
+        return { label, routeName: isLast ? undefined : seg.routeName, routeParams, isLast };
+    });
 });
 </script>
 
@@ -54,9 +75,22 @@ const pageTitle = computed(() => {
             <Separator orientation="vertical" class="mr-2 h-4" />
             <Breadcrumb>
                 <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>{{ pageTitle }}</BreadcrumbPage>
-                    </BreadcrumbItem>
+                    <template v-for="(seg, idx) in segments" :key="idx">
+                        <BreadcrumbSeparator v-if="idx > 0" />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink v-if="!seg.isLast && seg.routeName" :as-child="true">
+                                <router-link
+                                    :to="
+                                        seg.routeParams
+                                            ? { name: seg.routeName, params: seg.routeParams }
+                                            : { name: seg.routeName }
+                                    "
+                                    >{{ seg.label }}</router-link
+                                >
+                            </BreadcrumbLink>
+                            <BreadcrumbPage v-else>{{ seg.label }}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </template>
                 </BreadcrumbList>
             </Breadcrumb>
         </div>

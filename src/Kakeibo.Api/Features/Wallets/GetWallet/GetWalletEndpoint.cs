@@ -13,6 +13,9 @@ public sealed class GetWalletEndpoint : IEndpoint
         string Currency,
         decimal Balance,
         bool IsArchived,
+        string? Icon,
+        string? BackgroundColor,
+        string? TextColor,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)

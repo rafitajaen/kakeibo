@@ -43,6 +43,9 @@ public sealed class GetWalletHandler(AppDbContext db)
             wallet.Currency,
             Balance: balance,
             IsArchived: wallet.DeletedAt != null,
+            Icon: wallet.Icon,
+            BackgroundColor: wallet.BackgroundColor,
+            TextColor: wallet.TextColor,
             wallet.CreatedAt);
     }
 }

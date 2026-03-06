@@ -39,7 +39,7 @@ public sealed class WalletCrudIntegrationTests
         var user = await CreateUserAsync(db);
 
         // --- CREATE ---
-        var createHandler = new CreateWalletHandler(db, eventBus);
+        var createHandler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
         var createResult = await createHandler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Checking Account", "Personal"),
             user.Id, ct);
@@ -107,7 +107,7 @@ public sealed class WalletCrudIntegrationTests
         var ct = TestContext.Current.CancellationToken;
         var eventBus = Substitute.For<IEventBus>();
         var user = await CreateUserAsync(db);
-        var handler = new CreateWalletHandler(db, eventBus);
+        var handler = new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance);
 
         await handler.HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Savings", "Personal"), user.Id, ct);
@@ -128,7 +128,7 @@ public sealed class WalletCrudIntegrationTests
         var eventBus = Substitute.For<IEventBus>();
         var user = await CreateUserAsync(db);
 
-        var created = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var created = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Temp", "Personal"), user.Id, ct);
 
         await new ArchiveWalletHandler(db, eventBus, clock).HandleAsync(created.Value.Id, user.Id, ct);
@@ -151,7 +151,7 @@ public sealed class WalletCrudIntegrationTests
         var eventBus = Substitute.For<IEventBus>();
         var user = await CreateUserAsync(db);
 
-        var created = await new CreateWalletHandler(db, eventBus).HandleAsync(
+        var created = await new CreateWalletHandler(db, eventBus, NodaTime.SystemClock.Instance).HandleAsync(
             new CreateWalletEndpoint.CreateWalletRequest("Temp", "Personal"), user.Id, ct);
 
         await new ArchiveWalletHandler(db, eventBus, clock).HandleAsync(created.Value.Id, user.Id, ct);
