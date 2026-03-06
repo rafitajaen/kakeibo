@@ -11,6 +11,7 @@ money.backup
 *.userosscache
 *.sln.docstates
 *.env
+*.env.local
 
 # Semantic release generated files
 .version
