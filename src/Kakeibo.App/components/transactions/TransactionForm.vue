@@ -6,6 +6,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
     Select,
@@ -28,6 +29,7 @@ interface TransactionFormValues {
     date: string;
     categoryId: string;
     destinationWalletId?: string | null;
+    notes?: string | null;
 }
 
 const props = defineProps<{
@@ -59,6 +61,7 @@ const schema = toTypedSchema(
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
         categoryId: z.string().uuid(),
         destinationWalletId: z.string().uuid().nullable().optional(),
+        notes: z.string().max(1000).nullable().optional(),
     }),
 );
 
@@ -71,6 +74,7 @@ const form = useForm({
         date: props.initialData?.date ?? new Date().toISOString().slice(0, 10),
         categoryId: props.initialData?.categoryId ?? "",
         destinationWalletId: props.initialData?.destinationWalletId ?? null,
+        notes: props.initialData?.notes ?? null,
     },
 });
 
@@ -97,6 +101,7 @@ const onSubmit = form.handleSubmit((values) => {
         date: values.date,
         categoryId: values.categoryId,
         destinationWalletId: values.destinationWalletId ?? null,
+        notes: values.notes ?? null,
     });
 });
 
@@ -213,6 +218,22 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                             </SelectItem>
                         </SelectContent>
                     </Select>
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+        </FormField>
+
+        <!-- Notes (optional free-text) -->
+        <FormField v-slot="{ componentField }" name="notes">
+            <FormItem>
+                <FormLabel>{{ t("transactions.form.notes") }}</FormLabel>
+                <FormControl>
+                    <Textarea
+                        :placeholder="t('transactions.form.notesPlaceholder')"
+                        class="resize-none"
+                        rows="3"
+                        v-bind="componentField"
+                    />
                 </FormControl>
                 <FormMessage />
             </FormItem>

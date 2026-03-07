@@ -11,7 +11,8 @@ public sealed class UpdateTransactionEndpoint : IEndpoint
         string Description,
         string Date,
         Guid CategoryId,
-        Guid? DestinationWalletId);
+        Guid? DestinationWalletId,
+        string? Notes = null);
 
     public sealed record UpdateTransactionResponse(
         Guid Id,
@@ -23,6 +24,7 @@ public sealed class UpdateTransactionEndpoint : IEndpoint
         Guid WalletId,
         Guid? DestinationWalletId,
         Guid UserId,
+        string? Notes,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)

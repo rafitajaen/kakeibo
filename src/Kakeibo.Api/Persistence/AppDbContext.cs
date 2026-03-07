@@ -14,6 +14,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<WalletBalance> WalletBalances => Set<WalletBalance>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<TransactionAttachment> TransactionAttachments => Set<TransactionAttachment>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<RecurringPattern> RecurringPatterns => Set<RecurringPattern>();

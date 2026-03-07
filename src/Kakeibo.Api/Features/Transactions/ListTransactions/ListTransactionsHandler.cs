@@ -91,6 +91,7 @@ public sealed class ListTransactionsHandler(AppDbContext db)
                 t.WalletId,
                 t.DestinationWalletId,
                 t.UserId,
+                t.Notes,
                 t.CreatedAt
             })
             .ToListAsync(ct);
@@ -107,6 +108,7 @@ public sealed class ListTransactionsHandler(AppDbContext db)
                 t.WalletId,
                 t.DestinationWalletId,
                 t.UserId,
+                t.Notes,
                 t.CreatedAt))
             .ToList();
 

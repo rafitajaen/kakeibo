@@ -38,5 +38,9 @@ public sealed class RecordTransactionValidator
             .NotNull()
             .When(x => string.Equals(x.Type, "Transfer", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Destination wallet is required for Transfer transactions.");
+
+        RuleFor(x => x.Notes)
+            .MaximumLength(1000)
+            .When(x => x.Notes is not null);
     }
 }

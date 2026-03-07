@@ -12,6 +12,17 @@ export interface Transaction {
     categoryName: string;
     walletId: string;
     destinationWalletId?: string | null;
+    notes?: string | null;
+    createdAt: string;
+}
+
+export interface TransactionAttachment {
+    id: string;
+    transactionId: string;
+    fileName: string;
+    contentType: string;
+    fileSizeBytes: number;
+    uploadedByUserId: string;
     createdAt: string;
 }
 
@@ -23,6 +34,7 @@ export interface RecordTransactionData {
     categoryId: string;
     walletId: string;
     destinationWalletId?: string | null;
+    notes?: string | null;
 }
 
 export interface UpdateTransactionData {
@@ -31,6 +43,7 @@ export interface UpdateTransactionData {
     date: string;
     categoryId: string;
     destinationWalletId?: string | null;
+    notes?: string | null;
 }
 
 export interface ListTransactionsParams {
@@ -54,6 +67,8 @@ export const useTransactionsStore = defineStore("transactions", () => {
     const currentTransaction = ref<Transaction | null>(null);
     const total = ref(0);
     const isLoading = ref(false);
+    const attachments = ref<TransactionAttachment[]>([]);
+    const isAttachmentsLoading = ref(false);
 
     // Getters
     const incomeTransactions = computed(() =>
@@ -128,6 +143,59 @@ export const useTransactionsStore = defineStore("transactions", () => {
         total.value = Math.max(0, total.value - 1);
     }
 
+    // Fetches all attachments for a transaction.
+    async function fetchAttachments(transactionId: string): Promise<void> {
+        isAttachmentsLoading.value = true;
+        try {
+            const response = await api.get<{ items: TransactionAttachment[] }>(
+                `/api/transactions/${transactionId}/attachments`,
+            );
+            attachments.value = response.data.items;
+        } finally {
+            isAttachmentsLoading.value = false;
+        }
+    }
+
+    // Uploads a file attachment for a transaction and appends it to local state.
+    async function uploadAttachment(
+        transactionId: string,
+        file: File,
+    ): Promise<TransactionAttachment> {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await api.post<TransactionAttachment>(
+            `/api/transactions/${transactionId}/attachments`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data" } },
+        );
+        attachments.value.push(response.data);
+        return response.data;
+    }
+
+    // Downloads an attachment by triggering a browser download via an object URL.
+    async function downloadAttachment(
+        transactionId: string,
+        attachmentId: string,
+        fileName: string,
+    ): Promise<void> {
+        const response = await api.get(
+            `/api/transactions/${transactionId}/attachments/${attachmentId}`,
+            { responseType: "blob" },
+        );
+        const url = URL.createObjectURL(response.data as Blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Deletes an attachment and removes it from local state.
+    async function deleteAttachment(transactionId: string, attachmentId: string): Promise<void> {
+        await api.delete(`/api/transactions/${transactionId}/attachments/${attachmentId}`);
+        attachments.value = attachments.value.filter((a) => a.id !== attachmentId);
+    }
+
     // Fetches recent transactions from multiple wallets for the dashboard.
     // Returns merged list sorted by date descending without mutating store state.
     async function fetchRecentForDashboard(
@@ -155,6 +223,8 @@ export const useTransactionsStore = defineStore("transactions", () => {
         currentTransaction,
         total,
         isLoading,
+        attachments,
+        isAttachmentsLoading,
         incomeTransactions,
         expenseTransactions,
         fetchTransactions,
@@ -163,5 +233,9 @@ export const useTransactionsStore = defineStore("transactions", () => {
         updateTransaction,
         deleteTransaction,
         fetchRecentForDashboard,
+        fetchAttachments,
+        uploadAttachment,
+        downloadAttachment,
+        deleteAttachment,
     };
 });

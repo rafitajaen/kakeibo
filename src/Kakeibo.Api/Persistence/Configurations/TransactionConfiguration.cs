@@ -26,6 +26,10 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
             .HasMaxLength(500)
             .IsRequired();
 
+        builder.Property(t => t.Notes)
+            .HasMaxLength(1000)
+            .IsRequired(false);
+
         // Restrict deletes: wallet or category deletions must not cascade into transactions.
         builder.HasOne(t => t.Category)
             .WithMany()

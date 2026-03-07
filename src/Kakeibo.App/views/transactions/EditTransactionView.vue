@@ -7,6 +7,8 @@ import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TransactionForm from "@/components/transactions/TransactionForm.vue";
+import TransactionAttachmentList from "@/components/transactions/TransactionAttachmentList.vue";
+import type { TransactionAttachment } from "@/stores/transactions";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -25,6 +27,7 @@ onMounted(async () => {
     try {
         await Promise.all([
             transactionsStore.fetchTransaction(transactionId),
+            transactionsStore.fetchAttachments(transactionId),
             categoriesStore.fetchCategories(),
             walletsStore.fetchWallets(),
         ]);
@@ -33,12 +36,42 @@ onMounted(async () => {
     }
 });
 
+async function handleUploadAttachment(file: File): Promise<void> {
+    try {
+        await transactionsStore.uploadAttachment(transactionId, file);
+    } catch {
+        apiError.value = t("transactions.attachments.uploadError");
+    }
+}
+
+async function handleDownloadAttachment(attachment: TransactionAttachment): Promise<void> {
+    try {
+        await transactionsStore.downloadAttachment(
+            transactionId,
+            attachment.id,
+            attachment.fileName,
+        );
+    } catch {
+        apiError.value = t("transactions.attachments.downloadError");
+    }
+}
+
+async function handleDeleteAttachment(attachmentId: string): Promise<void> {
+    if (!confirm(t("transactions.attachments.deleteConfirm"))) return;
+    try {
+        await transactionsStore.deleteAttachment(transactionId, attachmentId);
+    } catch {
+        apiError.value = t("transactions.attachments.deleteError");
+    }
+}
+
 async function handleSubmit(values: {
     amount: number;
     description: string;
     date: string;
     categoryId: string;
     destinationWalletId?: string | null;
+    notes?: string | null;
 }) {
     apiError.value = null;
     isSubmitting.value = true;
@@ -78,6 +111,7 @@ async function handleSubmit(values: {
                                 categoryId: transactionsStore.currentTransaction.categoryId,
                                 destinationWalletId:
                                     transactionsStore.currentTransaction.destinationWalletId,
+                                notes: transactionsStore.currentTransaction.notes,
                             }"
                             :is-submitting="isSubmitting"
                             :categories="categoriesStore.activeCategories"
@@ -85,6 +119,16 @@ async function handleSubmit(values: {
                             :source-wallet-id="walletId"
                             @submit="handleSubmit"
                         />
+                        <div class="mt-4">
+                            <TransactionAttachmentList
+                                :transaction-id="transactionId"
+                                :attachments="transactionsStore.attachments"
+                                :is-loading="transactionsStore.isAttachmentsLoading"
+                                @upload="handleUploadAttachment"
+                                @download="handleDownloadAttachment"
+                                @delete="handleDeleteAttachment"
+                            />
+                        </div>
                         <p v-if="apiError" class="mt-2 text-sm text-destructive">{{ apiError }}</p>
                     </template>
                     <p v-else class="text-muted-foreground">{{ t("common.loading") }}</p>

@@ -13,7 +13,8 @@ public sealed class RecordTransactionEndpoint : IEndpoint
         string Date,
         Guid CategoryId,
         Guid WalletId,
-        Guid? DestinationWalletId);
+        Guid? DestinationWalletId,
+        string? Notes = null);
 
     public sealed record RecordTransactionResponse(
         Guid Id,
@@ -25,6 +26,7 @@ public sealed class RecordTransactionEndpoint : IEndpoint
         Guid WalletId,
         Guid? DestinationWalletId,
         Guid UserId,
+        string? Notes,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)

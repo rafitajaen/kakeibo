@@ -1,36 +1,22 @@
 using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
-using NodaTime;
 
-namespace Kakeibo.Api.Features.Transactions.GetTransaction;
+namespace Kakeibo.Api.Features.Transactions.DownloadAttachment;
 
-public sealed class GetTransactionEndpoint : IEndpoint
+public sealed class DownloadAttachmentEndpoint : IEndpoint
 {
-    public sealed record GetTransactionResponse(
-        Guid Id,
-        string Type,
-        decimal Amount,
-        string Description,
-        string Date,
-        Guid CategoryId,
-        string CategoryName,
-        Guid WalletId,
-        Guid? DestinationWalletId,
-        Guid UserId,
-        string? Notes,
-        Instant CreatedAt);
-
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/transactions/{id:guid}", HandleAsync)
+        app.MapGet("/api/transactions/{id:guid}/attachments/{attachmentId:guid}", HandleAsync)
             .WithTags("Transactions")
             .RequireAuthorization();
     }
 
     private static async Task<IResult> HandleAsync(
         Guid id,
+        Guid attachmentId,
         ClaimsPrincipal principal,
-        GetTransactionHandler handler,
+        DownloadAttachmentHandler handler,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
@@ -38,14 +24,18 @@ public sealed class GetTransactionEndpoint : IEndpoint
             return TypedResults.Unauthorized();
         }
 
-        var result = await handler.HandleAsync(id, userId, ct);
-        return result.IsSuccess
-            ? TypedResults.Ok(result.Value)
-            : result.Error.Code switch
+        var result = await handler.HandleAsync(id, attachmentId, userId, ct);
+        if (result.IsFailure)
+        {
+            return result.Error.Code switch
             {
                 "not_found" => TypedResults.NotFound(result.Error),
                 "forbidden" => TypedResults.StatusCode(403),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
+        }
+
+        // Return the raw binary stream — caller receives the file directly.
+        return Results.File(result.Value.Stream, result.Value.ContentType, result.Value.FileName);
     }
 }

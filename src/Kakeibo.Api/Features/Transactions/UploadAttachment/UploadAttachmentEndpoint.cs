@@ -2,35 +2,32 @@ using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
 using NodaTime;
 
-namespace Kakeibo.Api.Features.Transactions.GetTransaction;
+namespace Kakeibo.Api.Features.Transactions.UploadAttachment;
 
-public sealed class GetTransactionEndpoint : IEndpoint
+public sealed class UploadAttachmentEndpoint : IEndpoint
 {
-    public sealed record GetTransactionResponse(
+    public sealed record UploadAttachmentResponse(
         Guid Id,
-        string Type,
-        decimal Amount,
-        string Description,
-        string Date,
-        Guid CategoryId,
-        string CategoryName,
-        Guid WalletId,
-        Guid? DestinationWalletId,
-        Guid UserId,
-        string? Notes,
+        Guid TransactionId,
+        string FileName,
+        string ContentType,
+        long FileSizeBytes,
+        Guid UploadedByUserId,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/transactions/{id:guid}", HandleAsync)
+        app.MapPost("/api/transactions/{id:guid}/attachments", HandleAsync)
             .WithTags("Transactions")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .DisableAntiforgery();
     }
 
     private static async Task<IResult> HandleAsync(
         Guid id,
+        IFormFile file,
         ClaimsPrincipal principal,
-        GetTransactionHandler handler,
+        UploadAttachmentHandler handler,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
@@ -38,11 +35,12 @@ public sealed class GetTransactionEndpoint : IEndpoint
             return TypedResults.Unauthorized();
         }
 
-        var result = await handler.HandleAsync(id, userId, ct);
+        var result = await handler.HandleAsync(id, file, userId, ct);
         return result.IsSuccess
-            ? TypedResults.Ok(result.Value)
+            ? TypedResults.Created($"/api/transactions/{id}/attachments/{result.Value.Id}", result.Value)
             : result.Error.Code switch
             {
+                "validation" => TypedResults.UnprocessableEntity(result.Error),
                 "not_found" => TypedResults.NotFound(result.Error),
                 "forbidden" => TypedResults.StatusCode(403),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)

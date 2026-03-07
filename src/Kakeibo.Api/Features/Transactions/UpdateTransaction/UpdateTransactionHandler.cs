@@ -187,6 +187,7 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
         // Update the transaction fields
         transaction.Amount = request.Amount;
         transaction.Description = request.Description;
+        transaction.Notes = request.Notes;
         transaction.Date = newDate;
         transaction.CategoryId = request.CategoryId;
         transaction.DestinationWalletId = newDestinationWalletId;
@@ -218,6 +219,7 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             transaction.WalletId,
             transaction.DestinationWalletId,
             transaction.UserId,
+            transaction.Notes,
             transaction.CreatedAt);
     }
 }

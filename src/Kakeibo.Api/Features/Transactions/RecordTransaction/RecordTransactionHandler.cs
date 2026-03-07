@@ -83,6 +83,7 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             Type = transactionType,
             Amount = request.Amount,
             Description = request.Description,
+            Notes = request.Notes,
             Date = date,
             CategoryId = request.CategoryId,
             WalletId = request.WalletId,
@@ -155,6 +156,7 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             transaction.WalletId,
             transaction.DestinationWalletId,
             transaction.UserId,
+            transaction.Notes,
             transaction.CreatedAt);
     }
 

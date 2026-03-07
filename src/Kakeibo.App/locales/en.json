@@ -146,7 +146,21 @@
       "destinationWallet": "Destination wallet",
       "destinationWalletPlaceholder": "Select a wallet",
       "submit": "Record transaction",
-      "submitEdit": "Save changes"
+      "submitEdit": "Save changes",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional notes or context for this transaction"
+    },
+    "attachments": {
+      "title": "Attachments",
+      "empty": "No attachments yet",
+      "add": "Add attachment",
+      "download": "Download",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this attachment?",
+      "uploadError": "Failed to upload attachment. Please try again.",
+      "downloadError": "Failed to download attachment. Please try again.",
+      "deleteError": "Failed to delete attachment. Please try again.",
+      "allowedTypes": "Only PDF, JPEG, PNG, and WebP files are allowed."
     },
     "filters": {
       "dateFrom": "From",

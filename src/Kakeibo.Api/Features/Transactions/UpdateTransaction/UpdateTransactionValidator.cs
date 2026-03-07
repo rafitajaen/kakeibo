@@ -23,5 +23,9 @@ public sealed class UpdateTransactionValidator
 
         RuleFor(x => x.CategoryId)
             .NotEmpty();
+
+        RuleFor(x => x.Notes)
+            .MaximumLength(1000)
+            .When(x => x.Notes is not null);
     }
 }

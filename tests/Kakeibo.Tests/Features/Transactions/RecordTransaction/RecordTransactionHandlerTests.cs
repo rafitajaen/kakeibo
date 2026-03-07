@@ -259,4 +259,41 @@ public sealed class RecordTransactionHandlerTests
         Assert.True(result.IsSuccess);
         eventBus.Received(1).Publish(Arg.Any<Kakeibo.Api.Features.Transactions.Events.TransactionRecordedEvent>());
     }
+
+    [Fact]
+    public async Task WithNotes_PersistsAndReturnsNotes()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var user = await CreateUserAsync(db);
+        var wallet = await CreateWalletAsync(db, user.Id);
+        var handler = new RecordTransactionHandler(db, Substitute.For<IEventBus>(), TestClock);
+
+        var result = await handler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Expense", 50m, "Lunch", ValidDate, HousingCategoryId, wallet.Id, null,
+                Notes: "Expense with a note"),
+            user.Id, ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Expense with a note", result.Value.Notes);
+    }
+
+    [Fact]
+    public async Task WithoutNotes_ReturnsNullNotes()
+    {
+        await using var db = await TestDbContextFactory.CreateAsync();
+        var ct = TestContext.Current.CancellationToken;
+        var user = await CreateUserAsync(db);
+        var wallet = await CreateWalletAsync(db, user.Id);
+        var handler = new RecordTransactionHandler(db, Substitute.For<IEventBus>(), TestClock);
+
+        var result = await handler.HandleAsync(
+            new RecordTransactionEndpoint.RecordTransactionRequest(
+                "Income", 100m, "Salary", ValidDate, HousingCategoryId, wallet.Id, null),
+            user.Id, ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.Notes);
+    }
 }

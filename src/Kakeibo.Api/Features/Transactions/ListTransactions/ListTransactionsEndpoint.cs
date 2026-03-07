@@ -17,6 +17,7 @@ public sealed class ListTransactionsEndpoint : IEndpoint
         Guid WalletId,
         Guid? DestinationWalletId,
         Guid UserId,
+        string? Notes,
         Instant CreatedAt);
 
     public sealed record ListTransactionsResponse(

@@ -2,27 +2,24 @@ using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
 using NodaTime;
 
-namespace Kakeibo.Api.Features.Transactions.GetTransaction;
+namespace Kakeibo.Api.Features.Transactions.ListAttachments;
 
-public sealed class GetTransactionEndpoint : IEndpoint
+public sealed class ListAttachmentsEndpoint : IEndpoint
 {
-    public sealed record GetTransactionResponse(
+    public sealed record AttachmentItem(
         Guid Id,
-        string Type,
-        decimal Amount,
-        string Description,
-        string Date,
-        Guid CategoryId,
-        string CategoryName,
-        Guid WalletId,
-        Guid? DestinationWalletId,
-        Guid UserId,
-        string? Notes,
+        Guid TransactionId,
+        string FileName,
+        string ContentType,
+        long FileSizeBytes,
+        Guid UploadedByUserId,
         Instant CreatedAt);
+
+    public sealed record ListAttachmentsResponse(IReadOnlyList<AttachmentItem> Items);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/transactions/{id:guid}", HandleAsync)
+        app.MapGet("/api/transactions/{id:guid}/attachments", HandleAsync)
             .WithTags("Transactions")
             .RequireAuthorization();
     }
@@ -30,7 +27,7 @@ public sealed class GetTransactionEndpoint : IEndpoint
     private static async Task<IResult> HandleAsync(
         Guid id,
         ClaimsPrincipal principal,
-        GetTransactionHandler handler,
+        ListAttachmentsHandler handler,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))

@@ -146,7 +146,21 @@
       "destinationWallet": "Cartera destino",
       "destinationWalletPlaceholder": "Selecciona una cartera",
       "submit": "Registrar transacción",
-      "submitEdit": "Guardar cambios"
+      "submitEdit": "Guardar cambios",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas o contexto adicional para esta transacción (opcional)"
+    },
+    "attachments": {
+      "title": "Adjuntos",
+      "empty": "No hay adjuntos todavía",
+      "add": "Añadir adjunto",
+      "download": "Descargar",
+      "delete": "Eliminar",
+      "deleteConfirm": "¿Seguro que quieres eliminar este adjunto?",
+      "uploadError": "Error al subir el adjunto. Por favor, inténtalo de nuevo.",
+      "downloadError": "Error al descargar el adjunto. Por favor, inténtalo de nuevo.",
+      "deleteError": "Error al eliminar el adjunto. Por favor, inténtalo de nuevo.",
+      "allowedTypes": "Solo se permiten archivos PDF, JPEG, PNG y WebP."
     },
     "filters": {
       "dateFrom": "Desde",

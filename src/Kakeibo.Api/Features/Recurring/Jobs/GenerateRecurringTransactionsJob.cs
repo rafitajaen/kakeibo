@@ -65,7 +65,8 @@ public sealed class GenerateRecurringTransactionsJob(
                 LocalDatePattern.Iso.Format(pattern.NextOccurrence),
                 pattern.CategoryId,
                 pattern.WalletId,
-                pattern.DestinationWalletId);
+                pattern.DestinationWalletId,
+                Notes: null);
 
             var result = await recordHandler.HandleAsync(request, pattern.UserId, ct);
 

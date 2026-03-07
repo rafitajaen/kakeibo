@@ -21,6 +21,9 @@ public sealed class Transaction : Entity
     public required Guid CategoryId { get; set; }
     public required Guid WalletId { get; set; }
 
+    // Optional free-text note for additional context.
+    public string? Notes { get; set; }
+
     // Populated only for Transfer transactions.
     public Guid? DestinationWalletId { get; set; }
 
