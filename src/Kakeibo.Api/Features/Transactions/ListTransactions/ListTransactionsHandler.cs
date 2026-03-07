@@ -30,7 +30,10 @@ public sealed class ListTransactionsHandler(AppDbContext db)
         }
 
         var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
-        if (role is null)
+        var isMember = role is not null;
+
+        // Non-members can only list transactions in public wallets
+        if (!isMember && wallet.Visibility != WalletVisibility.Public)
         {
             return Error.Forbidden("You do not have access to this wallet.");
         }
@@ -85,6 +88,7 @@ public sealed class ListTransactionsHandler(AppDbContext db)
                 t.Date,
                 t.CategoryId,
                 CategoryName = t.Category!.Name,
+                CategoryIsPrivate = t.Category.IsPrivate,
                 t.WalletId,
                 t.DestinationWalletId,
                 t.UserId,
@@ -98,10 +102,12 @@ public sealed class ListTransactionsHandler(AppDbContext db)
                 t.Id,
                 t.Type.ToString(),
                 t.Amount,
-                t.Description,
+                // Mask description for non-members when category is private
+                (!isMember && t.CategoryIsPrivate) ? null : t.Description,
                 LocalDatePattern.Iso.Format(t.Date),
                 t.CategoryId,
-                t.CategoryName,
+                // Mask category name for non-members when category is private
+                (!isMember && t.CategoryIsPrivate) ? "Private" : t.CategoryName,
                 t.WalletId,
                 t.DestinationWalletId,
                 t.UserId,

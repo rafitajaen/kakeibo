@@ -10,7 +10,7 @@ public sealed class ListTransactionsEndpoint : IEndpoint
         Guid Id,
         string Type,
         decimal Amount,
-        string Description,
+        string? Description,
         string Date,
         Guid CategoryId,
         string CategoryName,

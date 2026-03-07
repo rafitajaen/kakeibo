@@ -43,6 +43,9 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(c => c.Icon)
             .HasMaxLength(50);
 
+        builder.Property(c => c.IsPrivate)
+            .HasDefaultValue(false);
+
         // A partial unique index on (name, user_id) WHERE deleted_at IS NULL is added via
         // migrationBuilder.Sql() in the migration to handle archived categories correctly.
 

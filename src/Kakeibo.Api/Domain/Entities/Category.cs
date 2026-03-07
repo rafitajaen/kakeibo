@@ -19,6 +19,9 @@ public sealed class Category : Entity
     // True when the category was created by the seed-data endpoint (never set manually).
     public bool IsSeedData { get; set; }
 
+    // When true, transaction details using this category are masked for non-members viewing a public wallet.
+    public bool IsPrivate { get; set; }
+
     // Visual customization — only settable on custom categories; system categories use seeded defaults.
     public string? BackgroundColor { get; set; }  // hex color, e.g. "#EFF6FF"
     public string? TextColor { get; set; }         // hex color, e.g. "#1D4ED8"

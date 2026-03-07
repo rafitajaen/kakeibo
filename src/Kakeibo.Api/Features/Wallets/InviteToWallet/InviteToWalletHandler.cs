@@ -61,6 +61,19 @@ public sealed class InviteToWalletHandler(
             {
                 return Error.Conflict($"'{request.InviteeEmail}' is already a member of this wallet.");
             }
+
+            // Inviting an existing user requires a confirmed friendship
+            var (lo, hi) = requesterId < inviteeUser.Id
+                ? (requesterId, inviteeUser.Id)
+                : (inviteeUser.Id, requesterId);
+
+            var areFriends = await db.Friendships.AnyAsync(
+                f => f.UserAId == lo && f.UserBId == hi, ct);
+
+            if (!areFriends)
+            {
+                return Error.Forbidden("You can only invite friends to a wallet.");
+            }
         }
 
         // Check no active (non-expired, non-revoked, non-accepted) invitation exists for this email

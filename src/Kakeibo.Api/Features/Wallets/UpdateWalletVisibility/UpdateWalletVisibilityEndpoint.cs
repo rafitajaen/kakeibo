@@ -1,36 +1,24 @@
 using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
-using NodaTime;
 
-namespace Kakeibo.Api.Features.Transactions.GetTransaction;
+namespace Kakeibo.Api.Features.Wallets.UpdateWalletVisibility;
 
-public sealed class GetTransactionEndpoint : IEndpoint
+public sealed class UpdateWalletVisibilityEndpoint : IEndpoint
 {
-    public sealed record GetTransactionResponse(
-        Guid Id,
-        string Type,
-        decimal Amount,
-        string? Description,
-        string Date,
-        Guid CategoryId,
-        string CategoryName,
-        Guid WalletId,
-        Guid? DestinationWalletId,
-        Guid UserId,
-        string? Notes,
-        Instant CreatedAt);
+    public sealed record UpdateWalletVisibilityRequest(string Visibility);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/transactions/{id:guid}", HandleAsync)
-            .WithTags("Transactions")
+        app.MapPut("/api/wallets/{id:guid}/visibility", HandleAsync)
+            .WithTags("Wallets")
             .RequireAuthorization();
     }
 
     private static async Task<IResult> HandleAsync(
         Guid id,
+        UpdateWalletVisibilityRequest request,
         ClaimsPrincipal principal,
-        GetTransactionHandler handler,
+        UpdateWalletVisibilityHandler handler,
         CancellationToken ct)
     {
         if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
@@ -38,13 +26,14 @@ public sealed class GetTransactionEndpoint : IEndpoint
             return TypedResults.Unauthorized();
         }
 
-        var result = await handler.HandleAsync(id, userId, ct);
+        var result = await handler.HandleAsync(id, request, userId, ct);
         return result.IsSuccess
-            ? TypedResults.Ok(result.Value)
+            ? TypedResults.NoContent()
             : result.Error.Code switch
             {
                 "not_found" => TypedResults.NotFound(result.Error),
                 "forbidden" => TypedResults.StatusCode(403),
+                "validation" => TypedResults.BadRequest(result.Error),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }

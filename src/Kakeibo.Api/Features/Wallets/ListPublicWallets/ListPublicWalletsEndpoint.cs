@@ -2,43 +2,36 @@ using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
 using NodaTime;
 
-namespace Kakeibo.Api.Features.Transactions.GetTransaction;
+namespace Kakeibo.Api.Features.Wallets.ListPublicWallets;
 
-public sealed class GetTransactionEndpoint : IEndpoint
+public sealed class ListPublicWalletsEndpoint : IEndpoint
 {
-    public sealed record GetTransactionResponse(
+    public sealed record PublicWalletResponse(
         Guid Id,
+        string Name,
         string Type,
-        decimal Amount,
-        string? Description,
-        string Date,
-        Guid CategoryId,
-        string CategoryName,
-        Guid WalletId,
-        Guid? DestinationWalletId,
-        Guid UserId,
-        string? Notes,
+        string Currency,
         Instant CreatedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/transactions/{id:guid}", HandleAsync)
-            .WithTags("Transactions")
+        app.MapGet("/api/users/{userId:guid}/wallets", HandleAsync)
+            .WithTags("Wallets")
             .RequireAuthorization();
     }
 
     private static async Task<IResult> HandleAsync(
-        Guid id,
+        Guid userId,
         ClaimsPrincipal principal,
-        GetTransactionHandler handler,
+        ListPublicWalletsHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var callerId))
         {
             return TypedResults.Unauthorized();
         }
 
-        var result = await handler.HandleAsync(id, userId, ct);
+        var result = await handler.HandleAsync(userId, callerId, ct);
         return result.IsSuccess
             ? TypedResults.Ok(result.Value)
             : result.Error.Code switch

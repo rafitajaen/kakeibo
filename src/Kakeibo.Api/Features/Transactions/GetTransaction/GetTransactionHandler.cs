@@ -32,19 +32,27 @@ public sealed class GetTransactionHandler(AppDbContext db)
         }
 
         var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, transaction.WalletId, userId, ct);
-        if (role is null)
+        var isMember = role is not null;
+
+        // Non-members can only access transactions in public wallets
+        if (!isMember && wallet.Visibility != Domain.Entities.WalletVisibility.Public)
         {
             return Error.Forbidden("You do not have access to this transaction.");
         }
+
+        // Apply privacy masking for non-members when category is private
+        var isPrivateCategory = transaction.Category!.IsPrivate;
+        var categoryName = (!isMember && isPrivateCategory) ? "Private" : transaction.Category.Name;
+        var description = (!isMember && isPrivateCategory) ? null : transaction.Description;
 
         return new GetTransactionEndpoint.GetTransactionResponse(
             transaction.Id,
             transaction.Type.ToString(),
             transaction.Amount,
-            transaction.Description,
+            description,
             LocalDatePattern.Iso.Format(transaction.Date),
             transaction.CategoryId,
-            transaction.Category!.Name,
+            categoryName,
             transaction.WalletId,
             transaction.DestinationWalletId,
             transaction.UserId,
