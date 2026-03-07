@@ -10,7 +10,7 @@ using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.InviteToWallet;
 
-// Sends an invitation to join a shared wallet. Any member (owner or WalletMember) can invite.
+// Sends an invitation to join a shared wallet. Only Owner can invite.
 public sealed class InviteToWalletHandler(
     AppDbContext db,
     IEventBus eventBus,
@@ -41,25 +41,21 @@ public sealed class InviteToWalletHandler(
             return Error.Forbidden("Only shared wallets can have invitations.");
         }
 
-        // Requester must be owner or existing WalletMember
-        var isOwner = wallet.OwnerId == requesterId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == walletId && m.UserId == requesterId, ct);
-
-        if (!isOwner && !isMember)
+        // Only Owner can invite
+        var role = await WalletAccessChecker.GetRoleAsync(db, walletId, requesterId, ct);
+        if (role is null || role.Value != WalletMemberRole.Owner)
         {
-            return Error.Forbidden("You are not a member of this wallet.");
+            return Error.Forbidden("Only the wallet owner can send invitations.");
         }
 
-        // Check invitee is not already a member or the owner
+        // Check invitee is not already a member
         var inviteeUser = await db.Users.FirstOrDefaultAsync(
             u => u.Email == request.InviteeEmail, ct);
 
         if (inviteeUser is not null)
         {
-            var alreadyMember = inviteeUser.Id == wallet.OwnerId ||
-                await db.WalletMembers.AnyAsync(
-                    m => m.WalletId == walletId && m.UserId == inviteeUser.Id, ct);
+            var alreadyMember = await db.WalletMembers.AnyAsync(
+                m => m.WalletId == walletId && m.UserId == inviteeUser.Id, ct);
 
             if (alreadyMember)
             {

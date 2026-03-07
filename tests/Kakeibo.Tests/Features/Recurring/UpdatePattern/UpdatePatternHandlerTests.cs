@@ -25,9 +25,10 @@ public sealed class UpdatePatternHandlerTests
     private static async Task<(Wallet wallet, Category category, RecurringPattern pattern)> SetupAsync(
         Kakeibo.Api.Persistence.AppDbContext db, Guid userId, string patternName = "Monthly Rent")
     {
-        var wallet = new Wallet { Name = "Wallet", OwnerId = userId, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Wallet", Currency = "EUR" };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = userId, Role = WalletMemberRole.Owner });
         var category = new Category { Name = "Category", UserId = null };
         db.Categories.Add(category);
         var pattern = new RecurringPattern
@@ -159,9 +160,10 @@ public sealed class UpdatePatternHandlerTests
         var (sourceWallet, category, _) = await SetupAsync(db, user.Id);
 
         // Add a second wallet for transfer destination
-        var destWallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        var destWallet = new Wallet { Name = "Savings", Currency = "EUR" };
         db.Wallets.Add(destWallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = destWallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = destWallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync(ct);
 
         // Create a transfer pattern pointing to destWallet

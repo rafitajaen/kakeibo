@@ -47,10 +47,10 @@ public sealed class TransactionCrudTests
         var wallet = new Wallet
         {
             Name = name,
-            OwnerId = user.Id,
             Currency = "EUR"
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 500m });
         await db.SaveChangesAsync(ct);
         return wallet;

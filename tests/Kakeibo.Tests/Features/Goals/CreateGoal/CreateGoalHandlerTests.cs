@@ -27,10 +27,11 @@ public sealed class CreateGoalHandlerTests
     private static async Task<(Wallet wallet, WalletBalance balance)> CreateWalletAsync(
         Kakeibo.Api.Persistence.AppDbContext db, Guid ownerId, string name = "Savings", decimal balance = 0m)
     {
-        var wallet = new Wallet { Name = name, OwnerId = ownerId, Currency = "EUR" };
+        var wallet = new Wallet { Name = name, Currency = "EUR" };
         var walletBalance = new WalletBalance { WalletId = wallet.Id, Balance = balance };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(walletBalance);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync();
         return (wallet, walletBalance);
     }

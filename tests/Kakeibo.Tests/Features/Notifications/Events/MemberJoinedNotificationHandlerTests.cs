@@ -37,7 +37,7 @@ public sealed class MemberJoinedNotificationHandlerTests
         var member2 = MakeUser(db);
         var newMember = MakeUser(db);
 
-        var wallet = new Wallet { Name = "House Expenses", OwnerId = owner.Id, Currency = "EUR", Type = WalletType.Shared };
+        var wallet = new Wallet { Name = "House Expenses", Currency = "EUR", Type = WalletType.Shared };
         db.Wallets.Add(wallet);
         await db.SaveChangesAsync(ct);
 
@@ -76,7 +76,7 @@ public sealed class MemberJoinedNotificationHandlerTests
         var owner = MakeUser(db);
         var newMember = MakeUser(db);
 
-        var wallet = new Wallet { Name = "Trip", OwnerId = owner.Id, Currency = "EUR", Type = WalletType.Shared };
+        var wallet = new Wallet { Name = "Trip", Currency = "EUR", Type = WalletType.Shared };
         db.Wallets.Add(wallet);
         await db.SaveChangesAsync(ct);
 
@@ -107,7 +107,7 @@ public sealed class MemberJoinedNotificationHandlerTests
         var owner = MakeUser(db);
         var newMember = MakeUser(db);
 
-        var wallet = new Wallet { Name = "Family", OwnerId = owner.Id, Currency = "EUR", Type = WalletType.Shared };
+        var wallet = new Wallet { Name = "Family", Currency = "EUR", Type = WalletType.Shared };
         db.Wallets.Add(wallet);
         await db.SaveChangesAsync(ct);
 

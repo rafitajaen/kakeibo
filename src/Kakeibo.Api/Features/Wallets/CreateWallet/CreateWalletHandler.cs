@@ -27,9 +27,10 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus, ICl
             return Error.NotFound("User not found.");
         }
 
-        // Enforce unique wallet name per user (excluding archived wallets)
+        // Enforce unique wallet name per user (via WalletMember ownership)
         var nameExists = await db.Wallets
-            .AnyAsync(w => w.OwnerId == userId && w.Name == request.Name && w.DeletedAt == null, ct);
+            .Where(w => w.WalletMembers.Any(m => m.UserId == userId && m.Role == WalletMemberRole.Owner))
+            .AnyAsync(w => w.Name == request.Name && w.DeletedAt == null, ct);
         if (nameExists)
         {
             return Error.Conflict($"A wallet named '{request.Name}' already exists.");
@@ -41,7 +42,6 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus, ICl
         {
             Name = request.Name,
             Type = walletType,
-            OwnerId = userId,
             Currency = user.Currency,
             Icon = request.Icon,
             BackgroundColor = request.BackgroundColor,
@@ -72,15 +72,13 @@ public sealed class CreateWalletHandler(AppDbContext db, IEventBus eventBus, ICl
             });
         }
 
-        // For shared wallets, auto-add the creator as a WalletMember in the same transaction
-        if (walletType == WalletType.Shared)
+        // Always add the creator as a WalletMember with Owner role
+        db.WalletMembers.Add(new WalletMember
         {
-            db.WalletMembers.Add(new WalletMember
-            {
-                WalletId = wallet.Id,
-                UserId = userId
-            });
-        }
+            WalletId = wallet.Id,
+            UserId = userId,
+            Role = WalletMemberRole.Owner
+        });
 
         // Publish event before SaveChangesAsync — fire-and-forget via Channel
         eventBus.Publish(new WalletCreatedEvent

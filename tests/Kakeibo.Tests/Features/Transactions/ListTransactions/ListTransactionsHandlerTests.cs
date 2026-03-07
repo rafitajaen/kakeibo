@@ -30,9 +30,10 @@ public sealed class ListTransactionsHandlerTests
     private static async Task<Wallet> CreateWalletAsync(
         Kakeibo.Api.Persistence.AppDbContext db, Guid ownerId, decimal initialBalance = 1000m)
     {
-        var wallet = new Wallet { Name = $"Wallet-{Guid.NewGuid():N}", OwnerId = ownerId, Currency = "EUR" };
+        var wallet = new Wallet { Name = $"Wallet-{Guid.NewGuid():N}", Currency = "EUR" };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = initialBalance });
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync();
         return wallet;
     }

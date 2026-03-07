@@ -35,10 +35,10 @@ public sealed class TransactionAtomicityTests
         var wallet = new Wallet
         {
             Name = "Test Wallet",
-            OwnerId = user.Id,
             Currency = "EUR"
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
 
         // WalletBalance seeded directly (simulates what CreateWalletHandler does)
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 0m });
@@ -113,10 +113,10 @@ public sealed class TransactionAtomicityTests
         var destWallet = new Wallet
         {
             Name = "Savings",
-            OwnerId = user.Id,
             Currency = "EUR"
         };
         db.Wallets.Add(destWallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = destWallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         db.WalletBalances.Add(new WalletBalance { WalletId = destWallet.Id, Balance = 0m });
         db.WalletBalances.First(wb => wb.WalletId == sourceWallet.Id).Balance = 1000m;
         await db.SaveChangesAsync(ct);
@@ -202,8 +202,9 @@ public sealed class TransactionAtomicityTests
         var eventBus = Substitute.For<IEventBus>();
         var (user, sourceWallet) = await SeedAsync(db, ct);
 
-        var destWallet = new Wallet { Name = "Destination", OwnerId = user.Id, Currency = "EUR" };
+        var destWallet = new Wallet { Name = "Destination", Currency = "EUR" };
         db.Wallets.Add(destWallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = destWallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         db.WalletBalances.Add(new WalletBalance { WalletId = destWallet.Id, Balance = 0m });
         db.WalletBalances.First(wb => wb.WalletId == sourceWallet.Id).Balance = 1000m;
         await db.SaveChangesAsync(ct);
@@ -238,9 +239,11 @@ public sealed class TransactionAtomicityTests
         var eventBus = Substitute.For<IEventBus>();
         var (user, sourceWallet) = await SeedAsync(db, ct);
 
-        var oldDest = new Wallet { Name = "Old Dest", OwnerId = user.Id, Currency = "EUR" };
-        var newDest = new Wallet { Name = "New Dest", OwnerId = user.Id, Currency = "EUR" };
+        var oldDest = new Wallet { Name = "Old Dest", Currency = "EUR" };
+        var newDest = new Wallet { Name = "New Dest", Currency = "EUR" };
         db.Wallets.AddRange(oldDest, newDest);
+        db.WalletMembers.Add(new WalletMember { WalletId = oldDest.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
+        db.WalletMembers.Add(new WalletMember { WalletId = newDest.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         db.WalletBalances.AddRange(
             new WalletBalance { WalletId = oldDest.Id, Balance = 0m },
             new WalletBalance { WalletId = newDest.Id, Balance = 0m });

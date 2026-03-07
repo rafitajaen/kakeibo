@@ -29,11 +29,12 @@ public sealed class GenerateRecurringTransactionsJobTests
         };
         db.Users.Add(user);
 
-        var wallet = new Wallet { Name = "Wallet", OwnerId = user.Id, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Wallet", Currency = "EUR" };
         db.Wallets.Add(wallet);
 
         var balance = new WalletBalance { WalletId = wallet.Id, Balance = 1000m };
         db.WalletBalances.Add(balance);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
 
         // System category (no userId) — accessible to all
         var category = new Category { Name = "Housing", UserId = null };
@@ -240,9 +241,10 @@ public sealed class GenerateRecurringTransactionsJobTests
         var (user, sourceWallet, _, category) = await SetupAsync(db);
 
         // Add a destination wallet with balance
-        var destinationWallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        var destinationWallet = new Wallet { Name = "Savings", Currency = "EUR" };
         db.Wallets.Add(destinationWallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = destinationWallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = destinationWallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync(ct);
 
         // Transfer pattern due today

@@ -1,11 +1,12 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.UpdateWallet;
 
-// Updates a wallet's name and visual customization. Only the owner can update. Type and currency are immutable.
+// Updates a wallet's name and visual customization. Requires Editor role or higher. Type and currency are immutable.
 public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
 {
     public async Task<Result<UpdateWalletEndpoint.UpdateWalletResponse>> HandleAsync(
@@ -23,15 +24,17 @@ public sealed class UpdateWalletHandler(AppDbContext db, IClock clock)
             return Error.NotFound("Wallet not found.");
         }
 
-        if (wallet.OwnerId != userId)
+        // Require at least Editor role
+        var role = await WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
+        if (role is null || role.Value > WalletMemberRole.Editor)
         {
-            return Error.Forbidden("Only the owner can update this wallet.");
+            return Error.Forbidden("You do not have permission to update this wallet.");
         }
 
-        // Check for duplicate name among the owner's active wallets (excluding current)
+        // Check for duplicate name among wallets the user owns (excluding current)
         var nameConflict = await db.Wallets
-            .AnyAsync(w => w.OwnerId == userId
-                        && w.Name == request.Name
+            .Where(w => w.WalletMembers.Any(m => m.UserId == userId && m.Role == WalletMemberRole.Owner))
+            .AnyAsync(w => w.Name == request.Name
                         && w.DeletedAt == null
                         && w.Id != walletId, ct);
         if (nameConflict)

@@ -36,10 +36,10 @@ public sealed class InviteToWalletHandlerTests
         {
             Name = name,
             Type = type,
-            OwnerId = ownerId,
             Currency = "EUR"
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync();
         return wallet;
     }
@@ -185,7 +185,7 @@ public sealed class InviteToWalletHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WalletMemberCanInvite()
+    public async Task HandleAsync_NonOwnerMember_ReturnsForbidden()
     {
         await using var db = await TestDbContextFactory.CreateAsync();
         var ct = TestContext.Current.CancellationToken;
@@ -201,14 +201,16 @@ public sealed class InviteToWalletHandlerTests
         var member = await CreateUserAsync(db, "member@example.com");
         var wallet = await CreateWalletAsync(db, owner.Id);
 
-        // Add member
-        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = member.Id });
+        // Add member as Editor (not Owner)
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = member.Id, Role = WalletMemberRole.Editor });
         await db.SaveChangesAsync(ct);
 
         var request = new InviteToWalletEndpoint.InviteToWalletRequest("newperson@example.com");
 
         var result = await handler.HandleAsync(request, wallet.Id, member.Id, ct);
 
-        Assert.True(result.IsSuccess);
+        Assert.Multiple(
+            () => Assert.True(result.IsFailure),
+            () => Assert.Equal("forbidden", result.Error.Code));
     }
 }

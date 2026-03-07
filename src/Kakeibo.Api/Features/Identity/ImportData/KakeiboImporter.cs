@@ -121,11 +121,18 @@ public sealed class KakeiboImporter(AppDbContext db, IClock clock) : IDataImport
                     Id = newId,
                     Name = reader.GetString(1),
                     Type = WalletType.Personal,
-                    OwnerId = userId,
                     Currency = reader.IsDBNull(2) ? "EUR" : reader.GetString(2),
                     Icon = reader.IsDBNull(3) ? null : reader.GetString(3),
                     BackgroundColor = reader.IsDBNull(4) ? null : reader.GetString(4),
                     TextColor = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+                db.WalletMembers.Add(new WalletMember
+                {
+                    WalletId = newId,
+                    UserId = userId,
+                    Role = WalletMemberRole.Owner,
                     CreatedAt = now,
                     UpdatedAt = now
                 });
@@ -443,11 +450,18 @@ public sealed class KakeiboImporter(AppDbContext db, IClock clock) : IDataImport
                     Id = newId,
                     Name = csv.GetField("Name")!,
                     Type = WalletType.Personal,
-                    OwnerId = userId,
                     Currency = csv.GetField("Currency") ?? "EUR",
                     Icon = NullIfEmpty(csv.GetField("Icon")),
                     BackgroundColor = NullIfEmpty(csv.GetField("BackgroundColor")),
                     TextColor = NullIfEmpty(csv.GetField("TextColor")),
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+                db.WalletMembers.Add(new WalletMember
+                {
+                    WalletId = newId,
+                    UserId = userId,
+                    Role = WalletMemberRole.Owner,
                     CreatedAt = now,
                     UpdatedAt = now
                 });

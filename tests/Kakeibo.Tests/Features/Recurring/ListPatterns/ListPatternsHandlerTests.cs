@@ -25,9 +25,10 @@ public sealed class ListPatternsHandlerTests
     private static async Task<(Wallet wallet, Category category)> CreateWalletAndCategoryAsync(
         Kakeibo.Api.Persistence.AppDbContext db, Guid userId)
     {
-        var wallet = new Wallet { Name = "Wallet", OwnerId = userId, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Wallet", Currency = "EUR" };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = userId, Role = WalletMemberRole.Owner });
         var category = new Category { Name = "Category", UserId = null };
         db.Categories.Add(category);
         await db.SaveChangesAsync();

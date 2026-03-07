@@ -30,24 +30,36 @@ public sealed class CheckFriendshipImpactHandler(AppDbContext db)
             ? friendship.UserBId
             : friendship.UserAId;
 
-        // Find shared wallets where both users are members (owner or WalletMember)
+        // Find shared wallets where both users are WalletMembers
         var sharedWallets = await db.Wallets
             .Where(w => w.Type == WalletType.Shared)
             .Where(w =>
-                (w.OwnerId == userId || db.WalletMembers.Any(m => m.WalletId == w.Id && m.UserId == userId)) &&
-                (w.OwnerId == otherUserId || db.WalletMembers.Any(m => m.WalletId == w.Id && m.UserId == otherUserId)))
+                db.WalletMembers.Any(m => m.WalletId == w.Id && m.UserId == userId) &&
+                db.WalletMembers.Any(m => m.WalletId == w.Id && m.UserId == otherUserId))
+            .Select(w => new
+            {
+                w.Id,
+                w.Name,
+                CallerRole = db.WalletMembers
+                    .Where(m => m.WalletId == w.Id && m.UserId == userId)
+                    .Select(m => m.Role)
+                    .FirstOrDefault()
+            })
+            .ToListAsync(ct);
+
+        var affectedWallets = sharedWallets
             .Select(w => new CheckFriendshipImpactEndpoint.AffectedWalletResponse(
                 w.Id,
                 w.Name,
-                w.OwnerId == userId ? "Owner" : "Member",
-                w.OwnerId != userId)) // Non-owners will lose access
-            .ToListAsync(ct);
+                w.CallerRole.ToString(),
+                w.CallerRole != WalletMemberRole.Owner)) // Non-owners will lose access
+            .ToList();
 
         // Count personal wallets where the other user is a guest (future: WalletMember on personal wallets)
         var guestAccessRevoked = 0;
 
         return new CheckFriendshipImpactEndpoint.CheckFriendshipImpactResponse(
-            sharedWallets,
+            affectedWallets,
             guestAccessRevoked);
     }
 }

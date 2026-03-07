@@ -64,7 +64,7 @@ public sealed class ExportDataHandler(AppDbContext db, ILogger<ExportDataHandler
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = """
             CREATE TABLE IF NOT EXISTS wallets (
-                id TEXT PRIMARY KEY, name TEXT NOT NULL, type INTEGER NOT NULL, owner_id TEXT NOT NULL,
+                id TEXT PRIMARY KEY, name TEXT NOT NULL, type INTEGER NOT NULL,
                 currency TEXT NOT NULL, icon TEXT, background_color TEXT, text_color TEXT,
                 created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
 
@@ -116,8 +116,8 @@ public sealed class ExportDataHandler(AppDbContext db, ILogger<ExportDataHandler
         foreach (var w in data.Wallets)
         {
             await ExecAsync(conn, tx,
-                "INSERT INTO wallets VALUES (@id,@name,@type,@owner,@currency,@icon,@bg,@fg,@ca,@ua)",
-                [("@id", w.Id), ("@name", w.Name), ("@type", (int)w.Type), ("@owner", w.OwnerId),
+                "INSERT INTO wallets VALUES (@id,@name,@type,@currency,@icon,@bg,@fg,@ca,@ua)",
+                [("@id", w.Id), ("@name", w.Name), ("@type", (int)w.Type),
                  ("@currency", w.Currency), ("@icon", (object?)w.Icon ?? DBNull.Value),
                  ("@bg", (object?)w.BackgroundColor ?? DBNull.Value), ("@fg", (object?)w.TextColor ?? DBNull.Value),
                  ("@ca", w.CreatedAt.ToString()), ("@ua", w.UpdatedAt.ToString())], ct);
@@ -229,7 +229,7 @@ public sealed class ExportDataHandler(AppDbContext db, ILogger<ExportDataHandler
         {
             WriteCsvEntry(archive, "wallets.csv", data.Wallets.Select(w => new
             {
-                w.Id, w.Name, Type = w.Type.ToString(), OwnerId = w.OwnerId,
+                w.Id, w.Name, Type = w.Type.ToString(),
                 w.Currency, Icon = w.Icon ?? string.Empty,
                 BackgroundColor = w.BackgroundColor ?? string.Empty,
                 TextColor = w.TextColor ?? string.Empty,
@@ -317,18 +317,11 @@ public sealed class ExportDataHandler(AppDbContext db, ILogger<ExportDataHandler
 
     private async Task<UserExportData> LoadUserDataAsync(Guid userId, CancellationToken ct)
     {
-        // Load all wallets the user owns or is a member of
-        var ownedWalletIds = await db.Wallets
-            .Where(w => w.OwnerId == userId && w.DeletedAt == null)
-            .Select(w => w.Id)
-            .ToListAsync(ct);
-
-        var memberWalletIds = await db.WalletMembers
-            .Where(wm => wm.UserId == userId && wm.DeletedAt == null)
+        // Load all wallets the user is a member of (ownership is now tracked via WalletMemberRole.Owner)
+        var allWalletIds = await db.WalletMembers
+            .Where(wm => wm.UserId == userId)
             .Select(wm => wm.WalletId)
-            .ToListAsync(ct);
-
-        var allWalletIds = ownedWalletIds.Union(memberWalletIds).ToHashSet();
+            .ToHashSetAsync(ct);
 
         var wallets = await db.Wallets
             .Where(w => allWalletIds.Contains(w.Id) && w.DeletedAt == null)

@@ -33,9 +33,10 @@ public sealed class GoalProgressTrackingTests
     private static async Task<(Wallet wallet, WalletBalance walletBalance)> CreateWalletAsync(
         Kakeibo.Api.Persistence.AppDbContext db, Guid ownerId)
     {
-        var wallet = new Wallet { Name = $"Wallet-{Guid.NewGuid():N}", OwnerId = ownerId, Currency = "EUR" };
+        var wallet = new Wallet { Name = $"Wallet-{Guid.NewGuid():N}", Currency = "EUR" };
         var walletBalance = new WalletBalance { WalletId = wallet.Id, Balance = 0m };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         db.WalletBalances.Add(walletBalance);
         await db.SaveChangesAsync();
         return (wallet, walletBalance);

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kakeibo.Api.Features.Wallets.GetWallet;
 
-// Returns a single wallet. Returns 404 if not found, 403 if the caller is not the owner.
+// Returns a single wallet. Returns 404 if not found, 403 if the caller is not a member.
 public sealed class GetWalletHandler(AppDbContext db)
 {
     public async Task<Result<GetWalletEndpoint.GetWalletResponse>> HandleAsync(
@@ -20,12 +20,9 @@ public sealed class GetWalletHandler(AppDbContext db)
             return Error.NotFound("Wallet not found.");
         }
 
-        // Allow owner or any WalletMember to access
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == walletId && m.UserId == userId, ct);
-
-        if (!isOwner && !isMember)
+        // Access check via WalletMember
+        var role = await WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
+        if (role is null)
         {
             return Error.Forbidden("You do not have access to this wallet.");
         }

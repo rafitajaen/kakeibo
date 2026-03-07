@@ -130,8 +130,15 @@ public sealed class OneMoneyImporter(AppDbContext db, IClock clock) : IDataImpor
                 Id = newId,
                 Name = entry.Name,
                 Type = WalletType.Personal,
-                OwnerId = userId,
                 Currency = "EUR", // OneMoney doesn't store currency per account in the schema
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+            db.WalletMembers.Add(new WalletMember
+            {
+                WalletId = newId,
+                UserId = userId,
+                Role = WalletMemberRole.Owner,
                 CreatedAt = now,
                 UpdatedAt = now
             });

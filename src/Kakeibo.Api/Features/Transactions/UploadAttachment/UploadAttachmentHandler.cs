@@ -57,11 +57,9 @@ public sealed class UploadAttachmentHandler(
             return Error.NotFound("Transaction not found.");
         }
 
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == transaction.WalletId && m.UserId == userId, ct);
-
-        if (!isOwner && !isMember)
+        // Require at least Editor role to upload attachments
+        var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, transaction.WalletId, userId, ct);
+        if (role is null || role.Value > Domain.Entities.WalletMemberRole.Editor)
         {
             return Error.Forbidden("You do not have access to this transaction.");
         }

@@ -89,8 +89,8 @@ public sealed class InvitationFlowIntegrationTests
         Assert.True(membersResult.IsSuccess);
         // Owner is listed first, then the new member
         Assert.Equal(2, membersResult.Value.Count);
-        Assert.Contains(membersResult.Value, m => m.UserId == owner.Id && m.IsOwner);
-        Assert.Contains(membersResult.Value, m => m.UserId == invitee.Id && !m.IsOwner);
+        Assert.Contains(membersResult.Value, m => m.UserId == owner.Id && m.Role == "Owner");
+        Assert.Contains(membersResult.Value, m => m.UserId == invitee.Id && m.Role == "Guest");
 
         // Invitee can also see members (equal rights)
         var membersAsInvitee = await new GetWalletMembersHandler(db).HandleAsync(walletId, invitee.Id, ct);

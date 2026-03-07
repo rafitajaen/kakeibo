@@ -160,7 +160,7 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             transaction.CreatedAt);
     }
 
-    // Returns the wallet if the user is the owner or an active WalletMember; null otherwise.
+    // Returns the wallet if the user has at least Editor role; null otherwise.
     private async Task<Wallet?> GetAccessibleWalletAsync(Guid walletId, Guid userId, CancellationToken ct)
     {
         var wallet = await db.Wallets
@@ -171,10 +171,7 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             return null;
         }
 
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == walletId && m.UserId == userId, ct);
-
-        return isOwner || isMember ? wallet : null;
+        var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
+        return role is not null && role.Value <= Domain.Entities.WalletMemberRole.Editor ? wallet : null;
     }
 }

@@ -20,9 +20,10 @@ public sealed class DeletePatternHandlerTests
             Currency = "EUR"
         };
         db.Users.Add(user);
-        var wallet = new Wallet { Name = "Wallet", OwnerId = user.Id, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Wallet", Currency = "EUR" };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         var category = new Category { Name = "Category", UserId = null };
         db.Categories.Add(category);
         var pattern = new RecurringPattern

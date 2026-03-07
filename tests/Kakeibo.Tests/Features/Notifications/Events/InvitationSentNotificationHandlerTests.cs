@@ -26,7 +26,7 @@ public sealed class InvitationSentNotificationHandlerTests
         };
         db.Users.Add(inviter);
 
-        var wallet = new Wallet { Name = "Shared Apartment", OwnerId = inviter.Id, Currency = "EUR", Type = WalletType.Shared };
+        var wallet = new Wallet { Name = "Shared Apartment", Currency = "EUR", Type = WalletType.Shared };
         db.Wallets.Add(wallet);
 
         var invitation = new Invitation

@@ -5,7 +5,7 @@ namespace Kakeibo.Api.Features.Wallets.GetWalletMembers;
 
 public sealed class GetWalletMembersEndpoint : IEndpoint
 {
-    public sealed record MemberDto(Guid UserId, string Email, bool IsOwner, NodaTime.Instant JoinedAt);
+    public sealed record MemberDto(Guid UserId, string Email, string Role, NodaTime.Instant JoinedAt);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

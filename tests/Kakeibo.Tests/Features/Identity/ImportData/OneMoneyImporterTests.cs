@@ -1,3 +1,4 @@
+using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.ImportData;
 using Microsoft.Data.Sqlite;
 
@@ -119,6 +120,16 @@ public sealed class OneMoneyImporterTests
     {
         var ct = TestContext.Current.CancellationToken;
         await using var db = await TestDbContextFactory.CreateAsync();
+
+        // User must exist for WalletMember FK
+        db.Users.Add(new User
+        {
+            Id = UserId, Email = "test@example.com", PasswordHash = "hash",
+            Username = "testuser", IsVerified = true, Currency = "EUR",
+            CreatedAt = Now, UpdatedAt = Now
+        });
+        await db.SaveChangesAsync(ct);
+
         var importer = new OneMoneyImporter(db, Clock);
 
         var backupBytes = BuildOneMoneyBackup(transactionCount: 2);
@@ -128,7 +139,7 @@ public sealed class OneMoneyImporterTests
         Assert.True(result.IsSuccess);
 
         var ctx2 = TestDbContextFactory.CreateSecondContext(db);
-        var walletCount = ctx2.Wallets.Count(w => w.OwnerId == UserId);
+        var walletCount = ctx2.WalletMembers.Count(m => m.UserId == UserId && m.Role == WalletMemberRole.Owner);
         var balanceCount = ctx2.WalletBalances.Count();
         Assert.Equal(walletCount, balanceCount);
     }

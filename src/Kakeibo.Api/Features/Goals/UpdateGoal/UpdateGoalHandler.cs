@@ -57,11 +57,8 @@ public sealed class UpdateGoalHandler(AppDbContext db, IClock clock)
             return Error.Forbidden("You do not have access to the specified wallet.");
         }
 
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == request.WalletId && m.UserId == userId, ct);
-
-        if (!isOwner && !isMember)
+        var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, request.WalletId, userId, ct);
+        if (role is null)
         {
             return Error.Forbidden("You do not have access to the specified wallet.");
         }

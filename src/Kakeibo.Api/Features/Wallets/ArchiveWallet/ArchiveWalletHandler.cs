@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Wallets.Events;
 using Kakeibo.Api.Infrastructure.Events;
 using Kakeibo.Api.Persistence;
@@ -7,7 +8,7 @@ using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.ArchiveWallet;
 
-// Soft-deletes (archives) a wallet. Only the owner can archive.
+// Soft-deletes (archives) a wallet. Only the Owner can archive.
 public sealed class ArchiveWalletHandler(AppDbContext db, IEventBus eventBus, IClock clock)
 {
     public async Task<Result<bool>> HandleAsync(
@@ -24,7 +25,9 @@ public sealed class ArchiveWalletHandler(AppDbContext db, IEventBus eventBus, IC
             return Error.NotFound("Wallet not found.");
         }
 
-        if (wallet.OwnerId != userId)
+        // Only Owner can archive
+        var role = await WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
+        if (role is null || role.Value != WalletMemberRole.Owner)
         {
             return Error.Forbidden("Only the owner can archive this wallet.");
         }

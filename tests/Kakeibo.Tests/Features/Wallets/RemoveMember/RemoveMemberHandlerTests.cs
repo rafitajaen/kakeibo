@@ -33,10 +33,10 @@ public sealed class RemoveMemberHandlerTests
         {
             Name = "Shared Wallet",
             Type = WalletType.Shared,
-            OwnerId = ownerId,
             Currency = "EUR"
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync();
         return wallet;
     }

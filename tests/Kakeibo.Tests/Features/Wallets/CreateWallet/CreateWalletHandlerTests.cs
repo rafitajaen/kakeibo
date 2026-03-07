@@ -44,6 +44,10 @@ public sealed class CreateWalletHandlerTests
             ? await db.Wallets.FirstOrDefaultAsync(w => w.Id == result.Value.Id, ct)
             : null;
 
+        var ownerMember = result.IsSuccess
+            ? await db.WalletMembers.FirstOrDefaultAsync(m => m.WalletId == result.Value.Id && m.UserId == user.Id, ct)
+            : null;
+
         Assert.Multiple(
             () => Assert.True(result.IsSuccess),
             () => Assert.Equal("Checking Account", result.Value.Name),
@@ -52,7 +56,8 @@ public sealed class CreateWalletHandlerTests
             () => Assert.Equal(0m, result.Value.Balance),
             () => Assert.False(result.Value.IsArchived),
             () => Assert.NotNull(inDb),
-            () => Assert.Equal(user.Id, inDb!.OwnerId));
+            () => Assert.NotNull(ownerMember),
+            () => Assert.Equal(WalletMemberRole.Owner, ownerMember!.Role));
 
         eventBus.Received(1).Publish(Arg.Is<WalletCreatedEvent>(e =>
             e.WalletId == result.Value.Id &&

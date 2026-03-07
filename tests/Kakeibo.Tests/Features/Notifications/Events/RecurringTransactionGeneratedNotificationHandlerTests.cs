@@ -29,7 +29,7 @@ public sealed class RecurringTransactionGeneratedNotificationHandlerTests
         var category = new Category { Name = "Housing", UserId = null };
         db.Categories.Add(category);
 
-        var wallet = new Wallet { Name = "Checking", OwnerId = user.Id, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Checking", Currency = "EUR" };
         db.Wallets.Add(wallet);
 
         await db.SaveChangesAsync();

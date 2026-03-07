@@ -16,12 +16,26 @@ public sealed class ExportDataHandlerTests
     private static async Task SeedMinimalData(Kakeibo.Api.Persistence.AppDbContext db)
     {
         var ct = TestContext.Current.CancellationToken;
+
+        // User must exist in DB because WalletMember has a FK to Users
+        var user = new User
+        {
+            Id = UserId,
+            Email = "export-test@example.com",
+            PasswordHash = "hash",
+            Username = "export_test",
+            IsVerified = true,
+            Currency = "EUR"
+        };
+        db.Users.Add(user);
+
         var wallet = new Wallet
         {
             Id = Guid7.NewGuid(), Name = "Test Wallet", Type = WalletType.Personal,
-            OwnerId = UserId, Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
+            Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = UserId, Role = WalletMemberRole.Owner });
         db.WalletBalances.Add(new WalletBalance
         {
             WalletId = wallet.Id, Balance = 100m, UpdatedAt = Now

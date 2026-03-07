@@ -30,10 +30,10 @@ public sealed class GetWalletMembersHandlerTests
         {
             Name = "Shared Wallet",
             Type = WalletType.Shared,
-            OwnerId = ownerId,
             Currency = "EUR"
         };
         db.Wallets.Add(wallet);
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = ownerId, Role = WalletMemberRole.Owner });
         await db.SaveChangesAsync();
         return wallet;
     }
@@ -57,8 +57,8 @@ public sealed class GetWalletMembersHandlerTests
         Assert.Multiple(
             () => Assert.True(result.IsSuccess),
             () => Assert.Equal(2, result.Value.Count),
-            () => Assert.Contains(result.Value, m => m.UserId == owner.Id && m.IsOwner),
-            () => Assert.Contains(result.Value, m => m.UserId == member.Id && !m.IsOwner));
+            () => Assert.Contains(result.Value, m => m.UserId == owner.Id && m.Role == "Owner"),
+            () => Assert.Contains(result.Value, m => m.UserId == member.Id && m.Role == "Guest"));
     }
 
     [Fact]

@@ -29,11 +29,8 @@ public sealed class ListTransactionsHandler(AppDbContext db)
             return Error.NotFound("Wallet not found.");
         }
 
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == walletId && m.UserId == userId, ct);
-
-        if (!isOwner && !isMember)
+        var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, walletId, userId, ct);
+        if (role is null)
         {
             return Error.Forbidden("You do not have access to this wallet.");
         }

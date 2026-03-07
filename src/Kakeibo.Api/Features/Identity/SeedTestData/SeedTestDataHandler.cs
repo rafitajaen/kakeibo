@@ -29,7 +29,7 @@ public sealed class SeedTestDataHandler(AppDbContext db, IClock clock)
     {
         // Guard: idempotent — skip if seed data already exists for this user
         var alreadySeeded = await db.Wallets
-            .AnyAsync(w => w.OwnerId == userId && w.IsSeedData, ct);
+            .AnyAsync(w => w.WalletMembers.Any(m => m.UserId == userId && m.Role == WalletMemberRole.Owner) && w.IsSeedData, ct);
         if (alreadySeeded)
         {
             return false;
@@ -64,6 +64,19 @@ public sealed class SeedTestDataHandler(AppDbContext db, IClock clock)
         var wBusiness  = MakeWallet(userId, "Business",          "Briefcase",  "#8B5CF6", "#FFFFFF", now);
         var wCash      = MakeWallet(userId, "Cash",              "Banknote",   "#6B7280", "#FFFFFF", now);
         db.Wallets.AddRange(wChecking, wSavings, wVacation, wEmergency, wBusiness, wCash);
+
+        // Create Owner WalletMember for each wallet
+        foreach (var w in new[] { wChecking, wSavings, wVacation, wEmergency, wBusiness, wCash })
+        {
+            db.WalletMembers.Add(new WalletMember
+            {
+                WalletId = w.Id,
+                UserId = userId,
+                Role = WalletMemberRole.Owner,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
 
         // Balances are tracked separately in WalletBalance
         var balances = new Dictionary<Guid, decimal>
@@ -244,7 +257,6 @@ public sealed class SeedTestDataHandler(AppDbContext db, IClock clock)
             Id = Guid7.NewGuid(),
             Name = name,
             Type = WalletType.Personal,
-            OwnerId = userId,
             Currency = "USD",
             Icon = icon,
             BackgroundColor = bg,

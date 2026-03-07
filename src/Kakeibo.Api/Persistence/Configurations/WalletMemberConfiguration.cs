@@ -15,6 +15,13 @@ public sealed class WalletMemberConfiguration : IEntityTypeConfiguration<WalletM
         // Each user can only be a member of a given wallet once
         builder.HasIndex(m => new { m.WalletId, m.UserId }).IsUnique();
 
+        // Store enum as string for readability
+        builder.Property(m => m.Role)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasDefaultValue(WalletMemberRole.Guest);
+
         // Cascade from wallet: removing a wallet removes all member records
         builder.HasOne(m => m.Wallet)
             .WithMany(w => w.WalletMembers)

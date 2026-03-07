@@ -28,7 +28,7 @@ public sealed class SettlementRecordedNotificationHandlerTests
         };
         db.Users.AddRange(fromUser, toUser);
 
-        var wallet = new Wallet { Name = "Shared Expenses", OwnerId = fromUser.Id, Currency = "EUR", Type = WalletType.Shared };
+        var wallet = new Wallet { Name = "Shared Expenses", Currency = "EUR", Type = WalletType.Shared };
         db.Wallets.Add(wallet);
 
         await db.SaveChangesAsync();

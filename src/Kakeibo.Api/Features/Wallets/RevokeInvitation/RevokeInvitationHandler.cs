@@ -1,11 +1,12 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.RevokeInvitation;
 
-// Revokes a pending invitation. Only the wallet owner or the inviter can revoke.
+// Revokes a pending invitation. Only the wallet Owner or the original inviter can revoke.
 public sealed class RevokeInvitationHandler(AppDbContext db, IClock clock)
 {
     public async Task<Result<bool>> HandleAsync(
@@ -23,11 +24,12 @@ public sealed class RevokeInvitationHandler(AppDbContext db, IClock clock)
             return Error.NotFound("Invitation not found.");
         }
 
-        // Only the wallet owner or the original inviter can revoke
-        var isWalletOwner = invitation.Wallet.OwnerId == requesterId;
+        // Only the wallet Owner or the original inviter can revoke
+        var role = await WalletAccessChecker.GetRoleAsync(db, walletId, requesterId, ct);
+        var isOwner = role is not null && role.Value == WalletMemberRole.Owner;
         var isInviter = invitation.InviterUserId == requesterId;
 
-        if (!isWalletOwner && !isInviter)
+        if (!isOwner && !isInviter)
         {
             return Error.Forbidden("You do not have permission to revoke this invitation.");
         }

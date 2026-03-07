@@ -9,7 +9,7 @@ using Npgsql;
 
 namespace Kakeibo.Api.Features.Wallets.AcceptInvitation;
 
-// Accepts a wallet invitation by code. Creates a WalletMember and marks the invitation accepted.
+// Accepts a wallet invitation by code. Creates a WalletMember (Editor role) and marks the invitation accepted.
 public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus, IClock clock)
 {
     public async Task<Result<AcceptInvitationEndpoint.AcceptInvitationResponse>> HandleAsync(
@@ -45,22 +45,22 @@ public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus,
         }
 
         // Check requester is not already a member
-        var alreadyMember = invitation.Wallet!.OwnerId == userId ||
-            await db.WalletMembers.AnyAsync(
-                m => m.WalletId == invitation.WalletId && m.UserId == userId, ct);
+        var alreadyMember = await db.WalletMembers.AnyAsync(
+            m => m.WalletId == invitation.WalletId && m.UserId == userId, ct);
 
         if (alreadyMember)
         {
             return Error.Conflict("You are already a member of this wallet.");
         }
 
-        // Mark invitation accepted and create WalletMember in the same transaction
+        // Mark invitation accepted and create WalletMember with Editor role in the same transaction
         invitation.AcceptedAt = now;
 
         var member = new WalletMember
         {
             WalletId = invitation.WalletId,
-            UserId = userId
+            UserId = userId,
+            Role = WalletMemberRole.Editor
         };
         db.WalletMembers.Add(member);
 
@@ -89,6 +89,6 @@ public sealed class AcceptInvitationHandler(AppDbContext db, IEventBus eventBus,
 
         return new AcceptInvitationEndpoint.AcceptInvitationResponse(
             invitation.WalletId,
-            invitation.Wallet.Name);
+            invitation.Wallet!.Name);
     }
 }

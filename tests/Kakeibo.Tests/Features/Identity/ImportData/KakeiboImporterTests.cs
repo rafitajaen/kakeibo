@@ -2,6 +2,7 @@ using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Identity.ExportData;
 using Kakeibo.Api.Features.Identity.ImportData;
+using Kakeibo.Api.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -28,16 +29,33 @@ public sealed class KakeiboImporterTests
         return ms.ToArray();
     }
 
+    private static async Task SeedUserAsync(Kakeibo.Api.Persistence.AppDbContext db)
+    {
+        db.Users.Add(new User
+        {
+            Id = UserId, Email = "importer@example.com", PasswordHash = "hash",
+            Username = "importer", IsVerified = true, Currency = "EUR",
+            CreatedAt = Now, UpdatedAt = Now
+        });
+        await db.SaveChangesAsync();
+    }
+
     private static async Task SeedMinimalData(Kakeibo.Api.Persistence.AppDbContext db)
     {
         var ct = TestContext.Current.CancellationToken;
+        await SeedUserAsync(db);
         var walletId = Guid7.NewGuid();
         db.Wallets.Add(new Wallet
         {
             Id = walletId, Name = "Checking", Type = WalletType.Personal,
-            OwnerId = UserId, Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
+            Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
         });
         db.WalletBalances.Add(new WalletBalance { WalletId = walletId, Balance = 500m, UpdatedAt = Now });
+        db.WalletMembers.Add(new WalletMember
+        {
+            WalletId = walletId, UserId = UserId, Role = WalletMemberRole.Owner,
+            CreatedAt = Now, UpdatedAt = Now
+        });
 
         var categoryId = Guid7.NewGuid();
         db.Categories.Add(new Category
@@ -64,6 +82,7 @@ public sealed class KakeiboImporterTests
         var exportBytes = await BuildExportBytesAsync(sourceDb);
 
         await using var targetDb = await TestDbContextFactory.CreateAsync();
+        await SeedUserAsync(targetDb); // User must exist for WalletMember FK
         var importer = new KakeiboImporter(targetDb, new FakeClock(Instant.FromUtc(2026, 3, 1, 13, 0)));
         var result = await importer.ImportAsync(
             new MemoryStream(exportBytes), "kakeibo-export.db", UserId, ct);
@@ -97,14 +116,22 @@ public sealed class KakeiboImporterTests
         var ct = TestContext.Current.CancellationToken;
         await using var db = await TestDbContextFactory.CreateAsync();
 
+        // Create User first (required for WalletMember FK)
+        await SeedUserAsync(db);
+
         // Pre-seed one wallet in the target DB
         var existingWalletId = Guid7.NewGuid();
         db.Wallets.Add(new Wallet
         {
             Id = existingWalletId, Name = "Pre-existing Wallet", Type = WalletType.Personal,
-            OwnerId = UserId, Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
+            Currency = "EUR", CreatedAt = Now, UpdatedAt = Now
         });
         db.WalletBalances.Add(new WalletBalance { WalletId = existingWalletId, Balance = 0m, UpdatedAt = Now });
+        db.WalletMembers.Add(new WalletMember
+        {
+            WalletId = existingWalletId, UserId = UserId, Role = WalletMemberRole.Owner,
+            CreatedAt = Now, UpdatedAt = Now
+        });
         await db.SaveChangesAsync(ct);
 
         // Build export from a source DB with different data
@@ -118,9 +145,9 @@ public sealed class KakeiboImporterTests
 
         Assert.True(result.IsSuccess);
 
-        // Both old and new wallets must exist
+        // Both old and new wallets must exist (counted via WalletMember ownership)
         var ctx2 = TestDbContextFactory.CreateSecondContext(db);
-        var walletCount = ctx2.Wallets.Count(w => w.OwnerId == UserId);
+        var walletCount = ctx2.WalletMembers.Count(m => m.UserId == UserId && m.Role == WalletMemberRole.Owner);
         Assert.Equal(2, walletCount);
     }
 }

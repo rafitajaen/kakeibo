@@ -26,7 +26,7 @@ public sealed class GoalAchievedNotificationHandlerTests
         };
         db.Users.Add(user);
 
-        var wallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Savings", Currency = "EUR" };
         db.Wallets.Add(wallet);
 
         var goal = new Goal

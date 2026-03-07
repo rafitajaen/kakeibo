@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Kakeibo.Api.Features.Wallets.ListWallets;
 
-// Returns wallets where the user is either the owner or a WalletMember.
+// Returns wallets where the user is a WalletMember (any role).
 public sealed class ListWalletsHandler(AppDbContext db)
 {
     public async Task<IReadOnlyList<ListWalletsEndpoint.ListWalletsResponse>> HandleAsync(
@@ -11,9 +11,8 @@ public sealed class ListWalletsHandler(AppDbContext db)
         bool includeArchived,
         CancellationToken ct)
     {
-        // Include wallets owned by the user OR where the user is a WalletMember
+        // All wallet access is now through WalletMember records
         var query = db.Wallets.Where(w =>
-            w.OwnerId == userId ||
             w.WalletMembers.Any(m => m.UserId == userId));
 
         // Exclude archived wallets unless explicitly requested

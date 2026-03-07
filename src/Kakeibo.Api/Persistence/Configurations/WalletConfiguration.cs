@@ -26,6 +26,12 @@ public sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .HasMaxLength(3)
             .IsRequired();
 
+        builder.Property(w => w.Visibility)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasDefaultValue(WalletVisibility.Private);
+
         builder.Property(w => w.Icon)
             .HasMaxLength(100);
 
@@ -35,13 +41,7 @@ public sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
         builder.Property(w => w.TextColor)
             .HasMaxLength(20);
 
-        // Restrict delete: prevents accidental cascade from User delete
-        builder.HasOne(w => w.Owner)
-            .WithMany()
-            .HasForeignKey(w => w.OwnerId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Exclude wallets whose owner is soft-deleted (mirrors UserConfiguration.HasQueryFilter).
-        builder.HasQueryFilter(w => w.Owner!.DeletedAt == null);
+        // Soft-delete filter — exclude wallets that are archived
+        builder.HasQueryFilter(w => w.DeletedAt == null);
     }
 }

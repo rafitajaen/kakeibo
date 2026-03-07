@@ -36,11 +36,9 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             return Error.NotFound("Transaction not found.");
         }
 
-        var isOwner = wallet.OwnerId == userId;
-        var isMember = await db.WalletMembers
-            .AnyAsync(m => m.WalletId == transaction.WalletId && m.UserId == userId, ct);
-
-        if (!isOwner && !isMember)
+        // Require at least Editor role to update transactions
+        var role = await Wallets.WalletAccessChecker.GetRoleAsync(db, transaction.WalletId, userId, ct);
+        if (role is null || role.Value > Domain.Entities.WalletMemberRole.Editor)
         {
             return Error.Forbidden("You do not have access to this transaction.");
         }
@@ -97,11 +95,8 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
                 return Error.NotFound("Destination wallet not found.");
             }
 
-            var newDestIsOwner = newDestWallet.OwnerId == userId;
-            var newDestIsMember = await db.WalletMembers
-                .AnyAsync(m => m.WalletId == newDestinationWalletId && m.UserId == userId, ct);
-
-            if (!newDestIsOwner && !newDestIsMember)
+            var destRole = await Wallets.WalletAccessChecker.GetRoleAsync(db, newDestinationWalletId.Value, userId, ct);
+            if (destRole is null || destRole.Value > Domain.Entities.WalletMemberRole.Editor)
             {
                 return Error.Forbidden("You do not have access to the destination wallet.");
             }

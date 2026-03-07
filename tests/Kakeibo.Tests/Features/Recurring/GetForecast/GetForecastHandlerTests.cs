@@ -20,9 +20,10 @@ public sealed class GetForecastHandlerTests
             Currency = "EUR"
         };
         db.Users.Add(user);
-        var wallet = new Wallet { Name = "Wallet", OwnerId = user.Id, Currency = "EUR" };
+        var wallet = new Wallet { Name = "Wallet", Currency = "EUR" };
         db.Wallets.Add(wallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = wallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = wallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
         var category = new Category { Name = "Housing", UserId = null };
         db.Categories.Add(category);
         await db.SaveChangesAsync();
@@ -291,9 +292,10 @@ public sealed class GetForecastHandlerTests
         var (user, wallet, category) = await SetupAsync(db);
 
         // Add a destination wallet for the transfer
-        var destinationWallet = new Wallet { Name = "Savings", OwnerId = user.Id, Currency = "EUR" };
+        var destinationWallet = new Wallet { Name = "Savings", Currency = "EUR" };
         db.Wallets.Add(destinationWallet);
         db.WalletBalances.Add(new WalletBalance { WalletId = destinationWallet.Id, Balance = 0m });
+        db.WalletMembers.Add(new WalletMember { WalletId = destinationWallet.Id, UserId = user.Id, Role = WalletMemberRole.Owner });
 
         var pattern = new RecurringPattern
         {

@@ -13,7 +13,7 @@ public sealed class DeleteSeedDataHandler(AppDbContext db, IClock clock)
 
         // Soft-delete seed wallets (cascades to transactions and balances via the app logic)
         var seedWalletIds = await db.Wallets
-            .Where(w => w.OwnerId == userId && w.IsSeedData && w.DeletedAt == null)
+            .Where(w => w.WalletMembers.Any(m => m.UserId == userId && m.Role == Domain.Entities.WalletMemberRole.Owner) && w.IsSeedData && w.DeletedAt == null)
             .Select(w => w.Id)
             .ToListAsync(ct);
 
