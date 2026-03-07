@@ -104,6 +104,17 @@ export const BREADCRUMB_MAP: Record<string, BreadcrumbSegment[]> = {
         { labelKey: "wallets.recurring.actions.edit" },
     ],
 
+    // Friends
+    friends: [{ labelKey: "friends.title" }],
+    "friend-requests": [
+        { labelKey: "friends.title", routeName: "friends" },
+        { labelKey: "friends.requests" },
+    ],
+    "user-profile": [
+        { labelKey: "friends.title", routeName: "friends" },
+        { labelKey: "friends.profile" },
+    ],
+
     // Other
     "notification-preferences": [{ labelKey: "notifications.prefs.title" }],
     activity: [{ labelKey: "activity.title" }],

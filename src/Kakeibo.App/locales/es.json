@@ -544,6 +544,22 @@
       "showing": "Mostrando {from}–{to} de {total}"
     }
   },
+  "friends": {
+    "title": "Amigos",
+    "requests": "Solicitudes",
+    "profile": "Perfil",
+    "searchUsers": "Buscar usuarios",
+    "searchPlaceholder": "Buscar por nombre de usuario...",
+    "empty": "Aún no tienes amigos. Busca usuarios para agregar amigos.",
+    "addFriend": "Agregar amigo",
+    "removeFriend": "Eliminar amigo",
+    "friendsSince": "Amigos",
+    "requestSent": "Solicitud enviada",
+    "received": "Recibidas",
+    "sent": "Enviadas",
+    "noReceivedRequests": "No hay solicitudes de amistad pendientes.",
+    "noSentRequests": "No hay solicitudes de amistad enviadas."
+  },
   "onboarding": {
     "welcome": {
       "title": "Bienvenido a Kakeibo",

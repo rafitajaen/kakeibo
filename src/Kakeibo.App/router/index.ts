@@ -183,6 +183,21 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/views/activity/ActivityView.vue"),
             },
             {
+                path: "friends",
+                name: "friends",
+                component: () => import("@/views/friends/FriendsView.vue"),
+            },
+            {
+                path: "friends/requests",
+                name: "friend-requests",
+                component: () => import("@/views/friends/FriendRequestsView.vue"),
+            },
+            {
+                path: "users/:id",
+                name: "user-profile",
+                component: () => import("@/views/friends/UserProfileView.vue"),
+            },
+            {
                 path: "settings",
                 name: "settings",
                 component: () => import("@/views/settings/SettingsView.vue"),

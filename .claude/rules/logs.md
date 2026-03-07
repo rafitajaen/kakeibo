@@ -52,6 +52,7 @@ logger.VerificationEmailFailed(email, userId, ex);
 | 2300–2399 | Features/Identity/ImportData + ExportData |
 | 3000–3099 | Features/Wallets |
 | 3100–3199 | Features/Notifications/Events |
+| 3200–3299 | Features/Friends |
 
 ## Compatibility
 

@@ -544,6 +544,22 @@
       "showing": "Showing {from}–{to} of {total}"
     }
   },
+  "friends": {
+    "title": "Friends",
+    "requests": "Requests",
+    "profile": "Profile",
+    "searchUsers": "Search users",
+    "searchPlaceholder": "Search by username...",
+    "empty": "No friends yet. Search for users to add friends.",
+    "addFriend": "Add friend",
+    "removeFriend": "Remove friend",
+    "friendsSince": "Friends",
+    "requestSent": "Request sent",
+    "received": "Received",
+    "sent": "Sent",
+    "noReceivedRequests": "No pending friend requests.",
+    "noSentRequests": "No sent friend requests."
+  },
   "onboarding": {
     "welcome": {
       "title": "Welcome to Kakeibo",

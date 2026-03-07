@@ -10,6 +10,7 @@ import {
     Repeat,
     Tag,
     Target,
+    Users,
     Wallet,
 } from "lucide-vue-next";
 import {
@@ -65,6 +66,11 @@ const navMainItems = [
         title: computed(() => t("app.recurring")),
         routeName: "recurring",
         icon: Repeat,
+    },
+    {
+        title: computed(() => t("friends.title")),
+        routeName: "friends",
+        icon: Users,
     },
     {
         title: computed(() => t("activity.title")),
