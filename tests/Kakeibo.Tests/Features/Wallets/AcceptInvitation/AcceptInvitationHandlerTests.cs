@@ -16,6 +16,7 @@ public sealed class AcceptInvitationHandlerTests
         {
             Email = email,
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

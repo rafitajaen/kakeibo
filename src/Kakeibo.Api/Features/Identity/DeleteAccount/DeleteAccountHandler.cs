@@ -22,8 +22,10 @@ public sealed class DeleteAccountHandler(AppDbContext db, IClock clock)
             return Error.NotFound("User not found.");
         }
 
-        // Require password confirmation to prevent accidental deletions
-        if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        // Require password confirmation to prevent accidental deletions.
+        // Google-only accounts (no password) can still delete via password confirmation
+        // after setting a password, or this check is skipped if PasswordHash is null.
+        if (user.PasswordHash is not null && !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             return Error.Unauthorized("Password is incorrect.");
         }

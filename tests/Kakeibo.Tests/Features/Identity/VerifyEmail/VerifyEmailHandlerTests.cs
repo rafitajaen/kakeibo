@@ -23,6 +23,7 @@ public sealed class VerifyEmailHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = false,
             EmailVerificationToken = TokenHasher.Hash(rawToken),

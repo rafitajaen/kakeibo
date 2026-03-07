@@ -5,7 +5,7 @@ namespace Kakeibo.Api.Features.Identity.LoginUser;
 public sealed class LoginUserEndpoint : IEndpoint
 {
     public sealed record LoginUserRequest(string Email, string Password);
-    public sealed record LoginUserResponse(Guid Id, string Email, string Role, string Currency);
+    public sealed record LoginUserResponse(Guid Id, string Email, string Role, string Currency, string Username);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

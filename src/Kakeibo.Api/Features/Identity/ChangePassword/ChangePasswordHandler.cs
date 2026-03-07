@@ -20,6 +20,12 @@ public sealed class ChangePasswordHandler(AppDbContext db, IClock clock)
             return Error.NotFound("User not found.");
         }
 
+        // Google-only accounts have no password — must set one via a different flow
+        if (user.PasswordHash is null)
+        {
+            return Error.Validation("This account uses Google authentication and has no password to change.");
+        }
+
         // Verify current password before allowing the change
         if (!PasswordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
         {

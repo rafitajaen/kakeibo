@@ -12,8 +12,14 @@ public enum UserRole
 public sealed class User : Entity
 {
     public required string Email { get; set; }
-    public required string PasswordHash { get; set; }
+    public string? PasswordHash { get; set; }
     public UserRole Role { get; set; } = UserRole.User;
+
+    // Auto-generated unique username (e.g., user_abc1234)
+    public required string Username { get; set; }
+
+    // Google OAuth identifier — null for email+password-only accounts
+    public string? GoogleId { get; set; }
 
     // Email verification
     public bool IsVerified { get; set; }

@@ -20,7 +20,21 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
 
         builder.Property(u => u.PasswordHash)
-            .IsRequired();
+            .IsRequired(false);
+
+        builder.Property(u => u.Username)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.HasIndex(u => u.Username)
+            .IsUnique();
+
+        builder.Property(u => u.GoogleId)
+            .HasMaxLength(255);
+
+        builder.HasIndex(u => u.GoogleId)
+            .IsUnique()
+            .HasFilter("google_id IS NOT NULL");
 
         builder.Property(u => u.Role)
             .HasConversion<string>()

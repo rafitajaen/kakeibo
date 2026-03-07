@@ -21,6 +21,7 @@ public sealed class BudgetMonitoringTests
         {
             Email = $"user-{Guid.NewGuid():N}@example.com",
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

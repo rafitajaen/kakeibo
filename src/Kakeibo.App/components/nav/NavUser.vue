@@ -38,7 +38,9 @@ const initials = computed(() => {
     return user.email[0].toUpperCase();
 });
 
-const displayName = computed(() => auth.user?.name ?? auth.user?.email ?? "");
+const displayName = computed(
+    () => auth.user?.name ?? auth.user?.username ?? auth.user?.email ?? "",
+);
 
 // Theme toggle — persists to localStorage and applies class on <html>
 function isDark(): boolean {

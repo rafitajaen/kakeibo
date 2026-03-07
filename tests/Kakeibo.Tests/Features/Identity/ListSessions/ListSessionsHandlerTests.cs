@@ -22,6 +22,7 @@ public sealed class ListSessionsHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "USD",
             IsVerified = true,
             VerifiedAt = Instant.FromUtc(2026, 1, 1, 0, 0)

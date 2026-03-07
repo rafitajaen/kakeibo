@@ -5,9 +5,11 @@ import api from "@/lib/axios";
 export interface User {
     id: string;
     email: string;
+    username: string;
     role: string;
     currency: string;
     isVerified: boolean;
+    hasPassword: boolean;
     name: string | null;
     avatarUrl: string | null;
     // Display preferences
@@ -58,6 +60,23 @@ export const useAuthStore = defineStore("auth", () => {
     async function login(data: LoginData): Promise<void> {
         await api.post("/api/auth/login", data);
         await fetchCurrentUser();
+    }
+
+    // Authenticates or registers via Google ID token.
+    async function loginWithGoogle(idToken: string, currency = "EUR"): Promise<void> {
+        await api.post("/api/auth/google", { idToken, currency });
+        await fetchCurrentUser();
+    }
+
+    // Updates the authenticated user's username.
+    async function updateUsername(username: string): Promise<string> {
+        const response = await api.put<{ username: string }>("/api/users/me/username", {
+            username,
+        });
+        if (user.value) {
+            user.value.username = response.data.username;
+        }
+        return response.data.username;
     }
 
     // Rotates the access token using the refresh_token cookie.
@@ -112,6 +131,8 @@ export const useAuthStore = defineStore("auth", () => {
         register,
         verifyEmail,
         login,
+        loginWithGoogle,
+        updateUsername,
         refresh,
         logout,
         forgotPassword,

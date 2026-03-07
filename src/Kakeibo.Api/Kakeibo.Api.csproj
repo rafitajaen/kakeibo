@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <!-- Authentication -->
+    <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <!-- Audit -->

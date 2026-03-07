@@ -24,7 +24,7 @@ public sealed class RefreshTokenHandlerTests
     });
 
     private RefreshTokenHandler CreateHandler(AppDbContext db) =>
-        new(db, new JwtService(TestJwtOptions, _clock), TestJwtOptions, _clock);
+        new(db, new JwtService(TestJwtOptions, _clock), new TokenCookieService(TestJwtOptions), TestJwtOptions, _clock);
 
     // Seeds a verified user and a refresh token. Returns the user and the raw (unhashed) token value.
     private static (UserEntity user, string rawToken) SeedUserWithRefreshToken(
@@ -37,6 +37,7 @@ public sealed class RefreshTokenHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = true,
             VerifiedAt = now.Minus(Duration.FromDays(30))

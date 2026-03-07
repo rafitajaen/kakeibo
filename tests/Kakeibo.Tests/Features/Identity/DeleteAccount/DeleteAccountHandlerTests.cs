@@ -23,6 +23,7 @@ public sealed class DeleteAccountHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword(Password),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "USD",
             IsVerified = true,
             VerifiedAt = Instant.FromUtc(2026, 1, 1, 0, 0)

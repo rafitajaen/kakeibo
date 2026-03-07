@@ -23,6 +23,7 @@ public sealed class ResetPasswordHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword("OldPassword1!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = true,
             VerifiedAt = now.Minus(Duration.FromDays(7))
@@ -65,8 +66,8 @@ public sealed class ResetPasswordHandlerTests
 
         Assert.Multiple(
             () => Assert.True(result.IsSuccess),
-            () => Assert.True(PasswordHasher.VerifyPassword("NewPassword1!", updatedUser!.PasswordHash)),
-            () => Assert.False(PasswordHasher.VerifyPassword("OldPassword1!", updatedUser!.PasswordHash)),
+            () => Assert.True(PasswordHasher.VerifyPassword("NewPassword1!", updatedUser!.PasswordHash!)),
+            () => Assert.False(PasswordHasher.VerifyPassword("OldPassword1!", updatedUser!.PasswordHash!)),
             () => Assert.NotNull(usedToken!.UsedAt));
     }
 

@@ -14,6 +14,7 @@ namespace Kakeibo.Api.Features.Identity.LoginUser;
 public sealed class LoginUserHandler(
     AppDbContext db,
     JwtService jwtService,
+    TokenCookieService tokenCookieService,
     IEventBus eventBus,
     IOptions<JwtOptions> jwtOptions,
     IClock clock)
@@ -28,8 +29,9 @@ public sealed class LoginUserHandler(
         var user = await db.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);
 
-        // Use constant-time comparison via VerifyPassword to prevent timing attacks
-        if (user is null || !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        // Use constant-time comparison via VerifyPassword to prevent timing attacks.
+        // PasswordHash is nullable (Google-only accounts have no password).
+        if (user is null || user.PasswordHash is null || !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             return Error.Unauthorized("Invalid email or password.");
         }
@@ -75,34 +77,9 @@ public sealed class LoginUserHandler(
         await db.SaveChangesAsync(ct);
 
         // Set HttpOnly cookies — tokens never exposed to JavaScript
-        SetTokenCookies(httpContext, accessToken, rawRefreshToken);
+        tokenCookieService.SetTokenCookies(httpContext, accessToken, rawRefreshToken);
 
         return new LoginUserEndpoint.LoginUserResponse(
-            user.Id, user.Email, user.Role.ToString(), user.Currency);
-    }
-
-    // Sets the access and refresh token HttpOnly cookies on the response.
-    private void SetTokenCookies(HttpContext httpContext, string accessToken, string refreshToken)
-    {
-        var isSecure = httpContext.Request.IsHttps;
-
-        httpContext.Response.Cookies.Append("access_token", accessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Strict,
-            Path = "/",
-            MaxAge = TimeSpan.FromMinutes(_jwtOptions.AccessTokenMinutes)
-        });
-
-        // Refresh token cookie is scoped to the refresh endpoint only
-        httpContext.Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Strict,
-            Path = "/api/auth/refresh",
-            MaxAge = TimeSpan.FromDays(_jwtOptions.RefreshTokenDays)
-        });
+            user.Id, user.Email, user.Role.ToString(), user.Currency, user.Username);
     }
 }

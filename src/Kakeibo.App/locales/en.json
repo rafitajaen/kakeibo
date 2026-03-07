@@ -30,6 +30,8 @@
       "password": "Password",
       "passwordPlaceholder": "••••••••",
       "submit": "Sign in",
+      "googleSignIn": "Sign in with Google",
+      "orContinueWith": "or continue with",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "register": "Sign up"
@@ -46,6 +48,8 @@
       "currency": "Currency",
       "currencyPlaceholder": "Select your currency",
       "submit": "Create account",
+      "googleSignUp": "Sign up with Google",
+      "orContinueWith": "or continue with",
       "hasAccount": "Already have an account?",
       "login": "Sign in",
       "checkEmail": "Check your email to verify your account"
@@ -90,6 +94,7 @@
       "emailConflict": "An account with this email already exists",
       "tokenExpired": "This link has expired. Please request a new one.",
       "tokenInvalid": "This link is invalid.",
+      "googleFailed": "Google sign-in failed. Please try again.",
       "unexpected": "Something went wrong. Please try again."
     }
   },
@@ -593,6 +598,11 @@
     "title": "Settings",
     "profile": {
       "title": "Profile",
+      "username": "Username",
+      "usernamePlaceholder": "your_username",
+      "usernameHint": "Lowercase letters, numbers, and underscores only",
+      "usernameConflict": "This username is already taken.",
+      "usernameSaved": "Username updated!",
       "name": "Display name",
       "namePlaceholder": "Your name",
       "currency": "Currency",

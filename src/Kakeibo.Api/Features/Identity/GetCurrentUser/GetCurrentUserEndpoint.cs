@@ -7,10 +7,12 @@ public sealed class GetCurrentUserEndpoint : IEndpoint
     public sealed record GetCurrentUserResponse(
         Guid Id,
         string Email,
+        string Username,
         string Role,
         bool IsVerified,
         string Currency,
         string? Name,
+        bool HasPassword,
         int WeekStartDay,
         int MonthStartDay,
         string CurrencyDecimalSeparator,

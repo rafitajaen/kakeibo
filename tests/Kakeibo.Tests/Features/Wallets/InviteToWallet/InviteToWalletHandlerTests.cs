@@ -17,6 +17,7 @@ public sealed class InviteToWalletHandlerTests
         {
             Email = email,
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

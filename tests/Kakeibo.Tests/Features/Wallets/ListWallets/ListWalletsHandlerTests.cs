@@ -16,6 +16,7 @@ public sealed class ListWalletsHandlerTests
         {
             Email = email,
             PasswordHash = "irrelevant-hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

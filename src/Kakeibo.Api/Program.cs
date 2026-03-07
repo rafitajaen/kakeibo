@@ -37,6 +37,7 @@ builder.Services.AddOpenApi();
 
 // --- Authentication: JWT Bearer via HttpOnly cookies ---
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
 
 var jwtSettings = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
     ?? throw new InvalidOperationException($"Missing required configuration section '{JwtOptions.SectionName}'.");
@@ -134,6 +135,7 @@ builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 
 // --- JWT service (used in Identity handlers) ---
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<TokenCookieService>();
 
 // --- Feature handlers: auto-scanned by Scrutor ---
 builder.Services.Scan(scan => scan
@@ -199,6 +201,7 @@ if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPa
         {
             Email = adminEmail.ToLowerInvariant(),
             PasswordHash = PasswordHasher.HashPassword(adminPassword),
+            Username = UsernameGenerator.Generate(),
             Role = UserRole.Admin,
             IsVerified = true,
             VerifiedAt = now,

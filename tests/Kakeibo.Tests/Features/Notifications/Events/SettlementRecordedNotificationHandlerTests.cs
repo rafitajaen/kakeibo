@@ -14,6 +14,7 @@ public sealed class SettlementRecordedNotificationHandlerTests
         {
             Email = $"from-{Guid.NewGuid():N}@example.com",
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };
@@ -21,6 +22,7 @@ public sealed class SettlementRecordedNotificationHandlerTests
         {
             Email = $"to-{Guid.NewGuid():N}@example.com",
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

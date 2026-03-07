@@ -32,7 +32,9 @@ public sealed class RegisterUserHandlerTests
             () => Assert.NotNull(inDb),
             () => Assert.Equal("alice@example.com", inDb!.Email),
             () => Assert.False(inDb!.IsVerified),
-            () => Assert.NotNull(inDb!.EmailVerificationToken));
+            () => Assert.NotNull(inDb!.EmailVerificationToken),
+            () => Assert.StartsWith("user_", inDb!.Username),
+            () => Assert.Equal(12, inDb!.Username.Length));
 
         eventBus.Received(1).Publish(Arg.Is<UserRegisteredEvent>(e =>
             e.UserId == result.Value.Id && e.Email == "alice@example.com"));

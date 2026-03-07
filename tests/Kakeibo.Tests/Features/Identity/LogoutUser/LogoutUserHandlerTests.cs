@@ -27,6 +27,7 @@ public sealed class LogoutUserHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = true,
             VerifiedAt = now.Minus(Duration.FromDays(30))

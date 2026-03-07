@@ -21,6 +21,7 @@ public sealed class UpdateDisplayPreferencesHandlerTests
         {
             Email = $"user-{Guid.NewGuid():N}@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = true,
             VerifiedAt = Instant.FromUtc(2026, 1, 1, 0, 0)

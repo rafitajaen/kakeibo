@@ -9,6 +9,8 @@ import { useAuthStore } from "@/stores/auth";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -145,5 +147,18 @@ const onSubmit = form.handleSubmit(async (values) => {
         <Button type="submit" class="w-full" :disabled="form.isSubmitting.value">
             {{ t("auth.register.submit") }}
         </Button>
+
+        <div class="relative my-2">
+            <div class="absolute inset-0 flex items-center">
+                <Separator />
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-background text-muted-foreground px-2">
+                    {{ t("auth.register.orContinueWith") }}
+                </span>
+            </div>
+        </div>
+
+        <GoogleSignInButton :label="t('auth.register.googleSignUp')" currency="EUR" />
     </form>
 </template>

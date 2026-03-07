@@ -27,10 +27,12 @@ public sealed class GetCurrentUserHandler(AppDbContext db)
         return new GetCurrentUserEndpoint.GetCurrentUserResponse(
             user.Id,
             user.Email,
+            user.Username,
             user.Role.ToString(),
             user.IsVerified,
             user.Currency,
             user.Name,
+            user.PasswordHash is not null,
             user.WeekStartDay,
             user.MonthStartDay,
             user.CurrencyDecimalSeparator,

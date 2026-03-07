@@ -28,6 +28,34 @@ const saved = ref(false);
 const isUploadingAvatar = ref(false);
 const avatarError = ref<string | null>(null);
 
+const usernameInput = ref(authStore.user?.username ?? "");
+const isSavingUsername = ref(false);
+const usernameSaved = ref(false);
+const usernameError = ref<string | null>(null);
+
+async function saveUsername() {
+    if (!usernameInput.value || usernameInput.value === authStore.user?.username) return;
+    isSavingUsername.value = true;
+    usernameError.value = null;
+    usernameSaved.value = false;
+    try {
+        await authStore.updateUsername(usernameInput.value);
+        usernameSaved.value = true;
+        setTimeout(() => {
+            usernameSaved.value = false;
+        }, 2000);
+    } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 409) {
+            usernameError.value = t("settings.profile.usernameConflict");
+        } else {
+            usernameError.value = t("common.errorGeneric");
+        }
+    } finally {
+        isSavingUsername.value = false;
+    }
+}
+
 const SUPPORTED_CURRENCIES = [
     "USD",
     "EUR",
@@ -160,6 +188,33 @@ async function handleAvatarChange(event: Event) {
                 <p class="text-xs text-muted-foreground">{{ t("settings.profile.avatarHint") }}</p>
                 <p v-if="avatarError" class="text-xs text-destructive">{{ avatarError }}</p>
             </div>
+        </div>
+
+        <!-- Username -->
+        <div class="space-y-2">
+            <Label for="profile-username">{{ t("settings.profile.username") }}</Label>
+            <div class="flex gap-2">
+                <Input
+                    id="profile-username"
+                    v-model="usernameInput"
+                    :placeholder="t('settings.profile.usernamePlaceholder')"
+                    :disabled="isSavingUsername"
+                />
+                <Button
+                    type="button"
+                    variant="outline"
+                    :disabled="isSavingUsername || usernameInput === authStore.user?.username"
+                    @click="saveUsername"
+                >
+                    {{
+                        usernameSaved
+                            ? t("settings.profile.usernameSaved")
+                            : t("settings.profile.save")
+                    }}
+                </Button>
+            </div>
+            <p class="text-xs text-muted-foreground">{{ t("settings.profile.usernameHint") }}</p>
+            <p v-if="usernameError" class="text-xs text-destructive">{{ usernameError }}</p>
         </div>
 
         <!-- Profile form -->

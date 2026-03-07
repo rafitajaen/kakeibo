@@ -23,7 +23,7 @@ public sealed class LoginUserHandlerTests
     });
 
     private LoginUserHandler CreateHandler(Kakeibo.Api.Persistence.AppDbContext db) =>
-        new(db, new JwtService(TestJwtOptions, _clock), Substitute.For<IEventBus>(), TestJwtOptions, _clock);
+        new(db, new JwtService(TestJwtOptions, _clock), new TokenCookieService(TestJwtOptions), Substitute.For<IEventBus>(), TestJwtOptions, _clock);
 
     // Seeds a verified user and saves it synchronously.
     private static User SeedVerifiedUser(
@@ -35,6 +35,7 @@ public sealed class LoginUserHandlerTests
         {
             Email = email,
             PasswordHash = PasswordHasher.HashPassword(password),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = true,
             VerifiedAt = Instant.FromUtc(2026, 2, 1, 10, 0)
@@ -76,6 +77,7 @@ public sealed class LoginUserHandlerTests
         {
             Email = "unverified@example.com",
             PasswordHash = PasswordHasher.HashPassword("Test1234!"),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "EUR",
             IsVerified = false
         };

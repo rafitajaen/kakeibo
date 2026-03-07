@@ -30,6 +30,8 @@
       "password": "Contraseña",
       "passwordPlaceholder": "••••••••",
       "submit": "Iniciar sesión",
+      "googleSignIn": "Iniciar sesión con Google",
+      "orContinueWith": "o continúa con",
       "forgotPassword": "¿Olvidaste tu contraseña?",
       "noAccount": "¿No tienes una cuenta?",
       "register": "Regístrate"
@@ -46,6 +48,8 @@
       "currency": "Moneda",
       "currencyPlaceholder": "Selecciona tu moneda",
       "submit": "Crear cuenta",
+      "googleSignUp": "Registrarse con Google",
+      "orContinueWith": "o continúa con",
       "hasAccount": "¿Ya tienes una cuenta?",
       "login": "Inicia sesión",
       "checkEmail": "Revisa tu correo para verificar tu cuenta"
@@ -90,6 +94,7 @@
       "emailConflict": "Ya existe una cuenta con este correo",
       "tokenExpired": "Este enlace ha expirado. Por favor, solicita uno nuevo.",
       "tokenInvalid": "Este enlace no es válido.",
+      "googleFailed": "Error al iniciar sesión con Google. Por favor, inténtalo de nuevo.",
       "unexpected": "Algo salió mal. Por favor, inténtalo de nuevo."
     }
   },
@@ -593,6 +598,11 @@
     "title": "Configuración",
     "profile": {
       "title": "Perfil",
+      "username": "Nombre de usuario",
+      "usernamePlaceholder": "tu_nombre",
+      "usernameHint": "Solo letras minúsculas, números y guiones bajos",
+      "usernameConflict": "Este nombre de usuario ya está en uso.",
+      "usernameSaved": "¡Nombre de usuario actualizado!",
       "name": "Nombre de visualización",
       "namePlaceholder": "Tu nombre",
       "currency": "Moneda",

@@ -13,6 +13,7 @@ public sealed class GetWalletMembersHandlerTests
         {
             Email = email,
             PasswordHash = "hash",
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             IsVerified = true,
             Currency = "EUR"
         };

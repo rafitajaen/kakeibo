@@ -12,6 +12,7 @@ namespace Kakeibo.Api.Features.Identity.RefreshToken;
 public sealed class RefreshTokenHandler(
     AppDbContext db,
     JwtService jwtService,
+    TokenCookieService tokenCookieService,
     IOptions<JwtOptions> jwtOptions,
     IClock clock)
 {
@@ -68,25 +69,7 @@ public sealed class RefreshTokenHandler(
         await db.SaveChangesAsync(ct);
 
         // Set new cookies
-        var isSecure = httpContext.Request.IsHttps;
-
-        httpContext.Response.Cookies.Append("access_token", accessToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Strict,
-            Path = "/",
-            MaxAge = TimeSpan.FromMinutes(_jwtOptions.AccessTokenMinutes)
-        });
-
-        httpContext.Response.Cookies.Append("refresh_token", newRawToken, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = isSecure,
-            SameSite = SameSiteMode.Strict,
-            Path = "/api/auth/refresh",
-            MaxAge = TimeSpan.FromDays(_jwtOptions.RefreshTokenDays)
-        });
+        tokenCookieService.SetTokenCookies(httpContext, accessToken, newRawToken);
 
         return new RefreshTokenEndpoint.RefreshTokenResponse("Token refreshed successfully.");
     }

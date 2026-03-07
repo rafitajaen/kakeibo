@@ -22,6 +22,7 @@ public sealed class ChangePasswordHandlerTests
         {
             Email = "alice@example.com",
             PasswordHash = PasswordHasher.HashPassword(OriginalPassword),
+            Username = $"user_{Guid.NewGuid():N}"[..12],
             Currency = "USD",
             IsVerified = true,
             VerifiedAt = Instant.FromUtc(2026, 1, 1, 0, 0)
@@ -44,7 +45,7 @@ public sealed class ChangePasswordHandlerTests
         Assert.True(result.IsSuccess);
         // Verify the new password hash is stored
         await db.Entry(user).ReloadAsync(ct);
-        Assert.True(PasswordHasher.VerifyPassword(NewPassword, user.PasswordHash));
+        Assert.True(PasswordHasher.VerifyPassword(NewPassword, user.PasswordHash!));
     }
 
     [Fact]

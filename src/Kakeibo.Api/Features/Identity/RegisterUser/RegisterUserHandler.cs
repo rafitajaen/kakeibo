@@ -42,6 +42,7 @@ public sealed class RegisterUserHandler(
         {
             Email = request.Email.ToLowerInvariant(),
             PasswordHash = PasswordHasher.HashPassword(request.Password),
+            Username = UsernameGenerator.Generate(),
             Currency = request.Currency,
             EmailVerificationToken = tokenHash,
             EmailVerificationTokenExpiresAt = now.Plus(VerificationTokenExpiry)
