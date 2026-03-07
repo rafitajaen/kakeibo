@@ -19,9 +19,10 @@ const memberList = ref(walletsStore.members.get(walletId) ?? []);
 const apiError = ref<string | null>(null);
 
 const currentUserId = computed(() => authStore.user?.id ?? "");
-const isOwner = computed(() =>
-    memberList.value.some((m) => m.userId === currentUserId.value && m.isOwner),
+const callerRole = computed(
+    () => memberList.value.find((m) => m.userId === currentUserId.value)?.role ?? "Guest",
 );
+const isOwner = computed(() => callerRole.value === "Owner");
 
 onMounted(async () => {
     try {
@@ -51,6 +52,15 @@ async function handleRemove(userId: string) {
         }
     }
 }
+
+async function handleRoleChange(userId: string, role: string) {
+    try {
+        await walletsStore.updateMemberRole(walletId, userId, role);
+        memberList.value = walletsStore.members.get(walletId) ?? [];
+    } catch {
+        apiError.value = t("wallets.members.errors.unexpected");
+    }
+}
 </script>
 
 <template>
@@ -77,8 +87,9 @@ async function handleRemove(userId: string) {
                 <MemberList
                     :members="memberList"
                     :current-user-id="currentUserId"
-                    :is-owner="isOwner"
+                    :caller-role="callerRole"
                     @remove="handleRemove"
+                    @role-change="handleRoleChange"
                 />
             </CardContent>
         </Card>

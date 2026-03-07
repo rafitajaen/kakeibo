@@ -10,20 +10,20 @@ const i18n = createI18n({ legacy: false, locale: "en", messages: { en } });
 const owner: WalletMember = {
     userId: "owner-id",
     email: "owner@example.com",
-    isOwner: true,
+    role: "Owner",
     joinedAt: "2026-03-01T00:00:00Z",
 };
 
 const member: WalletMember = {
     userId: "member-id",
     email: "member@example.com",
-    isOwner: false,
+    role: "Guest",
     joinedAt: "2026-03-02T00:00:00Z",
 };
 
-function mountList(members: WalletMember[], currentUserId = "owner-id", isOwner = true) {
+function mountList(members: WalletMember[], currentUserId = "owner-id", callerRole = "Owner") {
     return mount(MemberList, {
-        props: { members, currentUserId, isOwner },
+        props: { members, currentUserId, callerRole },
         global: { plugins: [i18n] },
     });
 }
@@ -51,8 +51,8 @@ describe("MemberList", () => {
 
     it("bubbles the remove event from a MemberCard", async () => {
         vi.spyOn(window, "confirm").mockReturnValue(true);
-        const wrapper = mountList([member], "owner-id", true);
-        // The Remove button is inside the nested MemberCard.
+        // Use the member's own card so only the Leave button appears (no role selector)
+        const wrapper = mountList([member], "member-id", "Guest");
         const button = wrapper.find("button");
         await button.trigger("click");
         const emitted = wrapper.emitted("remove");

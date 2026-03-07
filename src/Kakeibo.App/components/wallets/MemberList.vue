@@ -6,11 +6,12 @@ import type { WalletMember } from "@/stores/wallets";
 defineProps<{
     members: WalletMember[];
     currentUserId: string;
-    isOwner: boolean;
+    callerRole: string;
 }>();
 
 const emit = defineEmits<{
     (e: "remove", userId: string): void;
+    (e: "roleChange", userId: string, role: string): void;
 }>();
 
 const { t } = useI18n();
@@ -26,8 +27,9 @@ const { t } = useI18n();
             :key="member.userId"
             :member="member"
             :current-user-id="currentUserId"
-            :is-owner="isOwner"
+            :caller-role="callerRole"
             @remove="emit('remove', $event)"
+            @role-change="(userId, role) => emit('roleChange', userId, role)"
         />
     </div>
 </template>

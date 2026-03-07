@@ -13,12 +13,14 @@ export interface Wallet {
     backgroundColor: string | null;
     textColor: string | null;
     createdAt: string;
+    visibility: string;
+    callerRole: string;
 }
 
 export interface WalletMember {
     userId: string;
     email: string;
-    isOwner: boolean;
+    role: string;
     joinedAt: string;
 }
 
@@ -137,6 +139,62 @@ export const useWalletsStore = defineStore("wallets", () => {
         }
     }
 
+    // Updates the visibility of a wallet (Owner only). Accepts "Private" or "Public".
+    async function updateVisibility(id: string, visibility: string): Promise<void> {
+        await api.put(`/api/wallets/${id}/visibility`, { visibility });
+        if (currentWallet.value?.id === id) {
+            currentWallet.value = { ...currentWallet.value, visibility };
+        }
+        const index = wallets.value.findIndex((w) => w.id === id);
+        if (index !== -1) {
+            wallets.value[index] = { ...wallets.value[index], visibility };
+        }
+    }
+
+    // Updates the role of a wallet member (Owner only). Accepts "Editor" or "Guest".
+    async function updateMemberRole(walletId: string, userId: string, role: string): Promise<void> {
+        await api.put(`/api/wallets/${walletId}/members/${userId}/role`, { role });
+        const cached = members.value.get(walletId);
+        if (cached) {
+            members.value.set(
+                walletId,
+                cached.map((m) => (m.userId === userId ? { ...m, role } : m)),
+            );
+        }
+    }
+
+    // Returns a preview of members who will lose access if the wallet is made private.
+    async function previewMakePrivate(
+        id: string,
+    ): Promise<{ membersToRemove: string[]; message: string }> {
+        const response = await api.get<{ membersToRemove: string[]; message: string }>(
+            `/api/wallets/${id}/make-private`,
+        );
+        return response.data;
+    }
+
+    // Converts a shared wallet to personal, removing all non-owner members.
+    async function makeWalletPrivate(id: string): Promise<void> {
+        await api.post(`/api/wallets/${id}/make-private`);
+        if (currentWallet.value?.id === id) {
+            currentWallet.value = { ...currentWallet.value, type: "Personal" };
+        }
+        const index = wallets.value.findIndex((w) => w.id === id);
+        if (index !== -1) {
+            wallets.value[index] = { ...wallets.value[index], type: "Personal" };
+        }
+    }
+
+    // Transfers a personal wallet to a friend. The caller becomes Guest, the friend becomes Owner.
+    async function transferWallet(id: string, toUserId: string): Promise<void> {
+        await api.post(`/api/wallets/${id}/transfer`, { toUserId });
+        // Caller no longer owns the wallet — refresh to get updated state.
+        wallets.value = wallets.value.filter((w) => w.id !== id);
+        if (currentWallet.value?.id === id) {
+            currentWallet.value = null;
+        }
+    }
+
     return {
         wallets,
         currentWallet,
@@ -155,5 +213,10 @@ export const useWalletsStore = defineStore("wallets", () => {
         inviteMember,
         acceptInvitation,
         removeMember,
+        updateVisibility,
+        updateMemberRole,
+        previewMakePrivate,
+        makeWalletPrivate,
+        transferWallet,
     };
 });

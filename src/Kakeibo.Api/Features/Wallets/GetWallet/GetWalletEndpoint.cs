@@ -16,7 +16,9 @@ public sealed class GetWalletEndpoint : IEndpoint
         string? Icon,
         string? BackgroundColor,
         string? TextColor,
-        Instant CreatedAt);
+        Instant CreatedAt,
+        string Visibility,
+        string CallerRole);
 
     public static void MapEndpoint(IEndpointRouteBuilder app)
     {

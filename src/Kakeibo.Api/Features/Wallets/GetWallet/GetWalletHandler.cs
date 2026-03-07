@@ -13,6 +13,7 @@ public sealed class GetWalletHandler(AppDbContext db)
         CancellationToken ct)
     {
         var wallet = await db.Wallets
+            .AsNoTracking()
             .FirstOrDefaultAsync(w => w.Id == walletId && w.DeletedAt == null, ct);
 
         if (wallet is null)
@@ -29,6 +30,7 @@ public sealed class GetWalletHandler(AppDbContext db)
 
         // Read the current balance owned by the Transactions domain.
         var balance = await db.WalletBalances
+            .AsNoTracking()
             .Where(wb => wb.WalletId == walletId)
             .Select(wb => wb.Balance)
             .FirstOrDefaultAsync(ct);
@@ -43,6 +45,8 @@ public sealed class GetWalletHandler(AppDbContext db)
             Icon: wallet.Icon,
             BackgroundColor: wallet.BackgroundColor,
             TextColor: wallet.TextColor,
-            wallet.CreatedAt);
+            wallet.CreatedAt,
+            Visibility: wallet.Visibility.ToString(),
+            CallerRole: role.Value.ToString());
     }
 }

@@ -18,7 +18,9 @@
     "close": "Close",
     "back": "Back",
     "next": "Next",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "saving": "Saving...",
+    "saved": "Saved!"
   },
   "auth": {
     "logout": "Sign out",
@@ -208,6 +210,26 @@
       "submit": "Create wallet",
       "submitEdit": "Save changes"
     },
+    "visibility": {
+      "label": "Visibility",
+      "private": "Private",
+      "public": "Public"
+    },
+    "transfer": {
+      "action": "Transfer wallet",
+      "title": "Transfer wallet ownership",
+      "description": "The selected friend will become the new owner. You will become a guest member.",
+      "selectFriend": "Select a friend",
+      "selectPlaceholder": "Choose a friend...",
+      "confirm": "Transfer",
+      "errorNotFriends": "You must be friends with the selected user to transfer this wallet."
+    },
+    "makePrivate": {
+      "action": "Convert to private",
+      "title": "Convert to private wallet",
+      "description": "This will remove all members except you. This action cannot be undone.",
+      "confirm": "Convert to private"
+    },
     "actions": {
       "edit": "Edit",
       "archive": "Archive",
@@ -230,6 +252,11 @@
       "leaveConfirm": "Are you sure you want to leave this wallet?",
       "empty": "No members yet.",
       "debtSection": "Debt summary (coming soon)",
+      "role": {
+        "owner": "Owner",
+        "editor": "Editor",
+        "guest": "Guest"
+      },
       "errors": {
         "conflict": "This user is already a member.",
         "forbidden": "You do not have permission to perform this action.",
@@ -732,6 +759,40 @@
     "preferences": "Preferences",
     "language": "Language",
     "lightMode": "Light mode",
-    "darkMode": "Dark mode"
+    "darkMode": "Dark mode",
+    "admin": "Admin"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Manage platform settings and users",
+    "tabs": {
+      "users": "Users",
+      "platform": "Platform"
+    },
+    "platform": {
+      "title": "Platform Policy",
+      "description": "Control platform-wide behaviour",
+      "registration": {
+        "label": "Allow new registrations",
+        "description": "When disabled, new users cannot register via email or Google"
+      },
+      "maintenance": {
+        "label": "Maintenance mode",
+        "description": "When enabled, non-admin users will see a maintenance message"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Search by email or username...",
+      "blocked": "Blocked",
+      "unverified": "Unverified",
+      "block": "Block",
+      "unblock": "Unblock",
+      "delete": "Delete",
+      "empty": "No users found",
+      "confirmBlockTitle": "Block user?",
+      "confirmBlockDescription": "Block access for {email}? They will not be able to log in.",
+      "confirmDeleteTitle": "Delete user?",
+      "confirmDeleteDescription": "Schedule deletion for {email}? This starts the 30-day grace period."
+    }
   }
 }

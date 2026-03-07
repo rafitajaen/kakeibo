@@ -18,7 +18,9 @@
     "close": "Cerrar",
     "back": "Atrás",
     "next": "Siguiente",
-    "errorGeneric": "Algo salió mal. Por favor, inténtalo de nuevo."
+    "errorGeneric": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "saving": "Guardando...",
+    "saved": "¡Guardado!"
   },
   "auth": {
     "logout": "Cerrar sesión",
@@ -208,6 +210,26 @@
       "submit": "Crear cartera",
       "submitEdit": "Guardar cambios"
     },
+    "visibility": {
+      "label": "Visibilidad",
+      "private": "Privada",
+      "public": "Pública"
+    },
+    "transfer": {
+      "action": "Ceder cartera",
+      "title": "Transferir propiedad de la cartera",
+      "description": "El amigo seleccionado pasará a ser el nuevo propietario. Tú pasarás a ser miembro invitado.",
+      "selectFriend": "Selecciona un amigo",
+      "selectPlaceholder": "Elige un amigo...",
+      "confirm": "Transferir",
+      "errorNotFriends": "Debes ser amigo del usuario seleccionado para transferir esta cartera."
+    },
+    "makePrivate": {
+      "action": "Convertir a privada",
+      "title": "Convertir a cartera privada",
+      "description": "Se eliminarán todos los miembros excepto tú. Esta acción no se puede deshacer.",
+      "confirm": "Convertir a privada"
+    },
     "actions": {
       "edit": "Editar",
       "archive": "Archivar",
@@ -230,6 +252,11 @@
       "leaveConfirm": "¿Seguro que quieres abandonar esta cartera?",
       "empty": "Sin miembros todavía.",
       "debtSection": "Resumen de deudas (próximamente)",
+      "role": {
+        "owner": "Propietario",
+        "editor": "Editor",
+        "guest": "Invitado"
+      },
       "errors": {
         "conflict": "Este usuario ya es miembro.",
         "forbidden": "No tienes permiso para realizar esta acción.",
@@ -732,6 +759,40 @@
     "preferences": "Preferencias",
     "language": "Idioma",
     "lightMode": "Modo claro",
-    "darkMode": "Modo oscuro"
+    "darkMode": "Modo oscuro",
+    "admin": "Admin"
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "subtitle": "Gestiona la configuración de la plataforma y los usuarios",
+    "tabs": {
+      "users": "Usuarios",
+      "platform": "Plataforma"
+    },
+    "platform": {
+      "title": "Políticas de la Plataforma",
+      "description": "Controla el comportamiento global de la plataforma",
+      "registration": {
+        "label": "Permitir nuevos registros",
+        "description": "Si está desactivado, no se podrán registrar nuevos usuarios por email o Google"
+      },
+      "maintenance": {
+        "label": "Modo mantenimiento",
+        "description": "Si está activado, los usuarios no administradores verán un mensaje de mantenimiento"
+      }
+    },
+    "users": {
+      "searchPlaceholder": "Buscar por email o nombre de usuario...",
+      "blocked": "Bloqueado",
+      "unverified": "Sin verificar",
+      "block": "Bloquear",
+      "unblock": "Desbloquear",
+      "delete": "Eliminar",
+      "empty": "No se encontraron usuarios",
+      "confirmBlockTitle": "¿Bloquear usuario?",
+      "confirmBlockDescription": "¿Bloquear el acceso de {email}? No podrán iniciar sesión.",
+      "confirmDeleteTitle": "¿Eliminar usuario?",
+      "confirmDeleteDescription": "¿Programar la eliminación de {email}? Esto inicia el período de gracia de 30 días."
+    }
   }
 }
