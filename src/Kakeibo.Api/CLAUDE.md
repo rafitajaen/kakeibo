@@ -45,7 +45,15 @@ Simple Monolith with Vertical Slices + Screaming Architecture.
 | Newtonsoft.Json | Use System.Text.Json (built into .NET) |
 | FluentAssertions | Use xUnit v3 native Assert.* methods |
 | `.WithReuse(true)` in Testcontainers | Prohibited — causes test isolation issues |
-| RustFS | Abandoned alpha project (no security patches). Use MinIO server instead |
+
+---
+
+## Domain Areas
+
+8 business domains, all within `Features/`:
+
+- **Core:** Identity, Notifications, Auditing
+- **Business:** Wallets (includes Collaboration), Transactions (includes Categories), Budgets, Goals, Recurring
 
 ---
 
@@ -452,6 +460,13 @@ logger.WalletCreated(wallet.Id, userId);
 1. Create in `Domain/Entities/` (if shared) or `Features/{Domain}/` (if domain-specific), inheriting `Entity`
 2. Create `{Entity}Configuration : IEntityTypeConfiguration<{Entity}>` in `Persistence/Configurations/`
 3. `AppDbContext` picks up configurations via `ApplyConfigurationsFromAssembly`
+
+---
+
+## Architecture History
+
+This project was migrated from a Modular Monolith (12 projects) to a Simple Monolith (2 projects) at ~5% implementation.
+See `KB-010` in the knowledge base for the full migration record.
 
 ---
 
