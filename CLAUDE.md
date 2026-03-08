@@ -21,42 +21,6 @@ Personal finance and shared expense management platform inspired by traditional 
 
 ---
 
-## Tech Stack
-
-> Full tech stack: `.claude/rules/tech-stack.md`
-
-Key technologies: .NET 10 Minimal APIs, EF Core + PostgreSQL 18, FusionCache + Redis,
-System.Threading.Channels (in-process events), Hangfire (background jobs), Vue 3 Composition API + Pinia + shadcn-vue,
-Bun, xUnit v3 + Testcontainers / Vitest + Playwright.
-
----
-
-## Prohibited Technologies
-
-| Prohibited | Use instead |
-|------------|-------------|
-| Python scripts | sh or TypeScript scripts only |
-| EF Core InMemory, SQLite in-memory | Testcontainers with real PostgreSQL |
-| MediatR | Plain handler classes, no CQRS interfaces |
-| AutoMapper | Manual mapping or extension methods |
-| `DateTime` / `DateTimeOffset` | NodaTime (`Instant`, `LocalDate`, `LocalTime`) |
-| `Guid.CreateVersion7()` | `Guid7.NewGuid()` for entity IDs |
-| Swagger | Scalar |
-| ESLint, Prettier, Biome | oxlint, oxfmt |
-| Options API (Vue) | Composition API with `<script setup>` |
-| Moq | NSubstitute |
-| Newtonsoft.Json | System.Text.Json (native .NET) |
-| Quartz.NET | Hangfire + Hangfire.PostgreSql |
-| `@hugeicons/vue` / `@hugeicons/core-free-icons` | `lucide-vue-next` |
-| `FluentAssertions` | Use xUnit v3 native `Assert.*` methods manually |
-| `npx` | `bunx` (or `bunx --bun` when Bun runtime is required) |
-| Outbox Pattern / IModuleEventBus | `IEventBus` + `ChannelEventBus` (System.Threading.Channels) |
-| IModuleClient / IModuleRequest | Direct method calls — single project, no cross-assembly boundaries |
-
-> Full list: `.claude/rules/tech-stack.md`
-
----
-
 ## Git Conventions
 
 **Repository:** GitHub at `https://github.com/rafitajaen/kakeibo.git`. Use `gh` (GitHub CLI) for PR/issue operations.

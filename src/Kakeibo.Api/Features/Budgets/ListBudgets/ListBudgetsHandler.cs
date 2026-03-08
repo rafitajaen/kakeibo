@@ -14,6 +14,7 @@ public sealed class ListBudgetsHandler(AppDbContext db)
         CancellationToken ct)
     {
         var query = db.Budgets
+            .AsNoTracking()
             .Include(b => b.Category)
             .Include(b => b.Wallet)
             .Where(b => b.UserId == userId && b.DeletedAt == null);

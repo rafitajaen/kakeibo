@@ -12,6 +12,7 @@ public sealed class ListFriendsHandler(AppDbContext db)
     {
         // Friendships where the user is UserA
         var asUserA = db.Friendships
+            .AsNoTracking()
             .Where(f => f.UserAId == userId)
             .Select(f => new ListFriendsEndpoint.ListFriendsResponse(
                 f.Id,
@@ -23,6 +24,7 @@ public sealed class ListFriendsHandler(AppDbContext db)
 
         // Friendships where the user is UserB
         var asUserB = db.Friendships
+            .AsNoTracking()
             .Where(f => f.UserBId == userId)
             .Select(f => new ListFriendsEndpoint.ListFriendsResponse(
                 f.Id,

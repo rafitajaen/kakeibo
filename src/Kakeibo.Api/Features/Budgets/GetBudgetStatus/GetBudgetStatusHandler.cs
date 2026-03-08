@@ -14,6 +14,7 @@ public sealed class GetBudgetStatusHandler(AppDbContext db)
         CancellationToken ct)
     {
         var budget = await db.Budgets
+            .AsNoTracking()
             .Include(b => b.Category)
             .Include(b => b.Wallet)
             .FirstOrDefaultAsync(b => b.Id == budgetId && b.DeletedAt == null, ct);

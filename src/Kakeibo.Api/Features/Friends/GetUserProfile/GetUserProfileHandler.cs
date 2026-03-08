@@ -13,6 +13,7 @@ public sealed class GetUserProfileHandler(AppDbContext db)
         CancellationToken ct)
     {
         var user = await db.Users
+            .AsNoTracking()
             .Where(u => u.Id == profileUserId)
             .Select(u => new { u.Id, u.Username, u.Name, u.AvatarUrl })
             .FirstOrDefaultAsync(ct);
@@ -25,6 +26,7 @@ public sealed class GetUserProfileHandler(AppDbContext db)
         // Check friendship status
         var (userAId, userBId) = NormalizeIds(requestingUserId, profileUserId);
         var friendship = await db.Friendships
+            .AsNoTracking()
             .Where(f => f.UserAId == userAId && f.UserBId == userBId)
             .Select(f => new { f.CreatedAt })
             .FirstOrDefaultAsync(ct);

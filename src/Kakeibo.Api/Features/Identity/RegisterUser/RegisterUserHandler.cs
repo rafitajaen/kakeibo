@@ -23,6 +23,13 @@ public sealed class RegisterUserHandler(
         RegisterUserEndpoint.RegisterUserRequest request,
         CancellationToken ct)
     {
+        // Check platform settings — reject registration if disabled by admin
+        var settings = await db.PlatformPolicy.AsNoTracking().FirstOrDefaultAsync(ct);
+        if (settings is not null && !settings.RegistrationEnabled)
+        {
+            return Error.Forbidden("New registrations are currently disabled.");
+        }
+
         // Check for existing account with same email
         var exists = await db.Users
             .AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);

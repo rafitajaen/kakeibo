@@ -35,6 +35,7 @@ public sealed class ListPublicWalletsHandler(AppDbContext db)
 
         // Return non-archived public wallets where the target user is a member
         var wallets = await db.Wallets
+            .AsNoTracking()
             .Where(w =>
                 w.DeletedAt == null &&
                 w.Visibility == WalletVisibility.Public &&

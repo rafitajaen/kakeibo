@@ -21,7 +21,10 @@ const apiError = ref<string | null>(null);
 const isSubmitting = ref(false);
 
 onMounted(async () => {
-    await Promise.all([categoriesStore.fetchCategories(), walletsStore.fetchWallets()]);
+    await Promise.all([
+        categoriesStore.fetchCategories(false, walletId),
+        walletsStore.fetchWallets(),
+    ]);
 });
 
 async function handleSubmit(values: {

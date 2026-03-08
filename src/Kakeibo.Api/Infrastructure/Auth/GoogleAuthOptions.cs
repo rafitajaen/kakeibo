@@ -4,5 +4,6 @@ public sealed class GoogleAuthOptions
 {
     public const string SectionName = "GoogleAuth";
 
-    public required string ClientId { get; init; }
+    // Null when GOOGLE_CLIENT_ID is not configured — Google login is disabled in that case.
+    public string? ClientId { get; init; }
 }

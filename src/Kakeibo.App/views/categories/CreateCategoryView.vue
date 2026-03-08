@@ -18,6 +18,7 @@ async function handleSubmit(values: {
     icon: string | null;
     backgroundColor: string | null;
     textColor: string | null;
+    isPrivate: boolean;
 }) {
     apiError.value = null;
     isSubmitting.value = true;

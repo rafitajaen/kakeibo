@@ -18,10 +18,12 @@ public sealed class ListNotificationsHandler(AppDbContext db)
         var offset = (Math.Max(page, 1) - 1) * clampedSize;
 
         var unreadCount = await db.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId && !n.IsRead)
             .CountAsync(ct);
 
         var items = await db.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Skip(offset)

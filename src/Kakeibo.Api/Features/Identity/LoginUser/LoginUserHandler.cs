@@ -41,6 +41,12 @@ public sealed class LoginUserHandler(
             return Error.Validation("Email address has not been verified. Please check your inbox.");
         }
 
+        // Blocked users cannot authenticate regardless of credentials
+        if (user.IsBlocked)
+        {
+            return Error.Forbidden("This account has been suspended. Please contact support.");
+        }
+
         var now = clock.GetCurrentInstant();
 
         // If the user had previously requested deletion, cancel it (account recovery within grace period)

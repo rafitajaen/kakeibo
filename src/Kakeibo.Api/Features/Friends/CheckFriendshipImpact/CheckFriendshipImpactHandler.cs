@@ -14,6 +14,7 @@ public sealed class CheckFriendshipImpactHandler(AppDbContext db)
         CancellationToken ct)
     {
         var friendship = await db.Friendships
+            .AsNoTracking()
             .FirstOrDefaultAsync(f => f.Id == friendshipId, ct);
 
         if (friendship is null)
@@ -32,6 +33,7 @@ public sealed class CheckFriendshipImpactHandler(AppDbContext db)
 
         // Find shared wallets where both users are WalletMembers
         var sharedWallets = await db.Wallets
+            .AsNoTracking()
             .Where(w => w.Type == WalletType.Shared)
             .Where(w =>
                 db.WalletMembers.Any(m => m.WalletId == w.Id && m.UserId == userId) &&

@@ -7,6 +7,7 @@ export interface Category {
     name: string;
     isSystem: boolean;
     isArchived: boolean;
+    isPrivate: boolean;
     backgroundColor: string | null;
     textColor: string | null;
     icon: string | null;
@@ -14,6 +15,7 @@ export interface Category {
 
 export interface CreateCategoryData {
     name: string;
+    isPrivate?: boolean;
     backgroundColor?: string | null;
     textColor?: string | null;
     icon?: string | null;
@@ -21,6 +23,7 @@ export interface CreateCategoryData {
 
 export interface UpdateCategoryData {
     name: string;
+    isPrivate?: boolean;
     backgroundColor?: string | null;
     textColor?: string | null;
     icon?: string | null;
@@ -37,12 +40,13 @@ export const useCategoriesStore = defineStore("categories", () => {
     const activeCategories = computed(() => categories.value.filter((c) => !c.isArchived));
 
     // Fetches all categories. Pass includeArchived=true to include archived custom categories.
-    async function fetchCategories(includeArchived = false): Promise<void> {
+    // Pass walletId to include categories from all wallet members (Strategy 3: shared pool for friends).
+    async function fetchCategories(includeArchived = false, walletId?: string): Promise<void> {
         isLoading.value = true;
         try {
-            const response = await api.get<Category[]>("/api/categories", {
-                params: { includeArchived },
-            });
+            const params: Record<string, unknown> = { includeArchived };
+            if (walletId) params.walletId = walletId;
+            const response = await api.get<Category[]>("/api/categories", { params });
             categories.value = response.data;
         } finally {
             isLoading.value = false;

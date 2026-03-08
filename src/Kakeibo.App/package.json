@@ -45,6 +45,7 @@
     "typescript": "^5.7.2",
     "vee-validate": "^4.15.1",
     "vite": "^6.0.7",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.2.0",
     "zod": "3.25.76"

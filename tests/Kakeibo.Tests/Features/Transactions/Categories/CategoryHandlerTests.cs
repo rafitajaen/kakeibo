@@ -40,9 +40,9 @@ public sealed class CategoryHandlerTests
 
         // Create a user so we have a valid userId context.
         var user = await CreateUserAsync(db);
-        var result = await handler.HandleAsync(user.Id, includeArchived: false, ct);
+        var result = await handler.HandleAsync(user.Id, includeArchived: false, walletId: null, ct);
 
-        var systemCategories = result.Where(c => c.IsSystem).ToList();
+        var systemCategories = result.Value.Where(c => c.IsSystem).ToList();
         Assert.Equal(12, systemCategories.Count);
 
         // Verify expected category names are present.
@@ -69,10 +69,10 @@ public sealed class CategoryHandlerTests
         var user = await CreateUserAsync(db);
         var handler = new ListCategoriesHandler(db);
 
-        var result = await handler.HandleAsync(user.Id, includeArchived: false, ct);
+        var result = await handler.HandleAsync(user.Id, includeArchived: false, walletId: null, ct);
 
         // All 12 system categories must have icon, background color, and text color seeded.
-        var systemCategories = result.Where(c => c.IsSystem).ToList();
+        var systemCategories = result.Value.Where(c => c.IsSystem).ToList();
         foreach (var cat in systemCategories)
         {
             Assert.False(string.IsNullOrEmpty(cat.Icon),            $"Category '{cat.Name}' is missing Icon.");
@@ -107,16 +107,16 @@ public sealed class CategoryHandlerTests
         var listHandler = new ListCategoriesHandler(db);
 
         // UserA should see 12 system + 1 custom (not UserB's).
-        var resultA = await listHandler.HandleAsync(userA.Id, includeArchived: false, ct);
-        Assert.Equal(13, resultA.Count);
-        Assert.Contains(resultA, c => c.Name == "UserA Custom" && !c.IsSystem);
-        Assert.DoesNotContain(resultA, c => c.Name == "UserB Custom");
+        var resultA = await listHandler.HandleAsync(userA.Id, includeArchived: false, walletId: null, ct);
+        Assert.Equal(13, resultA.Value.Count);
+        Assert.Contains(resultA.Value, c => c.Name == "UserA Custom" && !c.IsSystem);
+        Assert.DoesNotContain(resultA.Value, c => c.Name == "UserB Custom");
 
         // UserB should see 12 system + 1 custom (not UserA's).
-        var resultB = await listHandler.HandleAsync(userB.Id, includeArchived: false, ct);
-        Assert.Equal(13, resultB.Count);
-        Assert.Contains(resultB, c => c.Name == "UserB Custom" && !c.IsSystem);
-        Assert.DoesNotContain(resultB, c => c.Name == "UserA Custom");
+        var resultB = await listHandler.HandleAsync(userB.Id, includeArchived: false, walletId: null, ct);
+        Assert.Equal(13, resultB.Value.Count);
+        Assert.Contains(resultB.Value, c => c.Name == "UserB Custom" && !c.IsSystem);
+        Assert.DoesNotContain(resultB.Value, c => c.Name == "UserA Custom");
     }
 
     [Fact]
@@ -265,12 +265,12 @@ public sealed class CategoryHandlerTests
         Assert.True(archiveResult.IsSuccess);
 
         // Not visible when includeArchived=false.
-        var activeList = await listHandler.HandleAsync(user.Id, includeArchived: false, ct);
-        Assert.DoesNotContain(activeList, c => c.Name == "Hobbies");
+        var activeList = await listHandler.HandleAsync(user.Id, includeArchived: false, walletId: null, ct);
+        Assert.DoesNotContain(activeList.Value, c => c.Name == "Hobbies");
 
         // Visible when includeArchived=true.
-        var allList = await listHandler.HandleAsync(user.Id, includeArchived: true, ct);
-        var archived = allList.FirstOrDefault(c => c.Name == "Hobbies");
+        var allList = await listHandler.HandleAsync(user.Id, includeArchived: true, walletId: null, ct);
+        var archived = allList.Value.FirstOrDefault(c => c.Name == "Hobbies");
         Assert.NotNull(archived);
         Assert.True(archived.IsArchived);
     }
@@ -308,11 +308,11 @@ public sealed class CategoryHandlerTests
         await createHandler.HandleAsync(
             new CreateCategoryEndpoint.CreateCategoryRequest("AAA Custom"), user.Id, ct);
 
-        var result = await listHandler.HandleAsync(user.Id, includeArchived: false, ct);
+        var result = await listHandler.HandleAsync(user.Id, includeArchived: false, walletId: null, ct);
 
         // System categories must all come before custom categories.
-        var systemEnd = result.ToList().FindLastIndex(c => c.IsSystem);
-        var customStart = result.ToList().FindIndex(c => !c.IsSystem);
+        var systemEnd = result.Value.ToList().FindLastIndex(c => c.IsSystem);
+        var customStart = result.Value.ToList().FindIndex(c => !c.IsSystem);
 
         Assert.True(systemEnd < customStart, "All system categories must appear before any custom category.");
     }

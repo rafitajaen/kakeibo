@@ -15,6 +15,7 @@ public sealed class GetGoalProgressHandler(AppDbContext db, IClock clock)
         CancellationToken ct)
     {
         var goal = await db.Goals
+            .AsNoTracking()
             .FirstOrDefaultAsync(g => g.Id == goalId && g.DeletedAt == null, ct);
 
         if (goal is null)

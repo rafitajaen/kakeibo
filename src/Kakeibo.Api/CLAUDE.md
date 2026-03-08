@@ -326,6 +326,47 @@ public partial class Program;
 | Entity | inherits `Entity` | `Kakeibo.Api.Domain.Entities` (shared) or `Features/{Domain}/` (domain-specific) |
 | EF Core config | `{Entity}Configuration : IEntityTypeConfiguration<T>` | `Kakeibo.Api.Persistence.Configurations` |
 | Options class | `{Name}Options` with `const string SectionName` | `Kakeibo.Api.Infrastructure.*` |
+| Logs class | `{Name}Logs` — `internal static partial class` | same namespace as consumer |
+
+---
+
+## Logging
+
+All logging uses the `[LoggerMessage]` source generator. Direct `logger.Log*()` calls are prohibited (CA1848 = `error` in `.editorconfig`).
+
+- **File**: `{Name}Logs.cs` — never inline in a handler or service.
+- **Class**: `internal static partial class {Name}Logs` in the same namespace as the consumer.
+- **Methods**: `internal static partial void`, first param `this ILogger logger` (extension method syntax).
+
+```csharp
+// WalletHandlerLogs.cs
+namespace Kakeibo.Api.Features.Wallets.CreateWallet;
+
+internal static partial class WalletHandlerLogs
+{
+    [LoggerMessage(3001, LogLevel.Information, "Wallet {WalletId} created by user {UserId}")]
+    internal static partial void WalletCreated(this ILogger logger, Guid walletId, Guid userId);
+}
+
+// Call site — no class prefix, no logger arg
+logger.WalletCreated(wallet.Id, userId);
+```
+
+**EventId ranges:**
+
+| Range | Location |
+|-------|----------|
+| 1100–1199 | Infrastructure/Audit |
+| 1200–1299 | Infrastructure/Email |
+| 1300–1399 | Infrastructure/Storage |
+| 1400–1499 | Infrastructure/WebPush |
+| 1500–1599 | Infrastructure/Events |
+| 2100–2199 | Features/Identity/Jobs |
+| 2200–2299 | Features/Recurring/Jobs |
+| 2300–2399 | Features/Identity/ImportData + ExportData |
+| 3000–3099 | Features/Wallets |
+| 3100–3199 | Features/Notifications/Events |
+| 3200–3299 | Features/Friends |
 
 ---
 

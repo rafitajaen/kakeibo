@@ -24,6 +24,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<Friendship> Friendships => Set<Friendship>();
     public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
+    public DbSet<PlatformPolicy> PlatformPolicy => Set<PlatformPolicy>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

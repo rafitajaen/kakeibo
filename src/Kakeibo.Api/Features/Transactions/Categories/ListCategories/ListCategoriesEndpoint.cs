@@ -10,6 +10,7 @@ public sealed class ListCategoriesEndpoint : IEndpoint
         string Name,
         bool IsSystem,
         bool IsArchived,
+        bool IsPrivate,
         string? BackgroundColor,
         string? TextColor,
         string? Icon);
@@ -23,6 +24,7 @@ public sealed class ListCategoriesEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         bool? includeArchived,
+        Guid? walletId,
         ClaimsPrincipal principal,
         ListCategoriesHandler handler,
         CancellationToken ct)
@@ -32,7 +34,13 @@ public sealed class ListCategoriesEndpoint : IEndpoint
             return TypedResults.Unauthorized();
         }
 
-        var result = await handler.HandleAsync(userId, includeArchived ?? false, ct);
-        return TypedResults.Ok(result);
+        var result = await handler.HandleAsync(userId, includeArchived ?? false, walletId, ct);
+        return result.IsSuccess
+            ? TypedResults.Ok(result.Value)
+            : result.Error.Code switch
+            {
+                "forbidden" => TypedResults.Forbid(),
+                _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
+            };
     }
 }

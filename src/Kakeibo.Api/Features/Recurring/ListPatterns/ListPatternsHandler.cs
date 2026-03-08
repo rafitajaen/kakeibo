@@ -12,6 +12,7 @@ public sealed class ListPatternsHandler(AppDbContext db)
         CancellationToken ct)
     {
         var patterns = await db.RecurringPatterns
+            .AsNoTracking()
             .Include(r => r.Category)
             .Include(r => r.Wallet)
             .Include(r => r.DestinationWallet)

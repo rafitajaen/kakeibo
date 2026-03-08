@@ -29,6 +29,7 @@ public sealed class CreateCategoryHandler(AppDbContext db)
         {
             Name = request.Name,
             UserId = userId,
+            IsPrivate = request.IsPrivate,
             BackgroundColor = request.BackgroundColor,
             TextColor = request.TextColor,
             Icon = request.Icon
@@ -42,6 +43,7 @@ public sealed class CreateCategoryHandler(AppDbContext db)
             category.Name,
             IsSystem: false,
             IsArchived: false,
+            category.IsPrivate,
             category.BackgroundColor,
             category.TextColor,
             category.Icon);

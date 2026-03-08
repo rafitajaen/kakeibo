@@ -18,7 +18,7 @@ public sealed class GetCurrentUserHandler(AppDbContext db)
             return Error.Unauthorized("User is not authenticated.");
         }
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null)
         {
             return Error.NotFound("User not found.");

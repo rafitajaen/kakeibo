@@ -116,7 +116,9 @@
       "backgroundColor": "Background color",
       "textColor": "Text color",
       "preview": "Preview",
-      "previewPlaceholder": "Category name"
+      "previewPlaceholder": "Category name",
+      "isPrivate": "Hide from public wallets",
+      "isPrivateHint": "When enabled, transaction details using this category will be masked for people viewing your public wallets."
     },
     "actions": {
       "edit": "Edit",
@@ -585,7 +587,17 @@
     "received": "Received",
     "sent": "Sent",
     "noReceivedRequests": "No pending friend requests.",
-    "noSentRequests": "No sent friend requests."
+    "noSentRequests": "No sent friend requests.",
+    "removeFriendDialog": {
+      "title": "Remove friend",
+      "description": "Are you sure you want to remove {name} from your friends list? This action cannot be undone.",
+      "sharedWalletsWarning": "This friend is a member of the following shared wallets:",
+      "loseAccessNote": "You will lose access to the wallets marked below.",
+      "roleLabel": "Your role: {role}",
+      "loseAccess": "You will lose access",
+      "confirm": "Remove friend",
+      "cancel": "Cancel"
+    }
   },
   "onboarding": {
     "welcome": {

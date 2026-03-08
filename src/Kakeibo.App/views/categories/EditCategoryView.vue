@@ -33,6 +33,7 @@ async function handleSubmit(values: {
     icon: string | null;
     backgroundColor: string | null;
     textColor: string | null;
+    isPrivate: boolean;
 }) {
     apiError.value = null;
     isSubmitting.value = true;
@@ -71,6 +72,7 @@ async function handleSubmit(values: {
                         :initial-icon="category.icon"
                         :initial-background-color="category.backgroundColor"
                         :initial-text-color="category.textColor"
+                        :initial-is-private="category.isPrivate"
                         :is-system="category.isSystem"
                         :is-submitting="isSubmitting"
                         @submit="handleSubmit"

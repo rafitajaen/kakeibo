@@ -12,8 +12,9 @@ public sealed class ListWalletsHandler(AppDbContext db)
         CancellationToken ct)
     {
         // All wallet access is now through WalletMember records
-        var query = db.Wallets.Where(w =>
-            w.WalletMembers.Any(m => m.UserId == userId));
+        var query = db.Wallets
+            .AsNoTracking()
+            .Where(w => w.WalletMembers.Any(m => m.UserId == userId));
 
         // Exclude archived wallets unless explicitly requested
         if (!includeArchived)

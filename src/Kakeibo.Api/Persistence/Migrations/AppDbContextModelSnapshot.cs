@@ -688,6 +688,33 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.ToTable("password_reset_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PlatformPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("MaintenanceMode")
+                        .HasColumnType("boolean")
+                        .HasColumnName("maintenance_mode");
+
+                    b.Property<bool>("RegistrationEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("registration_enabled");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_platform_policy");
+
+                    b.ToTable("platform_policy", (string)null);
+                });
+
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PushSubscription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1121,6 +1148,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("avatar_url");
 
+                    b.Property<Instant?>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
                     b.Property<Instant>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1190,6 +1221,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("google_id");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocked");
 
                     b.Property<bool>("IsVerified")
                         .HasColumnType("boolean")

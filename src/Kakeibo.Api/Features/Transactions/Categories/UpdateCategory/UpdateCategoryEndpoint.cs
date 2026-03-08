@@ -9,13 +9,15 @@ public sealed class UpdateCategoryEndpoint : IEndpoint
         string Name,
         string? BackgroundColor = null,
         string? TextColor = null,
-        string? Icon = null);
+        string? Icon = null,
+        bool IsPrivate = false);
 
     public sealed record UpdateCategoryResponse(
         Guid Id,
         string Name,
         bool IsSystem,
         bool IsArchived,
+        bool IsPrivate,
         string? BackgroundColor,
         string? TextColor,
         string? Icon);

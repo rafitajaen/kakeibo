@@ -116,7 +116,9 @@
       "backgroundColor": "Color de fondo",
       "textColor": "Color de texto",
       "preview": "Vista previa",
-      "previewPlaceholder": "Nombre de categoría"
+      "previewPlaceholder": "Nombre de categoría",
+      "isPrivate": "Ocultar de billeteras públicas",
+      "isPrivateHint": "Cuando está activado, los detalles de las transacciones con esta categoría serán ocultados para quienes vean tus billeteras públicas."
     },
     "actions": {
       "edit": "Editar",
@@ -585,7 +587,17 @@
     "received": "Recibidas",
     "sent": "Enviadas",
     "noReceivedRequests": "No hay solicitudes de amistad pendientes.",
-    "noSentRequests": "No hay solicitudes de amistad enviadas."
+    "noSentRequests": "No hay solicitudes de amistad enviadas.",
+    "removeFriendDialog": {
+      "title": "Eliminar amigo",
+      "description": "¿Estás seguro de que quieres eliminar a {name} de tu lista de amigos? Esta acción no se puede deshacer.",
+      "sharedWalletsWarning": "Este amigo es miembro de las siguientes billeteras compartidas:",
+      "loseAccessNote": "Perderás acceso a las billeteras marcadas a continuación.",
+      "roleLabel": "Tu rol: {role}",
+      "loseAccess": "Perderás el acceso",
+      "confirm": "Eliminar amigo",
+      "cancel": "Cancelar"
+    }
   },
   "onboarding": {
     "welcome": {

@@ -85,6 +85,7 @@ const props = defineProps<{
     initialIcon?: string | null;
     initialBackgroundColor?: string | null;
     initialTextColor?: string | null;
+    initialIsPrivate?: boolean;
     isSystem?: boolean;
     isSubmitting?: boolean;
 }>();
@@ -97,6 +98,7 @@ const emit = defineEmits<{
             icon: string | null;
             backgroundColor: string | null;
             textColor: string | null;
+            isPrivate: boolean;
         },
     ): void;
 }>();
@@ -109,6 +111,7 @@ const schema = toTypedSchema(
         icon: z.string().nullable().optional(),
         backgroundColor: z.string().nullable().optional(),
         textColor: z.string().nullable().optional(),
+        isPrivate: z.boolean().optional(),
     }),
 );
 
@@ -119,6 +122,7 @@ const form = useForm({
         icon: props.initialIcon ?? null,
         backgroundColor: props.initialBackgroundColor ?? null,
         textColor: props.initialTextColor ?? null,
+        isPrivate: props.initialIsPrivate ?? false,
     },
 });
 
@@ -140,6 +144,7 @@ const onSubmit = form.handleSubmit((values) => {
         icon: values.icon ?? null,
         backgroundColor: values.backgroundColor ?? null,
         textColor: values.textColor ?? null,
+        isPrivate: values.isPrivate ?? false,
     });
 });
 
@@ -255,6 +260,29 @@ defineExpose({ setFieldValue: form.setFieldValue, onSubmit });
                     {{ previewName }}
                 </span>
             </div>
+
+            <!-- Privacy toggle -->
+            <FormField name="isPrivate" v-slot="{ value, handleChange }">
+                <FormItem>
+                    <div class="flex items-start gap-3">
+                        <input
+                            id="category-is-private"
+                            type="checkbox"
+                            :checked="value"
+                            class="mt-0.5 size-4 rounded border-input"
+                            @change="handleChange(($event.target as HTMLInputElement).checked)"
+                        />
+                        <div>
+                            <FormLabel for="category-is-private" class="cursor-pointer">
+                                {{ t("categories.form.isPrivate") }}
+                            </FormLabel>
+                            <p class="text-xs text-muted-foreground mt-0.5">
+                                {{ t("categories.form.isPrivateHint") }}
+                            </p>
+                        </div>
+                    </div>
+                </FormItem>
+            </FormField>
         </template>
 
         <Button type="submit" class="w-full" :disabled="isSubmitting ?? form.isSubmitting.value">

@@ -70,7 +70,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Policy that restricts access to users with the Admin role
+    options.AddPolicy("Admin", policy =>
+        policy.RequireClaim(System.Security.Claims.ClaimTypes.Role, "Admin"));
+});
 
 // --- Persistence: PostgreSQL + EF Core ---
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL")
@@ -182,6 +187,21 @@ using (var migrateScope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
+// --- Platform settings seeding: ensures the singleton row always exists ---
+using (var settingsScope = app.Services.CreateScope())
+{
+    var settingsDb = settingsScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var settingsExist = await settingsDb.PlatformPolicy.AnyAsync();
+    if (!settingsExist)
+    {
+        settingsDb.PlatformPolicy.Add(new PlatformPolicy
+        {
+            UpdatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        await settingsDb.SaveChangesAsync();
+    }
+}
+
 // --- Admin seeding: creates the first admin account if none exists ---
 // Reads ADMIN_EMAIL and ADMIN_PASSWORD from environment variables (set in .env for dev, secrets for prod).
 // Silently skipped if either variable is missing — safe to deploy without pre-seeding.
@@ -215,6 +235,49 @@ if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPa
 // --- Middleware pipeline ---
 app.UseAuthentication();
 app.UseAuthorization();
+
+// --- Maintenance mode: returns 503 for non-admin users when MaintenanceMode is enabled ---
+app.Use(async (ctx, next) =>
+{
+    // Health check and admin endpoints are always reachable
+    if (ctx.Request.Path.StartsWithSegments("/health") ||
+        ctx.Request.Path.StartsWithSegments("/api/admin"))
+    {
+        await next(ctx);
+        return;
+    }
+
+    var cache = ctx.RequestServices.GetRequiredService<ICacheService>();
+
+    // Cache the flag for 30 seconds to avoid a DB hit on every request
+    var maintenanceMode = await cache.GetOrSetAsync(
+        "platform:maintenance_mode",
+        async ct =>
+        {
+            var db = ctx.RequestServices.GetRequiredService<AppDbContext>();
+            var policy = await db.PlatformPolicy.AsNoTracking().FirstOrDefaultAsync(ct);
+            return policy?.MaintenanceMode ?? false;
+        },
+        TimeSpan.FromSeconds(30));
+
+    if (maintenanceMode)
+    {
+        var isAdmin = ctx.User.HasClaim(System.Security.Claims.ClaimTypes.Role, "Admin");
+        if (!isAdmin)
+        {
+            ctx.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsJsonAsync(new
+            {
+                code = "maintenance",
+                message = "The platform is currently under maintenance. Please try again later."
+            });
+            return;
+        }
+    }
+
+    await next(ctx);
+});
 
 // --- Endpoints ---
 app.MapOpenApi();

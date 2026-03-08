@@ -1,21 +1,7 @@
-1. A la hora de crear una wallet se debe poder elegir el balance inicial.
-2. Una wallet debe tener asociado un icono y un color de fondo y un color de letras que tambien deben de ser editables en todo momento y sincronizarse.
-3. Debes de crear un icon picker por categorías con iconos de lucide.
-4. Debes de crear un color picker con una paleta de colores estandar, y que pueda ver tanto el background color como el text color.
-5. A la hora de editar cosas como por ejemplo una wallet no debería se runa pagina independiente si no un dialogo.
-6. Debes de repasar la plataforma entera porque necesito que el usuario sepa en todo momento que hace cada cosa así que ñade tooltips y comentarios en todo los sitios.
-7. La opcion de archivar una wallet debe estar dentro del dialogo de editar.
-8. ¿Donde se editan las categorías? Debe de estar visible en el sidebar.
-9. Puedes crearme un seed de pruebas? con un monton de transacciones y de cosas para poder ver la plataforma con datos rellenos? Debe poder elegirse al crear una cuenta. y en settings uno debe poder eliminar dichos datos de prueba así que debes poder marcarlos para identificarlos.
-10. tanto los settings como las preferencias del usuario deben estar en Dialogos tambien.
-11. Donde edito el perfil del usuario? Debo poder subir mi avatar.
-12. No quiero letras japonesas en el titulo.
-13. DOnde cambio el idioma en el que veo la plataforma? Donde cambio el tema de la plataforma? Deben de estar todo en el popup donde estan las preferencias y los settings del usuario.
-14. Necesito ver la version del software en algun sitio, quizas en el popup donde estan las preferencias y los settings del usuario.
-15. Creo que se prodrían unificar preferencias y settings del usuario.
-16. Toda pagina debe de tener breadcumb.
-17. CUando estoy en modo movil si selecciono algo del sidebar no se me cierra el sidebar.
-18. Deberías crear un wallet picker. Para poder elegir todas, o una seleccion de las que tenga diponibles. se debe poder ver directamente el nombre de la wallet con sus colores con su icono y si es personal o shared.
-19. Como añado un nuevo registro? Debería estar accesible este botón siempre. En movil como FAB, en escritorio en el sidebar al principio de todo.
-20. Deben de aparecer toast/sonner con cada nueva accion que haga como "se ha creado una nueva wallet correctamente"
-21. Toda accion que salga mal debe notificarse al usuario a traves de dialogos o sooner así que repasa la plataforma para poder asegurar esto.
+1. Quiero implementar el registro y el login con google. Debe de ser simultaneo, si me logueo con google y no tengo cuenta pues que me la cree. En el caso de registro o login con google el email quedará verificado automáticamente.
+2. Cada usuario debe tener asociado un username. Se podrá editar cuando se quiera siempre y cuando no haya colision ya que deben ser unicos. El usuario solo podrá editarlo en su perfil, y se asignará automáticamente en la creación del usuario. Algo como user_{xxxxxxx} como patron estará bien.
+3. Los usuarios podrán tener amistades. por lo que se tendrá que crear en el front y en el back una manera de gestionarlas. Y cada usuario tendrá un perfil publico, por lo que se tendrá que habilitar en algun sitio si quieres que las wallets sean publicas o privadas, y algun mecanismo para tener alguna wallet publica pero con categorías privadas.
+4. El flow para poder tener una wallet compartida pasa a ser primeramente el requisito de amistad entre dos usuarios, y despues podrán crear wallets compartidas. Revisa que las wallets compartidas puedan ser de 2 o más usuarios, que no haya nada que impida esto.
+5. A la hora de borrar una amistad se debe advertir al usuario en caso de que se tengan wallets compartidas. Estas wallets no desapareceran, pero ya no podrá acceder a ellas.
+6. Cada usuario tendrá un tipo de permiso distinto en las wallets compartidas. Podrá existir el rol owner, el rol editor y el rol invitado. El owner es el que decide los permisos de cada usuario de esa wallet compartida y su balance inicial. El editor puede decidir su nombre, sus colores, sus iconos y editar añadir gastos y demas. El invitado solo tiene acceso de lectura. Es obvio que el owner tambien tiene los permisos que tiene un editor. Cuando se elimina la amistad entre dos usuarios el owner se queda con esa wallet eliminando las relaciones de los demas usuarios con esa wallet. Puede haber más de owner por wallet. En caso de tener solo un owner y que se elimine la relacion de amistad con otros usuarios se elimina tambien el acceso de ese usuario si no era owner. En caso de multi-owner y de rescindir una amistad, se perderá el acceso compemante a esa wallet.
+

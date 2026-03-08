@@ -11,6 +11,7 @@ public sealed class ListSentRequestsHandler(AppDbContext db)
         CancellationToken ct)
     {
         return await db.FriendRequests
+            .AsNoTracking()
             .Where(r => r.SenderUserId == userId && r.AcceptedAt == null && r.RejectedAt == null)
             .OrderByDescending(r => r.CreatedAt)
             .Select(r => new ListSentRequestsEndpoint.ListSentRequestsResponse(

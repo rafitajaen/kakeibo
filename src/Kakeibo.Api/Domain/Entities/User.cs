@@ -50,4 +50,8 @@ public sealed class User : Entity
 
     // GDPR account deletion — 30-day grace period before permanent deletion.
     public Instant? DeletionRequestedAt { get; set; }
+
+    // Admin-managed access block. Blocked users cannot authenticate.
+    public bool IsBlocked { get; set; }
+    public Instant? BlockedAt { get; set; }
 }

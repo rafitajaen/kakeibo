@@ -19,6 +19,7 @@ public sealed class GetForecastHandler(AppDbContext db, IClock clock)
 
         // Load all active (non-deleted) patterns for the user with their related entities
         var patterns = await db.RecurringPatterns
+            .AsNoTracking()
             .Include(r => r.Category)
             .Include(r => r.Wallet)
             .Where(r => r.UserId == userId && r.DeletedAt == null)

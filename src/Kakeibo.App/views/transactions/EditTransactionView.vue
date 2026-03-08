@@ -28,7 +28,7 @@ onMounted(async () => {
         await Promise.all([
             transactionsStore.fetchTransaction(transactionId),
             transactionsStore.fetchAttachments(transactionId),
-            categoriesStore.fetchCategories(),
+            categoriesStore.fetchCategories(false, walletId),
             walletsStore.fetchWallets(),
         ]);
     } catch {

@@ -21,6 +21,7 @@ public sealed class SearchUsersHandler(AppDbContext db)
         var normalizedQuery = query.ToLowerInvariant();
 
         return await db.Users
+            .AsNoTracking()
             .Where(u => u.Id != excludeUserId && u.Username.Contains(normalizedQuery))
             .OrderBy(u => u.Username)
             .Take(MaxResults)

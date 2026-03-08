@@ -16,6 +16,7 @@ public sealed class ListSessionsHandler(AppDbContext db, IClock clock)
         var now = clock.GetCurrentInstant();
 
         var sessions = await db.RefreshTokens
+            .AsNoTracking()
             .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
             .OrderByDescending(rt => rt.CreatedAt)
             .Select(rt => new ListSessionsEndpoint.SessionItem(

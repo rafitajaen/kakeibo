@@ -13,6 +13,7 @@ public sealed class ListGoalsHandler(AppDbContext db)
         CancellationToken ct)
     {
         var query = db.Goals
+            .AsNoTracking()
             .Include(g => g.Wallet)
             .Where(g => g.UserId == userId && g.DeletedAt == null);
 

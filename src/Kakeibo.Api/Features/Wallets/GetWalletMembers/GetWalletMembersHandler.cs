@@ -27,6 +27,7 @@ public sealed class GetWalletMembersHandler(AppDbContext db)
 
         // Build member list from WalletMembers — Owner first, then by join date
         var members = await db.WalletMembers
+            .AsNoTracking()
             .Where(m => m.WalletId == walletId)
             .Include(m => m.User)
             .OrderBy(m => m.Role)

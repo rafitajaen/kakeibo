@@ -2,15 +2,24 @@
 import { ref, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { Search, UserPlus, Users } from "lucide-vue-next";
+import { Search, UserPlus, Users, AlertTriangle } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import FriendCard from "@/components/friends/FriendCard.vue";
 import UserSearchResults from "@/components/friends/UserSearchResults.vue";
-import { useFriendsStore } from "@/stores/friends";
+import { useFriendsStore, type FriendshipImpact } from "@/stores/friends";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -18,6 +27,13 @@ const friendsStore = useFriendsStore();
 
 const searchQuery = ref("");
 const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
+
+// Dialog state
+const showDeleteDialog = ref(false);
+const pendingDeleteId = ref<string | null>(null);
+const pendingDeleteName = ref("");
+const friendshipImpact = ref<FriendshipImpact | null>(null);
+const isCheckingImpact = ref(false);
 
 onMounted(async () => {
     await Promise.all([friendsStore.fetchFriends(), friendsStore.fetchReceivedRequests()]);
@@ -31,7 +47,32 @@ watch(searchQuery, (query) => {
 });
 
 async function handleDeleteFriendship(friendshipId: string) {
-    await friendsStore.deleteFriendship(friendshipId);
+    const friend = friendsStore.friends.find((f) => f.friendshipId === friendshipId);
+    pendingDeleteId.value = friendshipId;
+    pendingDeleteName.value = friend?.name ?? friend?.username ?? "";
+
+    isCheckingImpact.value = true;
+    try {
+        friendshipImpact.value = await friendsStore.checkFriendshipImpact(friendshipId);
+    } finally {
+        isCheckingImpact.value = false;
+    }
+
+    showDeleteDialog.value = true;
+}
+
+async function confirmDeleteFriendship() {
+    if (!pendingDeleteId.value) return;
+    await friendsStore.deleteFriendship(pendingDeleteId.value);
+    showDeleteDialog.value = false;
+    pendingDeleteId.value = null;
+    friendshipImpact.value = null;
+}
+
+function cancelDeleteFriendship() {
+    showDeleteDialog.value = false;
+    pendingDeleteId.value = null;
+    friendshipImpact.value = null;
 }
 
 async function handleSendRequest(userId: string) {
@@ -39,6 +80,9 @@ async function handleSendRequest(userId: string) {
     searchQuery.value = "";
     friendsStore.searchResults = [];
 }
+
+const hasLostAccess = (impact: FriendshipImpact) =>
+    impact.sharedWallets.some((w) => w.willLoseAccess);
 </script>
 
 <template>
@@ -107,4 +151,78 @@ async function handleSendRequest(userId: string) {
             />
         </div>
     </div>
+
+    <!-- Remove friend confirmation dialog -->
+    <AlertDialog :open="showDeleteDialog" @update:open="(v) => !v && cancelDeleteFriendship()">
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle class="flex items-center gap-2">
+                    <AlertTriangle
+                        v-if="friendshipImpact && friendshipImpact.sharedWallets.length > 0"
+                        class="size-5 text-amber-500"
+                    />
+                    {{ t("friends.removeFriendDialog.title") }}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                    {{ t("friends.removeFriendDialog.description", { name: pendingDeleteName }) }}
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <!-- Shared wallets warning -->
+            <div
+                v-if="friendshipImpact && friendshipImpact.sharedWallets.length > 0"
+                class="space-y-3"
+            >
+                <p class="text-sm font-medium">
+                    {{ t("friends.removeFriendDialog.sharedWalletsWarning") }}
+                </p>
+
+                <p
+                    v-if="hasLostAccess(friendshipImpact)"
+                    class="text-sm text-amber-600 dark:text-amber-400"
+                >
+                    {{ t("friends.removeFriendDialog.loseAccessNote") }}
+                </p>
+
+                <ul class="space-y-1.5">
+                    <li
+                        v-for="wallet in friendshipImpact.sharedWallets"
+                        :key="wallet.id"
+                        class="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                        :class="
+                            wallet.willLoseAccess
+                                ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30'
+                                : ''
+                        "
+                    >
+                        <span class="font-medium">{{ wallet.name }}</span>
+                        <div class="flex items-center gap-2 text-muted-foreground">
+                            <span>{{
+                                t("friends.removeFriendDialog.roleLabel", { role: wallet.yourRole })
+                            }}</span>
+                            <Badge
+                                v-if="wallet.willLoseAccess"
+                                variant="destructive"
+                                class="text-xs"
+                            >
+                                {{ t("friends.removeFriendDialog.loseAccess") }}
+                            </Badge>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <AlertDialogFooter>
+                <AlertDialogCancel @click="cancelDeleteFriendship">
+                    {{ t("friends.removeFriendDialog.cancel") }}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                    class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    @click="confirmDeleteFriendship"
+                >
+                    {{ t("friends.removeFriendDialog.confirm") }}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
 </template>

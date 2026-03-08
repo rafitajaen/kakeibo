@@ -32,6 +32,12 @@ public sealed class GoogleLoginHandler(
         HttpContext httpContext,
         CancellationToken ct)
     {
+        // Google OAuth is disabled when GOOGLE_CLIENT_ID is not configured
+        if (string.IsNullOrEmpty(_googleOptions.ClientId))
+        {
+            return Error.Internal("Google authentication is not configured on this server.");
+        }
+
         // Validate the Google ID token
         GoogleJsonWebSignature.Payload payload;
         try
@@ -51,6 +57,9 @@ public sealed class GoogleLoginHandler(
         var email = payload.Email.ToLowerInvariant();
         var now = clock.GetCurrentInstant();
         var isNewAccount = false;
+
+        // Load platform settings once — needed for registration check below
+        var settings = await db.PlatformPolicy.AsNoTracking().FirstOrDefaultAsync(ct);
 
         // Flow 1: Find existing user by GoogleId
         var user = await db.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId, ct);
@@ -77,7 +86,13 @@ public sealed class GoogleLoginHandler(
             }
             else
             {
-                // Flow 3: Create new user — no password, verified by Google
+                // Flow 3: Create new user — check if registration is enabled first
+                if (settings is not null && !settings.RegistrationEnabled)
+                {
+                    return Error.Forbidden("New registrations are currently disabled.");
+                }
+
+                // Create new user — no password, verified by Google
                 user = new User
                 {
                     Email = email,
@@ -99,6 +114,12 @@ public sealed class GoogleLoginHandler(
                     Email = user.Email
                 });
             }
+        }
+
+        // Blocked users cannot authenticate via Google either
+        if (user.IsBlocked)
+        {
+            return Error.Forbidden("This account has been suspended. Please contact support.");
         }
 
         // Cancel pending account deletion if applicable
