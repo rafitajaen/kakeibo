@@ -4,6 +4,51 @@ Simple Monolith with Vertical Slices + Screaming Architecture.
 
 ---
 
+## Tech Stack
+
+| Component | Description |
+|-----------|-------------|
+| Minimal APIs | Native REPR pattern with IEndpoint interface |
+| ASP.NET Core Authentication | JWT Bearer with HttpOnly cookies |
+| Simple Monolith | Single project, vertical slices + screaming architecture, folder-based domain separation |
+| EntityFramework | ORM with SnakeCaseConvention, NodaTime and PostgreSQL |
+| FluentValidation | Model validation |
+| FusionCache | Cache with Redis |
+| Serilog | Structured logging |
+| OpenTelemetry | Tracing, metrics and logging |
+| Scalar | API documentation |
+| AspNetCore.HealthChecks | Health endpoints for monitoring |
+| Polly | Resilience: retries, circuit breaker, timeouts |
+| System.Threading.Channels | In-memory async event bus (IEventBus, ChannelEventBus, EventDispatcher BackgroundService) |
+| MailKit | SMTP client for sending emails |
+| Hangfire + Hangfire.PostgreSql | Scheduled background jobs with PostgreSQL storage |
+| xUnit v3 | Testing |
+| Testcontainers | Docker containers for integration tests |
+| Minio NuGet SDK | S3-compatible client library (used with MinIO server) |
+
+## Prohibited Technologies
+
+| Technology | Reason |
+|------------|--------|
+| BCrypt | Use PBKDF2-SHA512 (PasswordHasher) |
+| Argon2id | Use PBKDF2-SHA512 (PasswordHasher) |
+| FastEndpoints | Use native Minimal APIs (IEndpoint + MapEndpoint) |
+| MediatR | Use plain handler classes, no CQRS interfaces |
+| Swagger | Use Scalar for API documentation |
+| EF Core InMemory, SQLite in-memory | Use Testcontainers with real PostgreSQL for integration tests |
+| Quartz.NET | Use Hangfire instead |
+| Guid.CreateVersion7() | Little-endian byte order breaks PostgreSQL sorting. Use Guid7 wrapper (Medo.Uuid7) |
+| SonarAnalyzer.CSharp | Use .editorconfig and built-in .NET analyzers instead |
+| MassTransit | Use System.Threading.Channels (IEventBus + ChannelEventBus) |
+| RabbitMQ | Use System.Threading.Channels (IEventBus + ChannelEventBus) |
+| Keycloak | Use ASP.NET Core native JWT Bearer authentication with in-memory signing |
+| Newtonsoft.Json | Use System.Text.Json (built into .NET) |
+| FluentAssertions | Use xUnit v3 native Assert.* methods |
+| `.WithReuse(true)` in Testcontainers | Prohibited — causes test isolation issues |
+| RustFS | Abandoned alpha project (no security patches). Use MinIO server instead |
+
+---
+
 ## Core Principles
 
 - **Vertical Slices**: Each feature is a self-contained folder with endpoint, handler, and validator. No horizontal layers.
