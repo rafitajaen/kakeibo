@@ -113,9 +113,13 @@ export const useFriendsStore = defineStore("friends", () => {
         friends.value = friends.value.filter((f) => f.friendshipId !== friendshipId);
     }
 
+    function clearSearchResults(): void {
+        searchResults.value = [];
+    }
+
     async function searchUsers(query: string): Promise<void> {
         if (query.length < 2) {
-            searchResults.value = [];
+            clearSearchResults();
             return;
         }
         const response = await api.get<UserSearchResult[]>("/api/users/search", {
@@ -146,6 +150,7 @@ export const useFriendsStore = defineStore("friends", () => {
         fetchReceivedRequests,
         fetchSentRequests,
         sendFriendRequest,
+        clearSearchResults,
         acceptRequest,
         rejectRequest,
         cancelRequest,

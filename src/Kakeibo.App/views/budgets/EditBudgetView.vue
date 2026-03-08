@@ -6,6 +6,7 @@ import { useBudgetsStore } from "@/stores/budgets";
 import type { UpdateBudgetData } from "@/stores/budgets";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import BudgetForm from "@/components/budgets/BudgetForm.vue";
 
@@ -42,7 +43,7 @@ async function handleSubmit(values: UpdateBudgetData) {
         await budgetsStore.updateBudget(route.params.id as string, values);
         await router.push({ name: "budgets" });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 422) {
             apiError.value = t("wallets.budgets.errors.validation");
         } else if (status === 403) {

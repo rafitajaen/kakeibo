@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useCategoriesStore } from "@/stores/categories";
 import type { Category } from "@/stores/categories";
+import { getHttpStatus } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +32,7 @@ async function handleArchive(category: Category) {
     try {
         await categoriesStore.archiveCategory(category.id);
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 409) {
             apiError.value = t("categories.errors.hasTransactions");
         } else if (status === 403) {

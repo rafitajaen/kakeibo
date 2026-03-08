@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useCategoriesStore } from "@/stores/categories";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CategoryForm from "@/components/categories/CategoryForm.vue";
 
@@ -26,7 +27,7 @@ async function handleSubmit(values: {
         await categoriesStore.createCategory(values);
         await router.push({ name: "categories" });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 409) {
             apiError.value = t("categories.errors.conflict");
         } else {

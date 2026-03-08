@@ -111,7 +111,9 @@ export const useAuthStore = defineStore("auth", () => {
         });
     }
 
-    // Fetches the current user's profile. Returns null silently on 401.
+    // Fetches the current user's profile on app init.
+    // The catch is intentional: a 401 here is expected when the user is not logged in.
+    // The axios interceptor skips token refresh for /api/auth/me, so the error is silenced.
     async function fetchCurrentUser(): Promise<void> {
         try {
             const response = await api.get<User>("/api/auth/me");

@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Transactions.ListTransactions;
@@ -39,15 +39,10 @@ public sealed class ListTransactionsEndpoint : IEndpoint
         string? to,
         Guid? categoryId,
         string? type,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ListTransactionsHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(
             walletId, userId,
             page ?? 1, pageSize ?? 50,
@@ -59,7 +54,7 @@ public sealed class ListTransactionsEndpoint : IEndpoint
             : result.Error.Code switch
             {
                 "not_found" => TypedResults.NotFound(result.Error),
-                "forbidden" => TypedResults.StatusCode(403),
+                "forbidden" => TypedResults.Forbid(),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }

@@ -177,6 +177,7 @@
       "allTypes": "All types",
       "allCategories": "All categories"
     },
+    "deleteConfirm": "Are you sure you want to delete this transaction?",
     "errors": {
       "notFound": "Transaction not found.",
       "forbidden": "You do not have access to this transaction.",

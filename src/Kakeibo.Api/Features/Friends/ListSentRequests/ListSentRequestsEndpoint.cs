@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Friends.ListSentRequests;
 
@@ -21,15 +21,10 @@ public sealed class ListSentRequestsEndpoint : IEndpoint
     }
 
     private static async Task<IResult> HandleAsync(
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ListSentRequestsHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(userId, ct);
         return TypedResults.Ok(result);
     }

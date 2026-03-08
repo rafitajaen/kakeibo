@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -46,17 +47,13 @@ public sealed class UpdatePatternHandler(AppDbContext db, IClock clock)
             return Error.Validation("Invalid frequency. Must be Daily, Weekly, Biweekly, Monthly, or Yearly.");
         }
 
-        // Parse optional EndDate
+        // Parse optional EndDate using NodaTimeParser
         LocalDate? endDate = null;
         if (request.EndDate is not null)
         {
-            var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
-            if (!endParseResult.Success)
-            {
-                return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
-            }
-
-            endDate = endParseResult.Value;
+            var endResult = NodaTimeParser.ParseLocalDate(request.EndDate, "EndDate");
+            if (endResult.IsFailure) return endResult.Error;
+            endDate = endResult.Value;
 
             // StartDate is immutable; validate EndDate against it
             if (endDate.Value < pattern.StartDate)

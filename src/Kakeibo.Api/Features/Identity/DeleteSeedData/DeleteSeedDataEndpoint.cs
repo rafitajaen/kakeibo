@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Identity.DeleteSeedData;
 
@@ -13,15 +13,10 @@ public sealed class DeleteSeedDataEndpoint : IEndpoint
     }
 
     private static async Task<IResult> HandleAsync(
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         DeleteSeedDataHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         await handler.HandleAsync(userId, ct);
         return TypedResults.NoContent();
     }

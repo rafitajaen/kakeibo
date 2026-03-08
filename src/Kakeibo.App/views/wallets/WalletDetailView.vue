@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useWalletsStore } from "@/stores/wallets";
 import { useFriendsStore } from "@/stores/friends";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ onMounted(async () => {
         // Pre-load friends so the transfer dialog is ready.
         await friendsStore.fetchFriends();
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 404) {
             apiError.value = t("wallets.errors.notFound");
         } else if (status === 403) {
@@ -122,7 +123,7 @@ async function handleTransfer() {
         showTransferDialog.value = false;
         await router.push({ name: "wallets" });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 400) {
             transferError.value = t("wallets.transfer.errorNotFriends");
         } else {

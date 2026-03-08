@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,29 +15,22 @@ public sealed class CreateBudgetHandler(AppDbContext db)
         Guid userId,
         CancellationToken ct)
     {
-        // Parse StartDate and EndDate using NodaTime ISO pattern
-        var startParseResult = LocalDatePattern.Iso.Parse(request.StartDate);
-        if (!startParseResult.Success)
-        {
-            return Error.Validation("Invalid StartDate format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
+        // Parse StartDate and EndDate using NodaTimeParser
+        var startResult = NodaTimeParser.ParseLocalDate(request.StartDate, "StartDate");
+        if (startResult.IsFailure) return startResult.Error;
+        var startDate = startResult.Value;
 
-        var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
-        if (!endParseResult.Success)
-        {
-            return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
-
-        var startDate = startParseResult.Value;
-        var endDate = endParseResult.Value;
+        var endResult = NodaTimeParser.ParseLocalDate(request.EndDate, "EndDate");
+        if (endResult.IsFailure) return endResult.Error;
+        var endDate = endResult.Value;
 
         if (endDate < startDate)
         {
             return Error.Validation("EndDate must be on or after StartDate.");
         }
 
-        // Enforce 5-year maximum period as per business constraints
-        if (endDate > startDate.PlusYears(5))
+        // Enforce maximum period as per business constraints
+        if (endDate > startDate.PlusYears(BusinessConstraints.BudgetMaxYears))
         {
             return Error.Validation("Budget period cannot exceed 5 years.");
         }

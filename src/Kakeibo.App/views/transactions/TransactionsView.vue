@@ -49,7 +49,7 @@ async function loadTransactions() {
 }
 
 async function handleDelete(id: string) {
-    if (!confirm(t("common.delete") + "?")) return;
+    if (!confirm(t("transactions.deleteConfirm"))) return;
     try {
         await transactionsStore.deleteTransaction(id);
     } catch {

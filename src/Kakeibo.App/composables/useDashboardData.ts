@@ -1,13 +1,5 @@
 import { ref, computed } from "vue";
-import {
-    startOfMonth,
-    subMonths,
-    subDays,
-    eachDayOfInterval,
-    format,
-    isSameDay,
-    parseISO,
-} from "date-fns";
+import { startOfMonth, subMonths, subDays, eachDayOfInterval, format } from "date-fns";
 import api from "@/lib/axios";
 import type { Transaction } from "@/stores/transactions";
 
@@ -108,19 +100,25 @@ export function useDashboardData() {
     });
 
     // Daily income/expense totals for the last 90 days (used by the area chart).
+    // Pre-groups transactions by date string (yyyy-MM-dd) for O(1) lookup per day
+    // instead of iterating all transactions for every day (O(days × transactions)).
     const chartData = computed<DailyData[]>(() => {
         const today = new Date();
         const start = subDays(today, 90);
         const days = eachDayOfInterval({ start, end: today });
 
+        const byDate = new Map<string, { income: number; expenses: number }>();
+        for (const t of allTransactions.value) {
+            const key = t.date.slice(0, 10);
+            const entry = byDate.get(key) ?? { income: 0, expenses: 0 };
+            if (t.type === "Income") entry.income += t.amount;
+            else if (t.type === "Expense") entry.expenses += t.amount;
+            byDate.set(key, entry);
+        }
+
         return days.map((day) => {
-            let income = 0;
-            let expenses = 0;
-            for (const t of allTransactions.value) {
-                if (!isSameDay(parseISO(t.date), day)) continue;
-                if (t.type === "Income") income += t.amount;
-                else if (t.type === "Expense") expenses += t.amount;
-            }
+            const key = format(day, "yyyy-MM-dd");
+            const { income, expenses } = byDate.get(key) ?? { income: 0, expenses: 0 };
             return { date: day, income, expenses };
         });
     });

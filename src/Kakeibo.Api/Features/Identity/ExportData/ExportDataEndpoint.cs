@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Identity.ExportData;
 
@@ -14,13 +14,10 @@ public sealed class ExportDataEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         string format,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ExportDataHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return TypedResults.Unauthorized();
-
         var normalizedFormat = format.ToLowerInvariant();
 
         if (normalizedFormat != "sqlite" && normalizedFormat != "csv")

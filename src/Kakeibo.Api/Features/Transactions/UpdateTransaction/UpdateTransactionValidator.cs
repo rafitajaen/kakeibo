@@ -1,4 +1,5 @@
 using FluentValidation;
+using Kakeibo.Api.Common.Utils;
 using NodaTime.Text;
 
 namespace Kakeibo.Api.Features.Transactions.UpdateTransaction;
@@ -9,8 +10,8 @@ public sealed class UpdateTransactionValidator
     public UpdateTransactionValidator()
     {
         RuleFor(x => x.Amount)
-            .GreaterThanOrEqualTo(0.01m)
-            .LessThanOrEqualTo(999_999_999.99m);
+            .GreaterThanOrEqualTo(BusinessConstraints.AmountMin)
+            .LessThanOrEqualTo(BusinessConstraints.AmountMax);
 
         RuleFor(x => x.Description)
             .NotEmpty()

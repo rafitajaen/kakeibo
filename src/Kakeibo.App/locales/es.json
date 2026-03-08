@@ -177,6 +177,7 @@
       "allTypes": "Todos los tipos",
       "allCategories": "Todas las categorías"
     },
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta transacción?",
     "errors": {
       "notFound": "Transacción no encontrada.",
       "forbidden": "No tienes acceso a esta transacción.",

@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.CreateWallet;
@@ -36,16 +36,10 @@ public sealed class CreateWalletEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         CreateWalletRequest request,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         CreateWalletHandler handler,
         CancellationToken ct)
     {
-        // Extract userId from JWT claims and pass to handler — keeps handler testable without HttpContext
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(request, userId, ct);
         return result.IsSuccess
             ? TypedResults.Created($"/api/wallets/{result.Value.Id}", result.Value)

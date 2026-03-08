@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Transactions.UploadAttachment;
@@ -26,15 +26,10 @@ public sealed class UploadAttachmentEndpoint : IEndpoint
     private static async Task<IResult> HandleAsync(
         Guid id,
         IFormFile file,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         UploadAttachmentHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(id, file, userId, ct);
         return result.IsSuccess
             ? TypedResults.Created($"/api/transactions/{id}/attachments/{result.Value.Id}", result.Value)
@@ -42,7 +37,7 @@ public sealed class UploadAttachmentEndpoint : IEndpoint
             {
                 "validation" => TypedResults.UnprocessableEntity(result.Error),
                 "not_found" => TypedResults.NotFound(result.Error),
-                "forbidden" => TypedResults.StatusCode(403),
+                "forbidden" => TypedResults.Forbid(),
                 _ => TypedResults.Problem(result.Error.Message, statusCode: 500)
             };
     }

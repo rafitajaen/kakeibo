@@ -78,7 +78,7 @@ function cancelDeleteFriendship() {
 async function handleSendRequest(userId: string) {
     await friendsStore.sendFriendRequest(userId);
     searchQuery.value = "";
-    friendsStore.searchResults = [];
+    friendsStore.clearSearchResults();
 }
 
 const hasLostAccess = (impact: FriendshipImpact) =>

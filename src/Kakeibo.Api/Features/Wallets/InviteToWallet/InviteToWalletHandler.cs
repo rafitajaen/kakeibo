@@ -18,9 +18,6 @@ public sealed class InviteToWalletHandler(
     IClock clock,
     ILogger<InviteToWalletHandler> logger)
 {
-    // Max pending invitations per wallet to prevent spam
-    private const int MaxPendingInvitations = 50;
-
     public async Task<Result<InviteToWalletEndpoint.InviteToWalletResponse>> HandleAsync(
         InviteToWalletEndpoint.InviteToWalletRequest request,
         Guid walletId,
@@ -96,7 +93,7 @@ public sealed class InviteToWalletHandler(
             i.RevokedAt == null &&
             i.ExpiresAt > now, ct);
 
-        if (pendingCount >= MaxPendingInvitations)
+        if (pendingCount >= BusinessConstraints.MaxPendingInvitations)
         {
             return Error.Conflict("This wallet has reached the maximum number of pending invitations.");
         }
@@ -107,7 +104,7 @@ public sealed class InviteToWalletHandler(
             InviterUserId = requesterId,
             InviteeEmail = request.InviteeEmail,
             Code = RandomString.Generate(32, CharSets.AlphanumericSafe),
-            ExpiresAt = now.Plus(Duration.FromDays(7))
+            ExpiresAt = now.Plus(Duration.FromDays(BusinessConstraints.InvitationExpiryDays))
         };
 
         db.Invitations.Add(invitation);

@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useWalletsStore } from "@/stores/wallets";
 import { useAuthStore } from "@/stores/auth";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -38,7 +39,7 @@ async function handleAccept() {
         await walletsStore.acceptInvitation(code);
         accepted.value = true;
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 404) {
             apiError.value = t("wallets.invitation.errors.notFound");
         } else if (status === 422) {

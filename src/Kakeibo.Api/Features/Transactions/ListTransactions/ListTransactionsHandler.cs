@@ -45,16 +45,18 @@ public sealed class ListTransactionsHandler(AppDbContext db)
                 t.DeletedAt == null);
 
         // Apply optional filters
-        if (!string.IsNullOrEmpty(from) && LocalDatePattern.Iso.Parse(from).Success)
+        if (!string.IsNullOrEmpty(from))
         {
-            var fromDate = LocalDatePattern.Iso.Parse(from).Value;
-            query = query.Where(t => t.Date >= fromDate);
+            var fromParse = LocalDatePattern.Iso.Parse(from);
+            if (fromParse.Success)
+                query = query.Where(t => t.Date >= fromParse.Value);
         }
 
-        if (!string.IsNullOrEmpty(to) && LocalDatePattern.Iso.Parse(to).Success)
+        if (!string.IsNullOrEmpty(to))
         {
-            var toDate = LocalDatePattern.Iso.Parse(to).Value;
-            query = query.Where(t => t.Date <= toDate);
+            var toParse = LocalDatePattern.Iso.Parse(to);
+            if (toParse.Success)
+                query = query.Where(t => t.Date <= toParse.Value);
         }
 
         if (categoryId.HasValue)

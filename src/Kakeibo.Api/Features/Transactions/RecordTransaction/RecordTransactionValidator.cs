@@ -1,4 +1,5 @@
 using FluentValidation;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using NodaTime.Text;
 
@@ -15,8 +16,8 @@ public sealed class RecordTransactionValidator
             .WithMessage("Type must be Income, Expense, or Transfer.");
 
         RuleFor(x => x.Amount)
-            .GreaterThanOrEqualTo(0.01m)
-            .LessThanOrEqualTo(999_999_999.99m);
+            .GreaterThanOrEqualTo(BusinessConstraints.AmountMin)
+            .LessThanOrEqualTo(BusinessConstraints.AmountMax);
 
         RuleFor(x => x.Description)
             .NotEmpty()

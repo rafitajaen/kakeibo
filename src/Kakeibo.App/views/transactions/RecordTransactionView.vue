@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useTransactionsStore } from "@/stores/transactions";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TransactionForm from "@/components/transactions/TransactionForm.vue";
 
@@ -41,7 +42,7 @@ async function handleSubmit(values: {
         await transactionsStore.recordTransaction({ ...values, walletId });
         await router.push({ name: "transactions", params: { walletId } });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 403) {
             apiError.value = t("transactions.errors.forbidden");
         } else {

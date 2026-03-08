@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useWalletsStore } from "@/stores/wallets";
 import { useAuthStore } from "@/stores/auth";
+import { getHttpStatus } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MemberList from "@/components/wallets/MemberList.vue";
@@ -42,7 +43,7 @@ async function handleRemove(userId: string) {
             await router.push({ name: "wallets" });
         }
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 403) {
             apiError.value = t("wallets.members.errors.forbidden");
         } else if (status === 404) {

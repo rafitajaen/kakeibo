@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -29,20 +30,16 @@ public sealed class UpdateGoalHandler(AppDbContext db, IClock clock)
             return Error.Forbidden("You do not have access to this goal.");
         }
 
-        // Parse optional Deadline
+        // Parse optional Deadline using NodaTimeParser
         LocalDate? deadline = null;
         if (request.Deadline is not null)
         {
-            var parseResult = LocalDatePattern.Iso.Parse(request.Deadline);
-            if (!parseResult.Success)
-            {
-                return Error.Validation("Invalid Deadline format. Expected ISO 8601 (YYYY-MM-DD).");
-            }
-
-            deadline = parseResult.Value;
+            var deadlineResult = NodaTimeParser.ParseLocalDate(request.Deadline, "Deadline");
+            if (deadlineResult.IsFailure) return deadlineResult.Error;
+            deadline = deadlineResult.Value;
 
             var today = clock.GetCurrentInstant().InUtc().Date;
-            if (deadline.Value > today.PlusYears(10))
+            if (deadline.Value > today.PlusYears(BusinessConstraints.GoalMaxYears))
             {
                 return Error.Validation("Deadline cannot be more than 10 years in the future.");
             }

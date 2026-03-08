@@ -6,6 +6,7 @@ import { useRecurringStore } from "@/stores/recurring";
 import type { UpdatePatternData } from "@/stores/recurring";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RecurringForm from "@/components/recurring/RecurringForm.vue";
 
@@ -44,7 +45,7 @@ async function handleSubmit(values: UpdatePatternData) {
         await recurringStore.updatePattern(route.params.id as string, values);
         await router.push({ name: "recurring" });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 422) {
             apiError.value = t("wallets.recurring.errors.validation");
         } else if (status === 403) {

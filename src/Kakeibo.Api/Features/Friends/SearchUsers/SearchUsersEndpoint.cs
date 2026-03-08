@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Friends.SearchUsers;
 
@@ -20,15 +20,10 @@ public sealed class SearchUsersEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         string q,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         SearchUsersHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var results = await handler.HandleAsync(q, userId, ct);
         return TypedResults.Ok(results);
     }

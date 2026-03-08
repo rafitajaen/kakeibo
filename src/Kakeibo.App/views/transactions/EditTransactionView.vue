@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useTransactionsStore } from "@/stores/transactions";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TransactionForm from "@/components/transactions/TransactionForm.vue";
 import TransactionAttachmentList from "@/components/transactions/TransactionAttachmentList.vue";
@@ -79,7 +80,7 @@ async function handleSubmit(values: {
         await transactionsStore.updateTransaction(transactionId, values);
         await router.push({ name: "transactions", params: { walletId } });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 404) {
             apiError.value = t("transactions.errors.notFound");
         } else if (status === 403) {

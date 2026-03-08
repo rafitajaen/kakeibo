@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Transactions.Events;
 using Kakeibo.Api.Infrastructure.Events;
@@ -23,18 +24,14 @@ public sealed class RecordTransactionHandler(AppDbContext db, IEventBus eventBus
             return Error.Validation("Invalid transaction type. Must be Income, Expense, or Transfer.");
         }
 
-        // Parse LocalDate using NodaTime ISO pattern — never DateTime.Parse
-        var parseResult = LocalDatePattern.Iso.Parse(request.Date);
-        if (!parseResult.Success)
-        {
-            return Error.Validation("Invalid date format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
+        // Parse LocalDate using NodaTimeParser — never DateTime.Parse
+        var dateResult = NodaTimeParser.ParseLocalDate(request.Date, "Date");
+        if (dateResult.IsFailure) return dateResult.Error;
+        var date = dateResult.Value;
 
-        var date = parseResult.Value;
-
-        // Reject dates more than 1 year in the future
+        // Reject dates beyond the maximum future horizon as per business constraints
         var today = clock.GetCurrentInstant().InUtc().Date;
-        if (date > today.PlusYears(1))
+        if (date > today.PlusYears(BusinessConstraints.TransactionMaxFutureYears))
         {
             return Error.Validation("Transaction date cannot be more than 1 year in the future.");
         }

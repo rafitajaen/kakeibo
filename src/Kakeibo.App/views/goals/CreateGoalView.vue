@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useGoalsStore } from "@/stores/goals";
 import type { CreateGoalData } from "@/stores/goals";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GoalForm from "@/components/goals/GoalForm.vue";
 
@@ -31,7 +32,7 @@ async function handleSubmit(values: CreateGoalData) {
         await goalsStore.createGoal(values);
         await router.push({ name: "goals" });
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 422) {
             apiError.value = t("wallets.goals.errors.validation");
         } else {

@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -28,26 +29,18 @@ public sealed class CreatePatternHandler(AppDbContext db, IClock clock)
             return Error.Validation("Invalid frequency. Must be Daily, Weekly, Biweekly, Monthly, or Yearly.");
         }
 
-        // Parse StartDate using NodaTime ISO pattern
-        var startParseResult = LocalDatePattern.Iso.Parse(request.StartDate);
-        if (!startParseResult.Success)
-        {
-            return Error.Validation("Invalid StartDate format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
-
-        var startDate = startParseResult.Value;
+        // Parse StartDate using NodaTimeParser
+        var startResult = NodaTimeParser.ParseLocalDate(request.StartDate, "StartDate");
+        if (startResult.IsFailure) return startResult.Error;
+        var startDate = startResult.Value;
 
         // Parse optional EndDate
         LocalDate? endDate = null;
         if (request.EndDate is not null)
         {
-            var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
-            if (!endParseResult.Success)
-            {
-                return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
-            }
-
-            endDate = endParseResult.Value;
+            var endResult = NodaTimeParser.ParseLocalDate(request.EndDate, "EndDate");
+            if (endResult.IsFailure) return endResult.Error;
+            endDate = endResult.Value;
 
             if (endDate.Value < startDate)
             {

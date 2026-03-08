@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import InvitationForm from "@/components/wallets/InvitationForm.vue";
@@ -24,7 +25,7 @@ async function handleSubmit(email: string) {
         await walletsStore.inviteMember(walletId, email);
         successMessage.value = t("wallets.invitation.success");
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 409) {
             apiError.value = t("wallets.invitation.errors.conflict");
         } else if (status === 403) {

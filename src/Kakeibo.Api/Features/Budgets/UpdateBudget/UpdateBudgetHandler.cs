@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -30,28 +31,21 @@ public sealed class UpdateBudgetHandler(AppDbContext db, IClock clock)
             return Error.Forbidden("You do not have access to this budget.");
         }
 
-        // Parse new dates
-        var startParseResult = LocalDatePattern.Iso.Parse(request.StartDate);
-        if (!startParseResult.Success)
-        {
-            return Error.Validation("Invalid StartDate format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
+        // Parse new dates using NodaTimeParser
+        var startResult = NodaTimeParser.ParseLocalDate(request.StartDate, "StartDate");
+        if (startResult.IsFailure) return startResult.Error;
+        var newStartDate = startResult.Value;
 
-        var endParseResult = LocalDatePattern.Iso.Parse(request.EndDate);
-        if (!endParseResult.Success)
-        {
-            return Error.Validation("Invalid EndDate format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
-
-        var newStartDate = startParseResult.Value;
-        var newEndDate = endParseResult.Value;
+        var endResult = NodaTimeParser.ParseLocalDate(request.EndDate, "EndDate");
+        if (endResult.IsFailure) return endResult.Error;
+        var newEndDate = endResult.Value;
 
         if (newEndDate < newStartDate)
         {
             return Error.Validation("EndDate must be on or after StartDate.");
         }
 
-        if (newEndDate > newStartDate.PlusYears(5))
+        if (newEndDate > newStartDate.PlusYears(BusinessConstraints.BudgetMaxYears))
         {
             return Error.Validation("Budget period cannot exceed 5 years.");
         }

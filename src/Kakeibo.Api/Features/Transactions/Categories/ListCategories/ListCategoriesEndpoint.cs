@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Transactions.Categories.ListCategories;
 
@@ -25,15 +25,10 @@ public sealed class ListCategoriesEndpoint : IEndpoint
     private static async Task<IResult> HandleAsync(
         bool? includeArchived,
         Guid? walletId,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ListCategoriesHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(userId, includeArchived ?? false, walletId, ct);
         return result.IsSuccess
             ? TypedResults.Ok(result.Value)

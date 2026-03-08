@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useBudgetsStore } from "@/stores/budgets";
 import { useCategoriesStore } from "@/stores/categories";
 import { useWalletsStore } from "@/stores/wallets";
+import { getHttpStatus } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import BudgetList from "@/components/budgets/BudgetList.vue";
@@ -34,7 +35,7 @@ async function handleDelete(id: string) {
     try {
         await budgetsStore.deleteBudget(id);
     } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
+        const status = getHttpStatus(err);
         if (status === 403) {
             apiError.value = t("wallets.budgets.errors.forbidden");
         } else if (status === 404) {

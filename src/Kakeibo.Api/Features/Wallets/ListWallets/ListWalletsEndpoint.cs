@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 
 namespace Kakeibo.Api.Features.Wallets.ListWallets;
@@ -27,15 +27,10 @@ public sealed class ListWalletsEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         bool? includeArchived,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ListWalletsHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var result = await handler.HandleAsync(userId, includeArchived ?? false, ct);
         return TypedResults.Ok(result);
     }

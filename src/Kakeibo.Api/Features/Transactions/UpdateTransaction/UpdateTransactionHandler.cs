@@ -1,4 +1,5 @@
 using Kakeibo.Api.Common.Abstractions;
+using Kakeibo.Api.Common.Utils;
 using Kakeibo.Api.Domain.Entities;
 using Kakeibo.Api.Features.Transactions.Events;
 using Kakeibo.Api.Infrastructure.Events;
@@ -43,14 +44,10 @@ public sealed class UpdateTransactionHandler(AppDbContext db, IEventBus eventBus
             return Error.Forbidden("You do not have access to this transaction.");
         }
 
-        // Parse new date
-        var parseResult = LocalDatePattern.Iso.Parse(request.Date);
-        if (!parseResult.Success)
-        {
-            return Error.Validation("Invalid date format. Expected ISO 8601 (YYYY-MM-DD).");
-        }
-
-        var newDate = parseResult.Value;
+        // Parse new date using NodaTimeParser
+        var dateResult = NodaTimeParser.ParseLocalDate(request.Date, "Date");
+        if (dateResult.IsFailure) return dateResult.Error;
+        var newDate = dateResult.Value;
         var today = clock.GetCurrentInstant().InUtc().Date;
         if (newDate > today.PlusYears(1))
         {

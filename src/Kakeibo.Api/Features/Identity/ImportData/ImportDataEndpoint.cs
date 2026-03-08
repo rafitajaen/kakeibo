@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using Kakeibo.Api.Common.Endpoints;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kakeibo.Api.Features.Identity.ImportData;
 
@@ -19,13 +19,10 @@ public sealed class ImportDataEndpoint : IEndpoint
 
     private static async Task<IResult> HandleAsync(
         [AsParameters] ImportDataRequest request,
-        ClaimsPrincipal principal,
+        [FromHeader(Name = "X-User-Id")] Guid userId,
         ImportDataHandler handler,
         CancellationToken ct)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return TypedResults.Unauthorized();
-
         var file = request.File!;
         await using var stream = file.OpenReadStream();
 
