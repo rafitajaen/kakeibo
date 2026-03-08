@@ -196,6 +196,12 @@
     "balance": "Balance",
     "currency": "Currency",
     "createNew": "New wallet",
+    "accounts": "Accounts",
+    "myFinances": "My Finances",
+    "assets": "Assets",
+    "debts": "Debts",
+    "net": "Net",
+    "viewArchived": "View archived",
     "type": {
       "personal": "Personal",
       "shared": "Shared"
@@ -773,7 +779,14 @@
     "language": "Language",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
-    "admin": "Admin"
+    "admin": "Admin",
+    "netBalance": "Net balance",
+    "tabs": {
+      "home": "Home",
+      "wallets": "Wallets",
+      "transactions": "Transactions",
+      "more": "More"
+    }
   },
   "admin": {
     "title": "Admin Panel",
@@ -807,5 +820,15 @@
       "confirmDeleteTitle": "Delete user?",
       "confirmDeleteDescription": "Schedule deletion for {email}? This starts the 30-day grace period."
     }
+  },
+  "period": {
+    "always": "Always",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "previous": "Previous period",
+    "next": "Next period",
+    "select": "Select period"
   }
 }

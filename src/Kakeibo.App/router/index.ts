@@ -113,6 +113,11 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/views/categories/EditCategoryView.vue"),
             },
             {
+                path: "transactions",
+                name: "transactions-global",
+                component: () => import("@/views/transactions/GlobalTransactionsView.vue"),
+            },
+            {
                 path: "wallets/:walletId/transactions",
                 name: "transactions",
                 component: () => import("@/views/transactions/TransactionsView.vue"),

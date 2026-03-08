@@ -15,7 +15,7 @@ defineProps<{
     >
         <p class="text-muted-foreground">{{ emptyMessage }}</p>
     </div>
-    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div v-else class="divide-y divide-border">
         <WalletCard v-for="wallet in wallets" :key="wallet.id" :wallet="wallet" />
     </div>
 </template>

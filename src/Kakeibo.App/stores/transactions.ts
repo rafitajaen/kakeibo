@@ -10,7 +10,10 @@ export interface Transaction {
     date: string; // ISO date "YYYY-MM-DD"
     categoryId: string;
     categoryName: string;
+    categoryColor?: string | null;
+    categoryIcon?: string | null;
     walletId: string;
+    walletName?: string | null;
     destinationWalletId?: string | null;
     notes?: string | null;
     createdAt: string;
@@ -56,6 +59,15 @@ export interface ListTransactionsParams {
     type?: string | null;
 }
 
+export interface ListAllTransactionsParams {
+    page?: number;
+    pageSize?: number;
+    from?: string | null;
+    to?: string | null;
+    categoryId?: string | null;
+    type?: string | null;
+}
+
 export interface TransactionListResult {
     items: Transaction[];
     total: number;
@@ -64,9 +76,12 @@ export interface TransactionListResult {
 export const useTransactionsStore = defineStore("transactions", () => {
     // State
     const transactions = ref<Transaction[]>([]);
+    const allTransactions = ref<Transaction[]>([]);
+    const allTransactionsTotal = ref(0);
     const currentTransaction = ref<Transaction | null>(null);
     const total = ref(0);
     const isLoading = ref(false);
+    const isAllLoading = ref(false);
     const attachments = ref<TransactionAttachment[]>([]);
     const isAttachmentsLoading = ref(false);
 
@@ -97,6 +112,27 @@ export const useTransactionsStore = defineStore("transactions", () => {
             total.value = response.data.total;
         } finally {
             isLoading.value = false;
+        }
+    }
+
+    // Fetches a paginated list of transactions across all user wallets.
+    async function fetchAllTransactions(params: ListAllTransactionsParams = {}): Promise<void> {
+        isAllLoading.value = true;
+        try {
+            const response = await api.get<TransactionListResult>("/api/transactions/all", {
+                params: {
+                    page: params.page ?? 1,
+                    pageSize: params.pageSize ?? 50,
+                    ...(params.from ? { from: params.from } : {}),
+                    ...(params.to ? { to: params.to } : {}),
+                    ...(params.categoryId ? { categoryId: params.categoryId } : {}),
+                    ...(params.type ? { type: params.type } : {}),
+                },
+            });
+            allTransactions.value = response.data.items;
+            allTransactionsTotal.value = response.data.total;
+        } finally {
+            isAllLoading.value = false;
         }
     }
 
@@ -220,14 +256,18 @@ export const useTransactionsStore = defineStore("transactions", () => {
 
     return {
         transactions,
+        allTransactions,
+        allTransactionsTotal,
         currentTransaction,
         total,
         isLoading,
+        isAllLoading,
         attachments,
         isAttachmentsLoading,
         incomeTransactions,
         expenseTransactions,
         fetchTransactions,
+        fetchAllTransactions,
         fetchTransaction,
         recordTransaction,
         updateTransaction,

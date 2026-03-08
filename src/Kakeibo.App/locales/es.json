@@ -196,6 +196,12 @@
     "balance": "Saldo",
     "currency": "Moneda",
     "createNew": "Nueva cartera",
+    "accounts": "Cuentas",
+    "myFinances": "Mis finanzas",
+    "assets": "Activos",
+    "debts": "Deudas",
+    "net": "Neto",
+    "viewArchived": "Ver archivadas",
     "type": {
       "personal": "Personal",
       "shared": "Compartida"
@@ -773,7 +779,14 @@
     "language": "Idioma",
     "lightMode": "Modo claro",
     "darkMode": "Modo oscuro",
-    "admin": "Admin"
+    "admin": "Admin",
+    "netBalance": "Balance neto",
+    "tabs": {
+      "home": "Inicio",
+      "wallets": "Cuentas",
+      "transactions": "Movimientos",
+      "more": "Más"
+    }
   },
   "admin": {
     "title": "Panel de Administración",
@@ -807,5 +820,15 @@
       "confirmDeleteTitle": "¿Eliminar usuario?",
       "confirmDeleteDescription": "¿Programar la eliminación de {email}? Esto inicia el período de gracia de 30 días."
     }
+  },
+  "period": {
+    "always": "Siempre",
+    "today": "Hoy",
+    "week": "Semana",
+    "month": "Mes",
+    "year": "Año",
+    "previous": "Período anterior",
+    "next": "Período siguiente",
+    "select": "Seleccionar período"
   }
 }
