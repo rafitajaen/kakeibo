@@ -14,7 +14,6 @@ Personal finance and shared expense management platform inspired by traditional 
 - **No prohibited technologies**: Check the Tech Stack section in the project-specific `CLAUDE.md` (API or App) for the prohibited technologies list.
 - **Guid7**: Use `Guid7.NewGuid()` for entity IDs. `Guid.CreateVersion7()` is PROHIBITED.
 - **NodaTime**: Use `Instant`, `LocalDate`, `LocalTime`. Never `DateTime` or `DateTimeOffset`.
-- **Never `dotnet format`**: Prohibited in all forms (`bun run api:format`, `dotnet format`, etc.). The user runs formatting manually.
 - **Sequential execution**: NEVER run build, test, or format commands in parallel (no parallel subagents). Execute them sequentially to avoid saturating the host OS.
 
 ---
@@ -143,7 +142,7 @@ Handlers auto-registered by Scrutor. No MVC controllers, no FastEndpoints, no Me
 
 ### Before Committing
 
-1. Backend: `bun run api:build && bun run api:test`
+1. Backend: `bun run api:format && bun run api:build && bun run api:test`
 2. Frontend (when exists): `bun run app:format && bun run app:lint && bun run app:test:unit`
 3. Email (if changed): `bun run email:format`
 4. Re-stage any files modified by the formatters before committing: `git add <files>`

@@ -42,7 +42,7 @@ interface Check {
 
 // ─── CHECKS ─────────────────────────────────────────────────────────────────
 // Executed sequentially (never in parallel) per CLAUDE.md sequential execution rule.
-// Format checks are intentionally excluded (user runs dotnet format manually — mandatory.md Rule 7).
+// Format checks are intentionally excluded here — CI validates formatting via `dotnet format --verify-no-changes` (api:format:check).
 const CHECKS: Check[] = [
   // ── API (backend) ─────────────────────────────────────────────────────────
   {

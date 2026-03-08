@@ -271,7 +271,8 @@ All commands run from the **monorepo root** via `bun run <script>`.
 |---------|-------------|
 | `bun run api:restore` | Restore .NET packages |
 | `bun run api:build` | Build solution in Release mode |
-| `bun run api:format:check` | Verify C# formatting (CI only — user runs `dotnet format` manually) |
+| `bun run api:format` | Apply C# formatting (`dotnet format`) |
+| `bun run api:format:check` | Verify C# formatting (`--verify-no-changes`, used by CI) |
 | `bun run api:test` | Run all tests |
 
 #### App Commands (Frontend)
@@ -338,8 +339,6 @@ bun run app:format && bun run app:lint
 git add <modified-files>   # Re-stage files modified by formatters
 git commit -m "feat(app): add new feature"
 ```
-
-Backend formatting (`dotnet format`) is **never** run by Claude — the user runs it manually (see `.claude/rules/mandatory.md` Rule 7).
 
 ---
 

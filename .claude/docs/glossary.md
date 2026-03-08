@@ -1620,7 +1620,7 @@ Terms that are explicitly banned from the codebase and documentation, along with
 | **Repository Pattern** | `AppDbContext` directly | No repository abstraction layer. Handlers inject `AppDbContext` and query `DbSet<T>` directly |
 | **Settings / Config suffix** | `Options` suffix | Configuration binding classes must use `{Name}Options` naming (TD-009). `*Settings` and `*Config` suffixes are prohibited |
 | **npx** | `bunx` (or `bunx --bun`) | The project uses Bun as the package manager. `npx` may resolve the wrong registry (mandatory.md Rule 9) |
-| **dotnet format** (Claude execution) | User runs manually | Claude must never execute `dotnet format` in any form. The user always runs formatting manually (mandatory.md Rule 7) |
+
 
 ---
 

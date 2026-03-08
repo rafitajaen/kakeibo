@@ -96,6 +96,8 @@ JWT_SECRET_KEY=
 
 ### Services & Ports
 
+> Consolidated reference for local development and production. The Docker Compose tables above show the host:container port mapping per service.
+
 | Service | Port(s) | Type | Local URL | Prod |
 |---------|---------|------|-----------|------|
 | Kakeibo.Api | 5000 | .NET API | http://localhost:5000 | ✅ |
@@ -115,3 +117,17 @@ JWT_SECRET_KEY=
 | Aspire OTLP | 18889 | OTLP gRPC receiver | — | ✅ |
 
 > Internal-only ports must never be exposed outside the Docker network. Port 5432 is flagged `## REMOVE ON PRODUCTION`. All production admin access to internal services via SSH tunnel only.
+
+---
+
+## Project Configuration
+
+| Component | Description |
+|-----------|-------------|
+| .slnx | Solution format |
+| .editorconfig | Style configuration |
+| Directory.Build.props | Centralized properties |
+| Directory.Packages.props | Centralized package management |
+| .env / appsettings.json | Secrets and configuration |
+| InternalsVisibleTo | Every src project exposes internals to its corresponding test project |
+| No nested src/ in src/ | Projects under `src/` must not contain a nested `src/` subfolder. See mandatory.md Rule 10. |

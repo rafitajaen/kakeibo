@@ -22,7 +22,7 @@ Runs on every pull request to `main`. Four jobs:
 
 | Job | Status | What it validates |
 |-----|--------|------------------|
-| `quality-api` | ✅ Active | .NET build + format check + unit tests |
+| `quality-api` | ✅ Active | .NET build + format check (`--verify-no-changes`) + unit tests |
 | `quality-app` | ✅ Active | Lint + unit tests + build |
 | `quality-email` | ✅ Active | Typecheck + lint + format + tests |
 | `quality-docker` | ⏸️ Disabled | Docker build validation (no push) |
@@ -35,7 +35,7 @@ services are production-ready (change `if: false` to `if: true` to enable).
 Local mirror of the CI quality gates. Runs checks sequentially (never parallel) and
 skips Testcontainers tests gracefully when Docker is unavailable — avoiding false failures
 on machines without Docker. Invoked via `bun run check:api|app|email|docs`.
-Intentionally excludes `dotnet format` (user-managed per mandatory.md Rule 7).
+
 
 ### Release Workflow (`.github/workflows/release.yml`)
 
