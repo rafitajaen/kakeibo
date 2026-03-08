@@ -7,6 +7,7 @@ import type { Category } from "@/stores/categories";
 import { getHttpStatus } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CategoryList from "@/components/categories/CategoryList.vue";
 
@@ -68,11 +69,18 @@ function handleEdit(category: Category) {
                     </TabsList>
 
                     <TabsContent value="system">
-                        <CategoryList :categories="systemCategories" :show-actions="false" />
+                        <div v-if="categoriesStore.isLoading" class="space-y-2">
+                            <Skeleton v-for="i in 5" :key="i" class="h-10 w-full rounded-md" />
+                        </div>
+                        <CategoryList v-else :categories="systemCategories" :show-actions="false" />
                     </TabsContent>
 
                     <TabsContent value="custom">
+                        <div v-if="categoriesStore.isLoading" class="space-y-2">
+                            <Skeleton v-for="i in 5" :key="i" class="h-10 w-full rounded-md" />
+                        </div>
                         <CategoryList
+                            v-else
                             :categories="customCategories"
                             :show-actions="true"
                             @edit="handleEdit"

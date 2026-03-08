@@ -31,9 +31,9 @@ function mountList(budgets: Budget[], isLoading = false) {
 }
 
 describe("BudgetList", () => {
-    it("shows loading message when isLoading is true", () => {
+    it("shows skeleton placeholders when isLoading is true", () => {
         const wrapper = mountList([], true);
-        expect(wrapper.text()).toContain("Loading...");
+        expect(wrapper.findAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
     });
 
     it("shows empty state message when list is empty", () => {

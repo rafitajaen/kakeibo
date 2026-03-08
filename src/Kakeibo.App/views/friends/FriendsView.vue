@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -129,8 +130,8 @@ const hasLostAccess = (impact: FriendshipImpact) =>
         </Card>
 
         <!-- Friends list -->
-        <div v-if="friendsStore.isLoading" class="text-center py-8 text-muted-foreground">
-            {{ t("common.loading") }}
+        <div v-if="friendsStore.isLoading" class="space-y-3">
+            <Skeleton v-for="i in 3" :key="i" class="h-16 w-full rounded-lg" />
         </div>
 
         <div

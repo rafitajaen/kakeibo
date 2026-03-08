@@ -50,19 +50,19 @@ const ICON_LIST = [
     "Scissors",
 ];
 
-// Preset background color palette.
+// Preset background color palette (Tailwind 200-level for clear visual distinction).
 const BG_COLORS = [
-    { value: "#EFF6FF", label: "Blue" },
-    { value: "#F0FDF4", label: "Green" },
-    { value: "#FFF7ED", label: "Orange" },
-    { value: "#FFF1F2", label: "Red" },
-    { value: "#FAF5FF", label: "Purple" },
-    { value: "#FDF2F8", label: "Pink" },
-    { value: "#EEF2FF", label: "Indigo" },
-    { value: "#F0FDFA", label: "Teal" },
-    { value: "#ECFDF5", label: "Emerald" },
-    { value: "#FEFCE8", label: "Yellow" },
-    { value: "#F9FAFB", label: "Gray" },
+    { value: "#BFDBFE", label: "Blue" },
+    { value: "#BBF7D0", label: "Green" },
+    { value: "#FED7AA", label: "Orange" },
+    { value: "#FECACA", label: "Red" },
+    { value: "#E9D5FF", label: "Purple" },
+    { value: "#FBCFE8", label: "Pink" },
+    { value: "#C7D2FE", label: "Indigo" },
+    { value: "#99F6E4", label: "Teal" },
+    { value: "#A7F3D0", label: "Emerald" },
+    { value: "#FEF08A", label: "Yellow" },
+    { value: "#E5E7EB", label: "Gray" },
     { value: "#FFFFFF", label: "White" },
 ];
 

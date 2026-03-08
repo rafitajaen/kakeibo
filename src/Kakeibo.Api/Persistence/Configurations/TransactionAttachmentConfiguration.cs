@@ -42,5 +42,8 @@ public sealed class TransactionAttachmentConfiguration : IEntityTypeConfiguratio
 
         // Fast lookup of all attachments for a transaction.
         builder.HasIndex(a => a.TransactionId);
+
+        // Mirror Transaction's query filter so direct attachment queries also exclude soft-deleted users.
+        builder.HasQueryFilter(a => a.Transaction!.User!.DeletedAt == null);
     }
 }

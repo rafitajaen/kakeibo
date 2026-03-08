@@ -45,9 +45,9 @@ function mountComponent(goals: Goal[], isLoading = false) {
 }
 
 describe("GoalSummary", () => {
-    it("shows loading when isLoading is true", () => {
+    it("shows skeleton placeholders when isLoading is true", () => {
         const wrapper = mountComponent([], true);
-        expect(wrapper.text()).toContain("Loading...");
+        expect(wrapper.findAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
     });
 
     it("shows empty state with create link when no goals", () => {

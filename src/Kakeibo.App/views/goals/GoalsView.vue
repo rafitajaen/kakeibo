@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import GoalList from "@/components/goals/GoalList.vue";
 import { useGoalsStore } from "@/stores/goals";
 
@@ -28,8 +29,8 @@ async function handleDelete(id: string) {
             </Button>
         </div>
 
-        <div v-if="goalsStore.isLoading" class="text-center py-8 text-muted-foreground">
-            {{ t("common.loading") }}
+        <div v-if="goalsStore.isLoading" class="space-y-4">
+            <Skeleton v-for="i in 3" :key="i" class="h-28 w-full rounded-lg" />
         </div>
 
         <div

@@ -2,6 +2,7 @@
 import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Transaction } from "@/stores/transactions";
 import { useCurrencyFormat } from "@/composables/useCurrencyFormat";
 
@@ -31,7 +32,12 @@ function formatAmount(tx: Transaction): string {
             <CardTitle>{{ t("dashboard.recentTransactions.title") }}</CardTitle>
         </CardHeader>
         <CardContent>
-            <p v-if="isLoading" class="text-muted-foreground">{{ t("common.loading") }}</p>
+            <div v-if="isLoading" class="space-y-1">
+                <div v-for="i in 5" :key="i" class="flex justify-between items-center py-1">
+                    <Skeleton class="h-4 w-48" />
+                    <Skeleton class="h-4 w-16" />
+                </div>
+            </div>
             <p v-else-if="transactions.length === 0" class="text-sm text-muted-foreground">
                 {{ t("dashboard.recentTransactions.empty") }}
             </p>

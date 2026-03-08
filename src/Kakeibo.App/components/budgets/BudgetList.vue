@@ -3,6 +3,7 @@ import { useI18n } from "vue-i18n";
 import type { Budget } from "@/stores/budgets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import BudgetProgressBar from "@/components/budgets/BudgetProgressBar.vue";
 import BudgetStatusBadge from "@/components/budgets/BudgetStatusBadge.vue";
 
@@ -26,7 +27,9 @@ function remaining(budget: Budget): number {
 
 <template>
     <div class="space-y-3">
-        <p v-if="isLoading" class="text-sm text-muted-foreground">{{ t("common.loading") }}</p>
+        <div v-if="isLoading" class="space-y-3">
+            <Skeleton v-for="i in 3" :key="i" class="h-24 w-full rounded-lg" />
+        </div>
 
         <p v-else-if="budgets.length === 0" class="text-sm text-muted-foreground">
             {{ t("wallets.budgets.empty") }}

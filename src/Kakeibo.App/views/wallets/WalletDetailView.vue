@@ -8,6 +8,7 @@ import { getHttpStatus } from "@/lib/http";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -269,7 +270,19 @@ async function handleTransfer() {
             </Card>
         </template>
 
-        <p v-else class="text-muted-foreground">{{ t("common.loading") }}</p>
+        <Card v-else>
+            <CardHeader class="flex flex-row items-start justify-between gap-2">
+                <Skeleton class="h-7 w-48" />
+                <Skeleton class="h-5 w-16 rounded-full" />
+            </CardHeader>
+            <CardContent class="space-y-4">
+                <Skeleton class="h-10 w-32" />
+                <Skeleton class="h-8 w-40" />
+            </CardContent>
+            <CardFooter class="flex flex-wrap gap-2">
+                <Skeleton v-for="i in 3" :key="i" class="h-9 w-24 rounded-md" />
+            </CardFooter>
+        </Card>
 
         <!-- Transfer wallet dialog -->
         <Dialog v-model:open="showTransferDialog">

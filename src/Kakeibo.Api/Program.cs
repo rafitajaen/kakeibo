@@ -1,5 +1,6 @@
 using System.Text;
 using DotNetEnv;
+using Serilog;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -31,6 +32,10 @@ Env.Load("../../.env");
 Env.Load(".env.local");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- Logging: Serilog ---
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.ReadFrom.Configuration(ctx.Configuration));
 
 // --- OpenAPI ---
 builder.Services.AddOpenApi();
@@ -255,7 +260,7 @@ app.Use(async (ctx, next) =>
         async ct =>
         {
             var db = ctx.RequestServices.GetRequiredService<AppDbContext>();
-            var policy = await db.PlatformPolicy.AsNoTracking().FirstOrDefaultAsync(ct);
+            var policy = await db.PlatformPolicy.AsNoTracking().OrderBy(p => p.Id).FirstOrDefaultAsync(ct);
             return policy?.MaintenanceMode ?? false;
         },
         TimeSpan.FromSeconds(30));

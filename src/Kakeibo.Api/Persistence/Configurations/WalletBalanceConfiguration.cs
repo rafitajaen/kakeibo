@@ -21,5 +21,8 @@ public sealed class WalletBalanceConfiguration : IEntityTypeConfiguration<Wallet
             .WithOne(w => w.WalletBalance)
             .HasForeignKey<WalletBalance>(wb => wb.WalletId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Mirror Wallet's query filter so direct balance queries also exclude archived wallets.
+        builder.HasQueryFilter(wb => wb.Wallet!.DeletedAt == null);
     }
 }

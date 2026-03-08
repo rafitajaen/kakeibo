@@ -3,6 +3,7 @@ import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Budget } from "@/stores/budgets";
 
 defineProps<{
@@ -24,7 +25,15 @@ function percentageUsed(budget: Budget): number {
             <CardTitle>{{ t("dashboard.budgetSummary.title") }}</CardTitle>
         </CardHeader>
         <CardContent>
-            <p v-if="isLoading" class="text-muted-foreground">{{ t("common.loading") }}</p>
+            <div v-if="isLoading" class="space-y-3">
+                <div v-for="i in 3" :key="i" class="space-y-1">
+                    <div class="flex justify-between">
+                        <Skeleton class="h-4 w-32" />
+                        <Skeleton class="h-4 w-8" />
+                    </div>
+                    <Skeleton class="h-2 w-full" />
+                </div>
+            </div>
             <div v-else-if="budgets.length === 0" class="text-sm text-muted-foreground">
                 <p>{{ t("dashboard.budgetSummary.empty") }}</p>
                 <RouterLink

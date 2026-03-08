@@ -34,11 +34,10 @@ public sealed class ListFriendsHandler(AppDbContext db)
                 f.UserA.AvatarUrl,
                 f.CreatedAt.ToString()));
 
-        // Combine and sort by username
-        var friends = await asUserA.Concat(asUserB)
-            .OrderBy(f => f.Username)
-            .ToListAsync(ct);
+        // Materialize each side separately — EF Core cannot translate UNION after client projection
+        var listA = await asUserA.ToListAsync(ct);
+        var listB = await asUserB.ToListAsync(ct);
 
-        return friends;
+        return listA.Concat(listB).OrderBy(f => f.Username).ToList();
     }
 }

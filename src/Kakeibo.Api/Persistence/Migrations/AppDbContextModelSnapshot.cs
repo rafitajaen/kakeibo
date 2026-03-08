@@ -1398,10 +1398,8 @@ namespace Kakeibo.Api.Persistence.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Guest")
                         .HasColumnName("role");
 
                     b.Property<Instant>("UpdatedAt")

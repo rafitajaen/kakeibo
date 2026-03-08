@@ -15,12 +15,12 @@ public sealed class WalletMemberConfiguration : IEntityTypeConfiguration<WalletM
         // Each user can only be a member of a given wallet once
         builder.HasIndex(m => new { m.WalletId, m.UserId }).IsUnique();
 
-        // Store enum as string for readability
+        // Store enum as string for readability. No HasDefaultValue — entity initializer sets Guest,
+        // so EF always sends the value and no DB default is needed (avoids sentinel conflict with Owner=0).
         builder.Property(m => m.Role)
             .HasConversion<string>()
             .HasMaxLength(20)
-            .IsRequired()
-            .HasDefaultValue(WalletMemberRole.Guest);
+            .IsRequired();
 
         // Cascade from wallet: removing a wallet removes all member records
         builder.HasOne(m => m.Wallet)

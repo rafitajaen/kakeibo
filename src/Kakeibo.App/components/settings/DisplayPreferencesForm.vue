@@ -28,7 +28,7 @@ const schema = toTypedSchema(
         weekStartDay: z.coerce.number().int().min(0).max(6),
         monthStartDay: z.coerce.number().int().min(1).max(28),
         currencyDecimalSeparator: z.enum([".", ","]),
-        currencyGroupSeparator: z.enum([",", ".", " ", ""]),
+        currencyGroupSeparator: z.enum([",", ".", " ", "none"]),
         currencySymbolPosition: z.enum(["before", "after"]),
         currencyDisplay: z.enum(["symbol", "code", "none"]),
     }),
@@ -40,11 +40,9 @@ const form = useForm({
         weekStartDay: authStore.user?.weekStartDay ?? 1,
         monthStartDay: authStore.user?.monthStartDay ?? 1,
         currencyDecimalSeparator: (authStore.user?.currencyDecimalSeparator ?? ".") as "." | ",",
-        currencyGroupSeparator: (authStore.user?.currencyGroupSeparator ?? ",") as
-            | ","
-            | "."
-            | " "
-            | "",
+        currencyGroupSeparator: ((authStore.user?.currencyGroupSeparator ?? ",") === ""
+            ? "none"
+            : (authStore.user?.currencyGroupSeparator ?? ",")) as "," | "." | " " | "none",
         currencySymbolPosition: (authStore.user?.currencySymbolPosition ?? "before") as
             | "before"
             | "after",
@@ -59,7 +57,8 @@ const form = useForm({
 const previewAmount = computed(() => {
     const values = form.values;
     const decimal = values.currencyDecimalSeparator ?? ".";
-    const group = values.currencyGroupSeparator ?? ",";
+    const group =
+        values.currencyGroupSeparator === "none" ? "" : (values.currencyGroupSeparator ?? ",");
     const pos = values.currencySymbolPosition ?? "before";
     const display = values.currencyDisplay ?? "symbol";
     const currency = authStore.user?.currency ?? "USD";
@@ -89,7 +88,8 @@ const onSubmit = form.handleSubmit(async (values) => {
         weekStartDay: values.weekStartDay,
         monthStartDay: values.monthStartDay,
         currencyDecimalSeparator: values.currencyDecimalSeparator,
-        currencyGroupSeparator: values.currencyGroupSeparator,
+        currencyGroupSeparator:
+            values.currencyGroupSeparator === "none" ? "" : values.currencyGroupSeparator,
         currencySymbolPosition: values.currencySymbolPosition,
         currencyDisplay: values.currencyDisplay,
     });
@@ -203,7 +203,7 @@ const onSubmit = form.handleSubmit(async (values) => {
                             <SelectItem value=" ">{{
                                 t("settings.display.separators.space")
                             }}</SelectItem>
-                            <SelectItem value="">{{
+                            <SelectItem value="none">{{
                                 t("settings.display.separators.none")
                             }}</SelectItem>
                         </SelectContent>

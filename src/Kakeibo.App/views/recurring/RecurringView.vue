@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RecurringList from "@/components/recurring/RecurringList.vue";
 import ForecastList from "@/components/recurring/ForecastList.vue";
@@ -53,8 +54,8 @@ async function setForecastDays(days: number) {
 
             <!-- Patterns tab -->
             <TabsContent value="patterns">
-                <div v-if="recurringStore.isLoading" class="text-center py-8 text-muted-foreground">
-                    {{ t("common.loading") }}
+                <div v-if="recurringStore.isLoading" class="space-y-4">
+                    <Skeleton v-for="i in 3" :key="i" class="h-20 w-full rounded-lg" />
                 </div>
 
                 <div
@@ -86,8 +87,8 @@ async function setForecastDays(days: number) {
                     </Button>
                 </div>
 
-                <div v-if="recurringStore.isLoading" class="text-center py-8 text-muted-foreground">
-                    {{ t("common.loading") }}
+                <div v-if="recurringStore.isLoading" class="space-y-4">
+                    <Skeleton v-for="i in 3" :key="i" class="h-20 w-full rounded-lg" />
                 </div>
 
                 <ForecastList v-else :items="recurringStore.forecast" />

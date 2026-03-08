@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useWalletsStore } from "@/stores/wallets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import WalletList from "@/components/wallets/WalletList.vue";
 
 const { t } = useI18n();
@@ -25,7 +26,11 @@ onMounted(async () => {
             </Button>
         </div>
 
-        <Tabs default-value="personal">
+        <div v-if="walletsStore.isLoading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Skeleton v-for="i in 3" :key="i" class="h-32 w-full rounded-lg" />
+        </div>
+
+        <Tabs v-else default-value="personal">
             <TabsList class="mb-4">
                 <TabsTrigger value="personal">{{ t("wallets.personal") }}</TabsTrigger>
                 <TabsTrigger value="shared">{{ t("wallets.shared") }}</TabsTrigger>

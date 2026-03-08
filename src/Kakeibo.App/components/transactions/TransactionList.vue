@@ -4,6 +4,7 @@ import type { Transaction } from "@/stores/transactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 defineProps<{
     transactions: Transaction[];
@@ -19,7 +20,9 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <p v-if="isLoading" class="text-muted-foreground">{{ t("common.loading") }}</p>
+    <div v-if="isLoading" class="space-y-2">
+        <Skeleton v-for="i in 4" :key="i" class="h-20 w-full rounded-lg" />
+    </div>
 
     <template v-else>
         <p v-if="transactions.length === 0" class="text-muted-foreground">
