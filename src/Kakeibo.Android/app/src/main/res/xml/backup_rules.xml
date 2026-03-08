@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup rules for Android 11 and below (android:fullBackupContent).
+    On Android 12+, data_extraction_rules.xml takes precedence.
+    Exclude the same sensitive prefs file.
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="kakeibo_secure_prefs.xml" />
+</full-backup-content>

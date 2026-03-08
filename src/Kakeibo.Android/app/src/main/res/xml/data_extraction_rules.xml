@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Rules for Android's data extraction (cloud backup / migration) feature.
+    Exclude sensitive files from backup — JWT tokens and encrypted prefs must never
+    be backed up to Google Drive or transferred to a new device as-is.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="kakeibo_secure_prefs.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="kakeibo_secure_prefs.xml" />
+    </device-transfer>
+</data-extraction-rules>

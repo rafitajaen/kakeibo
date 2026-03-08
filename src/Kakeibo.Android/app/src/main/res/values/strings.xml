@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kakeibo</string>
+
+    <!-- Navigation labels -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_wallets">Wallets</string>
+    <string name="nav_activity">Activity</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Auth -->
+    <string name="auth_login">Log in</string>
+    <string name="auth_register">Create account</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_no_account">Don\'t have an account?</string>
+    <string name="auth_already_account">Already have an account?</string>
+
+    <!-- Common actions -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_add">Add</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_retry">Retry</string>
+
+    <!-- Common states -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_empty">Nothing here yet.</string>
+    <string name="state_error">Something went wrong. Please try again.</string>
+
+    <!-- Currency / amounts -->
+    <string name="amount_income">Income</string>
+    <string name="amount_expense">Expense</string>
+    <string name="amount_balance">Balance</string>
+    <string name="amount_transfer">Transfer</string>
+</resources>

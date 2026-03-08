@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Splash screen theme.
+        The SplashScreen API requires a dedicated theme applied to MainActivity
+        before Compose takes over. The windowBackground and the new splash screen
+        attributes define what is shown during cold start.
+
+        After the splash screen is dismissed, KakeiboTheme (Compose) takes full
+        control of the visual appearance.
+    -->
+    <style name="Theme.Kakeibo.Splash" parent="Theme.SplashScreen">
+        <!-- Splash background colour — matches KakeiboTheme primary -->
+        <item name="windowSplashScreenBackground">#1A6B3A</item>
+        <!-- Icon shown on the splash screen (adaptive icon) -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- Duration of the animated icon (0 = instant) -->
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <!-- Theme to transition to after the splash -->
+        <item name="postSplashScreenTheme">@style/Theme.Kakeibo</item>
+    </style>
+
+    <!-- Post-splash theme — transparent background so Compose draws everything -->
+    <style name="Theme.Kakeibo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+</resources>
