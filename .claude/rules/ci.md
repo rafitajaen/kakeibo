@@ -11,7 +11,7 @@ versioning, enforce quality on every contribution, and document every release au
 ### Commitlint (`commitlint.config.ts`)
 
 Enforces `type(scope): description` format on every commit via the `commit-msg` lefthook.
-Valid scopes: `app`, `api`, `email`, `docs`, `infra`, `deps`, `release`, `skills`, `roadmap`.
+Valid scopes: `app`, `api`, `android`, `email`, `docs`, `infra`, `deps`, `release`, `skills`, `roadmap`.
 Max subject: 100 chars. This is the upstream source for version calculation, CHANGELOG content,
 and GitHub Release notes — a poorly worded commit becomes a poorly worded release note.
 **Every new project must add its scope here, in `quality.yml`, `quality-check.ts`, and `package.json`.**

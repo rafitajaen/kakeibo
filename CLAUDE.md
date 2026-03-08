@@ -29,7 +29,7 @@ type(scope): description
 ```
 
 - **Types**: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
-- **Scopes (scope-enum):** `app` · `api` · `email` · `docs` · `infra` · `deps` · `release` · `skills` · `roadmap`
+- **Scopes (scope-enum):** `app` · `api` · `android` · `email` · `docs` · `infra` · `deps` · `release` · `skills` · `roadmap`
 - When adding a new project, add its scope to `commitlint.config.ts` and update this list.
 - Scope is optional but recommended
 - Max subject length: 100 characters

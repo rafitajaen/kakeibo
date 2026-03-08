@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { Bell, LogOut, Moon, Settings, Sun } from "lucide-vue-next";
-import { useAuthStore } from "@/stores/auth";
 import { useSidebar } from "@/components/ui/sidebar";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,59 +12,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useUserNav } from "@/composables/useUserNav";
 
-const { t, locale } = useI18n();
-const router = useRouter();
-const auth = useAuthStore();
+const { t } = useI18n();
 const { isMobile } = useSidebar();
+const { initials, displayName, isDark, toggleTheme, setLocale, handleLogout, auth, locale } =
+    useUserNav();
 
 const appVersion = import.meta.env.VITE_APP_VERSION as string;
-
-// Compute initials from name (up to 2 chars) or fallback to first letter of email.
-const initials = computed(() => {
-    const user = auth.user;
-    if (!user) return "?";
-    if (user.name) {
-        return user.name
-            .split(" ")
-            .map((s) => s[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2);
-    }
-    return user.email[0].toUpperCase();
-});
-
-const displayName = computed(
-    () => auth.user?.name ?? auth.user?.username ?? auth.user?.email ?? "",
-);
-
-// Theme toggle — persists to localStorage and applies class on <html>
-function isDark(): boolean {
-    return document.documentElement.classList.contains("dark");
-}
-
-function toggleTheme() {
-    const html = document.documentElement;
-    if (isDark()) {
-        html.classList.remove("dark");
-        localStorage.setItem("theme", "light");
-    } else {
-        html.classList.add("dark");
-        localStorage.setItem("theme", "dark");
-    }
-}
-
-// Language toggle — persists to localStorage
-function setLocale(lang: string) {
-    locale.value = lang;
-    localStorage.setItem("locale", lang);
-}
-
-async function handleLogout() {
-    await auth.logout();
-    router.push({ name: "login" });
-}
 </script>
 
 <template>

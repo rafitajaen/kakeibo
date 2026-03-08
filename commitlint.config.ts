@@ -5,7 +5,7 @@ const config: UserConfig = {
   rules: {
     'scope-enum': [
       2, 'always',
-      ['app', 'api', 'email', 'docs', 'infra', 'deps', 'release', 'skills', 'roadmap'],
+      ['app', 'api', 'android', 'email', 'docs', 'infra', 'deps', 'release', 'skills', 'roadmap'],
     ],
     'scope-empty': [0],
     'subject-empty': [2, 'never'],
