@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Kakeibo.Api.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260307095722_AddFriendshipTables")]
-    partial class AddFriendshipTables
+    [Migration("20260308071820_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -128,6 +128,12 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("icon");
 
+                    b.Property<bool>("IsPrivate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_private");
+
                     b.Property<bool>("IsSeedData")
                         .HasColumnType("boolean")
                         .HasColumnName("is_seed_data");
@@ -166,6 +172,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#EFF6FF",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Home",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Housing",
                             TextColor = "#1D4ED8",
@@ -177,6 +184,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#F0FDF4",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Car",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Transportation",
                             TextColor = "#15803D",
@@ -188,6 +196,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FFF7ED",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "UtensilsCrossed",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Food & Dining",
                             TextColor = "#C2410C",
@@ -199,6 +208,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FFF1F2",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Heart",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Health & Wellness",
                             TextColor = "#BE123C",
@@ -210,6 +220,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FAF5FF",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Tv",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Entertainment & Leisure",
                             TextColor = "#7E22CE",
@@ -221,6 +232,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FDF2F8",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "ShoppingCart",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Shopping & Personal",
                             TextColor = "#9D174D",
@@ -232,6 +244,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#EEF2FF",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "BookOpen",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Education",
                             TextColor = "#3730A3",
@@ -243,6 +256,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#F0FDFA",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Repeat",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Subscriptions & Bills",
                             TextColor = "#0F766E",
@@ -254,6 +268,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#ECFDF5",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "PiggyBank",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Savings & Investments",
                             TextColor = "#065F46",
@@ -265,6 +280,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FEFCE8",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "CreditCard",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Debt & Loans",
                             TextColor = "#854D0E",
@@ -276,6 +292,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#FFF1F2",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "Gift",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Gifts & Donations",
                             TextColor = "#9F1239",
@@ -287,6 +304,7 @@ namespace Kakeibo.Api.Persistence.Migrations
                             BackgroundColor = "#F9FAFB",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(17672256000000000L),
                             Icon = "MoreHorizontal",
+                            IsPrivate = false,
                             IsSeedData = false,
                             Name = "Other",
                             TextColor = "#374151",
@@ -671,6 +689,33 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasDatabaseName("ix_password_reset_tokens_user_id");
 
                     b.ToTable("password_reset_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PlatformPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("MaintenanceMode")
+                        .HasColumnType("boolean")
+                        .HasColumnName("maintenance_mode");
+
+                    b.Property<bool>("RegistrationEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("registration_enabled");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_platform_policy");
+
+                    b.ToTable("platform_policy", (string)null);
                 });
 
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.PushSubscription", b =>
@@ -1106,6 +1151,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("avatar_url");
 
+                    b.Property<Instant?>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
                     b.Property<Instant>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1175,6 +1224,10 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("google_id");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocked");
 
                     b.Property<bool>("IsVerified")
                         .HasColumnType("boolean")
@@ -1281,10 +1334,6 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("OwnerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_id");
-
                     b.Property<string>("TextColor")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
@@ -1300,11 +1349,16 @@ namespace Kakeibo.Api.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Private")
+                        .HasColumnName("visibility");
+
                     b.HasKey("Id")
                         .HasName("pk_wallets");
-
-                    b.HasIndex("OwnerId")
-                        .HasDatabaseName("ix_wallets_owner_id");
 
                     b.ToTable("wallets", (string)null);
                 });
@@ -1344,6 +1398,14 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Property<Instant?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Guest")
+                        .HasColumnName("role");
 
                     b.Property<Instant>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1679,18 +1741,6 @@ namespace Kakeibo.Api.Persistence.Migrations
                     b.Navigation("Transaction");
 
                     b.Navigation("UploadedByUser");
-                });
-
-            modelBuilder.Entity("Kakeibo.Api.Domain.Entities.Wallet", b =>
-                {
-                    b.HasOne("Kakeibo.Api.Domain.Entities.User", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_wallets_users_owner_id");
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Kakeibo.Api.Domain.Entities.WalletBalance", b =>
