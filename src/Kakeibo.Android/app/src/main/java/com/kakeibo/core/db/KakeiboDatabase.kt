@@ -13,9 +13,9 @@ import androidx.room.RoomDatabase
  * Add @Entity classes and @Dao interfaces to entities/daos as features are implemented.
  */
 @Database(
-    entities = [],          // Add entities here: WalletEntity::class, TransactionEntity::class, ...
+    entities = [PlaceholderEntity::class], // Replace with real entities as features are implemented
     version = 1,
-    exportSchema = true,
+    exportSchema = false,
 )
 abstract class KakeiboDatabase : RoomDatabase() {
     // Add DAO abstract functions here as features are implemented:
