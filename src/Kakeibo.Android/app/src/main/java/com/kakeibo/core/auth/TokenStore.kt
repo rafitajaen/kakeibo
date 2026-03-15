@@ -39,12 +39,22 @@ class TokenStore @Inject constructor(
         get() = prefs.getString(KEY_REFRESH_TOKEN, null)
         set(value) = prefs.edit().putString(KEY_REFRESH_TOKEN, value).apply()
 
+    /** ISO-4217 currency code selected by the user at registration (e.g. "USD", "EUR"). */
+    var currency: String?
+        get() = prefs.getString(KEY_CURRENCY, null)
+        set(value) = prefs.edit().putString(KEY_CURRENCY, value).apply()
+
     fun clear() {
-        prefs.edit().remove(KEY_ACCESS_TOKEN).remove(KEY_REFRESH_TOKEN).apply()
+        prefs.edit()
+            .remove(KEY_ACCESS_TOKEN)
+            .remove(KEY_REFRESH_TOKEN)
+            .remove(KEY_CURRENCY)
+            .apply()
     }
 
     private companion object {
         const val KEY_ACCESS_TOKEN = "access_token"
         const val KEY_REFRESH_TOKEN = "refresh_token"
+        const val KEY_CURRENCY = "user_currency"
     }
 }

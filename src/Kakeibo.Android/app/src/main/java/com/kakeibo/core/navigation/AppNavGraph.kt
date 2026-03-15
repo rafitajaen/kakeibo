@@ -7,48 +7,53 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.kakeibo.core.navigation.shell.AppShell
+import com.kakeibo.features.auth.presentation.ForgotPasswordScreen
+import com.kakeibo.features.auth.presentation.LoginScreen
+import com.kakeibo.features.auth.presentation.RegisterScreen
+import com.kakeibo.features.auth.presentation.ResetPasswordScreen
+import com.kakeibo.features.auth.presentation.VerifyEmailScreen
+import com.kakeibo.features.onboarding.presentation.OnboardingScreen
 
 /**
  * Root navigation graph for the Kakeibo app.
  *
- * Structure:
- * - Auth graph: login, register, email verification, forgot/reset password
- * - Main graph: app shell (bottom nav / nav rail / drawer) wrapping all authenticated screens
+ * - Auth graph: login, register, email verification, forgot/reset password, onboarding.
+ * - Main graph: [AppShell] with bottom nav wrapping all authenticated screens.
  *
- * Deep links from FCM notifications are handled by passing the intent to [navController].
+ * [startAuthenticated] skips the auth flow when a valid token is already stored.
  */
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
+    startAuthenticated: Boolean = false,
 ) {
     NavHost(
         navController = navController,
-        startDestination = LoginRoute,
+        startDestination = if (startAuthenticated) DashboardRoute else LoginRoute,
     ) {
-        // Auth screens (no shell / bottom nav)
         composable<LoginRoute> {
-            // TODO: LoginScreen(navController)
+            LoginScreen(navController = navController)
         }
         composable<RegisterRoute> {
-            // TODO: RegisterScreen(navController)
+            RegisterScreen(navController = navController)
         }
         composable<VerifyEmailRoute> {
-            // TODO: VerifyEmailScreen(navController)
+            VerifyEmailScreen(navController = navController)
         }
         composable<ForgotPasswordRoute> {
-            // TODO: ForgotPasswordScreen(navController)
+            ForgotPasswordScreen(navController = navController)
         }
         composable<ResetPasswordRoute> { entry ->
             val route: ResetPasswordRoute = entry.toRoute()
-            // TODO: ResetPasswordScreen(token = route.token, navController)
+            ResetPasswordScreen(token = route.token, navController = navController)
         }
         composable<OnboardingRoute> {
-            // TODO: OnboardingScreen(navController)
+            OnboardingScreen(navController = navController)
         }
 
-        // Main authenticated shell — bottom nav / nav rail / drawer selected automatically
+        // Authenticated shell — bottom nav + inner NavHost for all feature screens
         composable<DashboardRoute> {
-            AppShell(navController = navController)
+            AppShell(outerNavController = navController)
         }
     }
 }

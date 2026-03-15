@@ -2,6 +2,10 @@ package com.kakeibo.core.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.kakeibo.features.transactions.data.db.TransactionEntity
+import com.kakeibo.features.transactions.data.db.TransactionsDao
+import com.kakeibo.features.wallets.data.db.WalletEntity
+import com.kakeibo.features.wallets.data.db.WalletsDao
 
 /**
  * Room database for Kakeibo offline cache.
@@ -9,17 +13,13 @@ import androidx.room.RoomDatabase
  * Room is a read cache — not the source of truth.
  * Every write goes to the API; Room is populated from API responses to enable
  * instant display of stale data while a refresh is in flight.
- *
- * Add @Entity classes and @Dao interfaces to entities/daos as features are implemented.
  */
 @Database(
-    entities = [PlaceholderEntity::class], // Replace with real entities as features are implemented
-    version = 1,
+    entities = [WalletEntity::class, TransactionEntity::class],
+    version = 2,
     exportSchema = false,
 )
 abstract class KakeiboDatabase : RoomDatabase() {
-    // Add DAO abstract functions here as features are implemented:
-    // abstract fun walletsDao(): WalletsDao
-    // abstract fun transactionsDao(): TransactionsDao
-    // abstract fun notificationsDao(): NotificationsDao
+    abstract fun walletsDao(): WalletsDao
+    abstract fun transactionsDao(): TransactionsDao
 }

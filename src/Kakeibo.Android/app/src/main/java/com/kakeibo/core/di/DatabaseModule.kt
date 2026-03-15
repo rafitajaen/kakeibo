@@ -21,5 +21,7 @@ object DatabaseModule {
             context,
             KakeiboDatabase::class.java,
             "kakeibo.db",
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
 }

@@ -22,11 +22,56 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.kakeibo.core.navigation.ActivityFeedRoute
+import com.kakeibo.core.navigation.BudgetDetailRoute
+import com.kakeibo.core.navigation.BudgetListRoute
+import com.kakeibo.core.navigation.CategoryListRoute
+import com.kakeibo.core.navigation.CreateBudgetRoute
+import com.kakeibo.core.navigation.CreateCategoryRoute
+import com.kakeibo.core.navigation.CreateGoalRoute
+import com.kakeibo.core.navigation.CreateRecurringRoute
+import com.kakeibo.core.navigation.CreateWalletRoute
 import com.kakeibo.core.navigation.DashboardRoute
+import com.kakeibo.core.navigation.EditBudgetRoute
+import com.kakeibo.core.navigation.EditCategoryRoute
+import com.kakeibo.core.navigation.EditGoalRoute
+import com.kakeibo.core.navigation.EditRecurringRoute
+import com.kakeibo.core.navigation.FriendListRoute
+import com.kakeibo.core.navigation.GoalDetailRoute
+import com.kakeibo.core.navigation.GoalListRoute
+import com.kakeibo.core.navigation.InviteMemberRoute
 import com.kakeibo.core.navigation.NotificationListRoute
+import com.kakeibo.core.navigation.RecordTransactionRoute
+import com.kakeibo.core.navigation.RecurringListRoute
 import com.kakeibo.core.navigation.SettingsRoute
+import com.kakeibo.core.navigation.WalletDetailRoute
 import com.kakeibo.core.navigation.WalletListRoute
+import com.kakeibo.features.activity.presentation.ActivityFeedScreen
+import com.kakeibo.features.budgets.presentation.BudgetDetailScreen
+import com.kakeibo.features.budgets.presentation.BudgetListScreen
+import com.kakeibo.features.budgets.presentation.CreateBudgetScreen
+import com.kakeibo.features.budgets.presentation.EditBudgetScreen
+import com.kakeibo.features.categories.presentation.CategoryListScreen
+import com.kakeibo.features.categories.presentation.CreateCategoryScreen
+import com.kakeibo.features.categories.presentation.EditCategoryScreen
+import com.kakeibo.features.dashboard.presentation.DashboardScreen
+import com.kakeibo.features.friends.presentation.FriendListScreen
+import com.kakeibo.features.goals.presentation.CreateGoalScreen
+import com.kakeibo.features.goals.presentation.EditGoalScreen
+import com.kakeibo.features.goals.presentation.GoalDetailScreen
+import com.kakeibo.features.goals.presentation.GoalListScreen
+import com.kakeibo.features.notifications.presentation.NotificationListScreen
+import com.kakeibo.features.recurring.presentation.CreatePatternScreen
+import com.kakeibo.features.recurring.presentation.EditPatternScreen
+import com.kakeibo.features.recurring.presentation.RecurringListScreen
+import com.kakeibo.features.settings.presentation.SettingsScreen
+import com.kakeibo.features.transactions.presentation.GlobalTransactionsScreen
+import com.kakeibo.features.transactions.presentation.RecordTransactionScreen
+import com.kakeibo.features.wallets.presentation.CreateWalletScreen
+import com.kakeibo.features.wallets.presentation.InviteMemberScreen
+import com.kakeibo.features.wallets.presentation.WalletDetailScreen
+import com.kakeibo.features.wallets.presentation.WalletListScreen
 
 /** Top-level navigation destinations shown in bottom nav. */
 enum class TopLevelDestination(
@@ -42,13 +87,12 @@ enum class TopLevelDestination(
 }
 
 /**
- * App shell with bottom navigation bar.
+ * App shell with bottom navigation bar and inner NavHost hosting all authenticated screens.
  *
- * TODO: Replace with NavigationSuiteScaffold for adaptive layout support
- * (requires adding material3-adaptive-navigation-suite dependency).
+ * [outerNavController] is the root NavController used only for auth-level navigation (e.g. logout).
  */
 @Composable
-fun AppShell(navController: NavHostController) {
+fun AppShell(outerNavController: NavHostController) {
     val innerNavController = rememberNavController()
     val backStackEntry by innerNavController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -80,20 +124,111 @@ fun AppShell(navController: NavHostController) {
             startDestination = DashboardRoute,
             modifier = Modifier.padding(innerPadding),
         ) {
+            // ── Bottom nav top-level destinations ──────────────────────────
             composable<DashboardRoute> {
-                // TODO: DashboardScreen(navController)
+                DashboardScreen(navController = innerNavController)
             }
             composable<WalletListRoute> {
-                // TODO: WalletListScreen(navController)
+                WalletListScreen(navController = innerNavController)
             }
             composable<ActivityFeedRoute> {
-                // TODO: ActivityFeedScreen(navController)
+                ActivityFeedScreen(navController = innerNavController)
             }
             composable<NotificationListRoute> {
-                // TODO: NotificationListScreen(navController)
+                NotificationListScreen(navController = innerNavController)
             }
             composable<SettingsRoute> {
-                // TODO: SettingsScreen(navController)
+                SettingsScreen(
+                    navController = innerNavController,
+                    onLogout = {
+                        outerNavController.navigate(com.kakeibo.core.navigation.LoginRoute) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                )
+            }
+
+            // ── Wallets ────────────────────────────────────────────────────
+            composable<WalletDetailRoute> { entry ->
+                val route: WalletDetailRoute = entry.toRoute()
+                WalletDetailScreen(walletId = route.walletId, navController = innerNavController)
+            }
+            composable<CreateWalletRoute> {
+                CreateWalletScreen(navController = innerNavController)
+            }
+            composable<InviteMemberRoute> { entry ->
+                val route: InviteMemberRoute = entry.toRoute()
+                InviteMemberScreen(walletId = route.walletId, navController = innerNavController)
+            }
+
+            // ── Transactions ───────────────────────────────────────────────
+            composable<RecordTransactionRoute> { entry ->
+                val route: RecordTransactionRoute = entry.toRoute()
+                RecordTransactionScreen(
+                    preselectedWalletId = route.walletId.takeIf { it.isNotBlank() },
+                    navController = innerNavController,
+                )
+            }
+
+            // ── Categories ─────────────────────────────────────────────────
+            composable<CategoryListRoute> {
+                CategoryListScreen(navController = innerNavController)
+            }
+            composable<CreateCategoryRoute> {
+                CreateCategoryScreen(navController = innerNavController)
+            }
+            composable<EditCategoryRoute> { entry ->
+                val route: EditCategoryRoute = entry.toRoute()
+                EditCategoryScreen(categoryId = route.categoryId, navController = innerNavController)
+            }
+
+            // ── Budgets ────────────────────────────────────────────────────
+            composable<BudgetListRoute> {
+                BudgetListScreen(navController = innerNavController)
+            }
+            composable<CreateBudgetRoute> {
+                CreateBudgetScreen(navController = innerNavController)
+            }
+            composable<EditBudgetRoute> { entry ->
+                val route: EditBudgetRoute = entry.toRoute()
+                EditBudgetScreen(budgetId = route.budgetId, navController = innerNavController)
+            }
+            composable<BudgetDetailRoute> { entry ->
+                val route: BudgetDetailRoute = entry.toRoute()
+                BudgetDetailScreen(budgetId = route.budgetId, navController = innerNavController)
+            }
+
+            // ── Goals ──────────────────────────────────────────────────────
+            composable<GoalListRoute> {
+                GoalListScreen(navController = innerNavController)
+            }
+            composable<CreateGoalRoute> {
+                CreateGoalScreen(navController = innerNavController)
+            }
+            composable<EditGoalRoute> { entry ->
+                val route: EditGoalRoute = entry.toRoute()
+                EditGoalScreen(goalId = route.goalId, navController = innerNavController)
+            }
+            composable<GoalDetailRoute> { entry ->
+                val route: GoalDetailRoute = entry.toRoute()
+                GoalDetailScreen(goalId = route.goalId, navController = innerNavController)
+            }
+
+            // ── Recurring ──────────────────────────────────────────────────
+            composable<RecurringListRoute> {
+                RecurringListScreen(navController = innerNavController)
+            }
+            composable<CreateRecurringRoute> {
+                CreatePatternScreen(navController = innerNavController)
+            }
+            composable<EditRecurringRoute> { entry ->
+                val route: EditRecurringRoute = entry.toRoute()
+                EditPatternScreen(patternId = route.patternId, navController = innerNavController)
+            }
+
+            // ── Friends ────────────────────────────────────────────────────
+            composable<FriendListRoute> {
+                FriendListScreen(navController = innerNavController)
             }
         }
     }
