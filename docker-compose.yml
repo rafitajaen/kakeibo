@@ -121,12 +121,12 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  # Email Renderer - Bun + Hono + React Email
-  email-renderer:
+  # Kakeibo Email - Bun + Hono + React Email
+  kakeibo-email:
     build:
       context: ./src/Kakeibo.Email
       dockerfile: Dockerfile
-    container_name: kakeibo-email-renderer
+    container_name: kakeibo-email
     ports:
       - "3050:3050"
     healthcheck:
@@ -169,7 +169,7 @@ services:
       ClickHouse__Host: "clickhouse"
       ClickHouse__Port: "8123"
       ClickHouse__Database: "kakeibo"
-      EmailRenderer__BaseUrl: "http://email-renderer:3050"
+      KakeiboEmail__BaseUrl: "http://kakeibo-email:3050"
       Smtp__Host: "mailpit"
       Smtp__Port: "1025"
       Smtp__From: "${SMTP_FROM}"
@@ -190,7 +190,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      email-renderer:
+      kakeibo-email:
         condition: service_healthy
     profiles:
       - app

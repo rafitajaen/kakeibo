@@ -111,7 +111,7 @@ builder.Services.AddSingleton<ICacheService, FusionCacheService>();
 
 // --- Email ---
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
-builder.Services.Configure<EmailRendererOptions>(builder.Configuration.GetSection(EmailRendererOptions.SectionName));
+builder.Services.Configure<KakeiboEmailOptions>(builder.Configuration.GetSection(KakeiboEmailOptions.SectionName));
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<IEmailService, EmailService>();
 

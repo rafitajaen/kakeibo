@@ -89,7 +89,7 @@ Kakeibo.slnx
 │   │   │   └── Auditing/
 │   │   ├── Infrastructure/
 │   │   │   ├── Caching/                — ICacheService, FusionCacheService, CachingOptions
-│   │   │   ├── Email/                  — IEmailService, EmailService, SmtpOptions, EmailRendererOptions
+│   │   │   ├── Email/                  — IEmailService, EmailService, SmtpOptions, KakeiboEmailOptions
 │   │   │   ├── Storage/                — IStorageService, StorageService, StorageOptions
 │   │   │   └── Events/                 — IEvent, IEventHandler<T>, IEventBus, ChannelEventBus, EventDispatcher
 │   │   ├── Persistence/

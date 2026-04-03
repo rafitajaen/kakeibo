@@ -6,15 +6,15 @@ using MimeKit;
 
 namespace Kakeibo.Api.Infrastructure.Email;
 
-// Email service that renders templates via the email-renderer service and sends via SMTP.
+// Email service that renders templates via the kakeibo-email service and sends via SMTP.
 public sealed class EmailService(
     IOptions<SmtpOptions> smtpOptions,
-    IOptions<EmailRendererOptions> rendererOptions,
+    IOptions<KakeiboEmailOptions> rendererOptions,
     IHttpClientFactory httpClientFactory,
     ILogger<EmailService> logger) : IEmailService
 {
     private readonly SmtpOptions _smtpOptions = smtpOptions.Value;
-    private readonly EmailRendererOptions _rendererOptions = rendererOptions.Value;
+    private readonly KakeiboEmailOptions _rendererOptions = rendererOptions.Value;
 
     public async Task SendEmailVerificationAsync(
         Guid userId,
@@ -190,13 +190,13 @@ public sealed class EmailService(
         }
     }
 
-    // Renders an email template via the external email-renderer service.
+    // Renders an email template via the external kakeibo-email service.
     private async Task<string> RenderTemplateAsync(
         string template,
         object props,
         CancellationToken cancellationToken)
     {
-        var httpClient = httpClientFactory.CreateClient("EmailRenderer");
+        var httpClient = httpClientFactory.CreateClient("KakeiboEmail");
         httpClient.BaseAddress = new Uri(_rendererOptions.BaseUrl);
 
         var payload = DefaultSerializer.Serialize(new { template, props });
